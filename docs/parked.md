@@ -26,6 +26,10 @@ Written 2026-09-15 after two build iterations. The handoff listed eight candidat
 
 The interest-profile idea is sound; what it lacked was a cheap link source. If newsletters can be forwarded to a folder that a Power Automate flow dumps as a `.csv` of links into OneDrive synced to the corporate machine, the local `/interview-topic` → `/triage-topic` → `/refine-topic` prompts (in git history, v0.6.0) work unchanged with no paste. Without that, it's a paste a day for a digest you could get by asking Copilot Chat "what's new in AI in my newsletters this week".
 
+## What replaced them
+
+`m365/` — build sheets for the three cases that matter (daily brief, meeting filing + evening prep, email drafts) plus the 1-1 agenda check, designed around what runs unattended for free: scheduled prompts in Copilot Chat for the model step, standard Power Automate connectors for the filing, Agent Builder over a SharePoint library for on-demand work. Storing meeting material in SharePoint (not OneNote) is what makes the agent able to read it.
+
 ## Git history
 
-`v0.5.0` — all eight candidates, local knowledge base, Agent Builder exporter. `v0.6.0` — M365-side triage/brief, sanitized links only. `v0.7.0` — this repo: D2P only, CSV tracker, runbooks.
+`v0.5.0` — all eight candidates, local knowledge base, Agent Builder exporter. `v0.6.0` — M365-side triage/brief, sanitized links only. `v0.7.0` — D2P only, CSV tracker, runbooks. `v0.8.0` — adds `m365/` build sheets.

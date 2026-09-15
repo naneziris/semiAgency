@@ -71,4 +71,6 @@ Each prompt checks the engagement `kind` and tells you the right one if you pick
 | synthesis is thin or invents things | transcript too long for one pass; check `normalized/T1.part01.md` exists; G1 exists for exactly this |
 | tracker CSV locked | close Excel, run `append_tasks.py` again |
 
-Reference: `docs/design.md` (why it is built this way), `docs/bootstrap.md` (script specs and build prompts), `docs/parked.md` (what was tried for the other workflows and why it is not here).
+Reference: `docs/design.md` (why it is built this way), `docs/bootstrap.md` (script specs and build prompts).
+
+**Everything that lives in Microsoft 365** — daily brief, meeting filing and prep, email drafts, 1-1 agenda check — is in `m365/` (build sheets: scheduled prompts, Power Automate flows with standard connectors, two Agent Builder agents). It never touches this workspace. `docs/parked.md` records the earlier attempts and why they were dropped.
