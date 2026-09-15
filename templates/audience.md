@@ -1,5 +1,5 @@
 # Audience brief
-<!-- Fill this in before /write-storylines. 10 minutes. The storylines and the speech are only as good as this. -->
+<!-- Fill this in before /proposal or /storylines. 10 minutes. The storylines and the speech are only as good as this. -->
 
 ## Who is in the room
 - roles, seniority, how many; who decides, who influences
