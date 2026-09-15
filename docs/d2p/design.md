@@ -257,10 +257,10 @@ Once you hand-edit `deck.pptx`, it's no longer regenerable without losing edits.
 
 `id | created | source | context | owner | action | due | urgency | effort | status | depends_on | notes`
 
-(`context` = engagement name or export date; `urgency`/`effort` are filled by email triage and left blank by D2P. `scripts/tracker_init.py` creates the file; `scripts/append_tasks.py` ships with the workspace and is tested — see `scripts/README.md`.)
+(`context` = engagement name; `urgency`/`effort` optional. `scripts/tracker_init.py` creates the file; `scripts/append_tasks.py` ships with the workspace and is tested — see `scripts/README.md`.)
 
 - `id` = short hash of (source:context, action) — dedup key.
-- `source` = `d2p`, `meeting-notes`, `email-triage` or `one-on-one` so filtering is trivial.
+- `source` = `d2p` or `meeting-notes` so filtering is trivial (email actions live in Microsoft To Do, not here).
 - `append_tasks.py` is stdlib: unzip, append `<row>` elements to `xl/worksheets/sheet1.xml` using inline strings (`t="inlineStr"`, so `sharedStrings.xml` is never touched), bump the `<dimension ref>`, and if the sheet is an Excel Table also bump the `ref` in `xl/tables/table1.xml`. Existing rows, styles and column widths are bytes we never rewrite. Keep the tracker deliberately simple: one sheet, no formulas in data rows, no merged cells. If the file is locked (open in Excel), it writes `tasks.pending.csv` next to it and tells you; the next run drains it.
 - Honest caveat: an xlsx appender with no library is the one script here that needs real testing against *your* tracker file, because Excel is stricter about workbook XML than PowerPoint is about slides. If it fights you, fall back to the tracker being a `.csv` that Excel opens — workflow #3 doesn't need xlsx internals either.
 

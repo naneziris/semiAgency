@@ -11,6 +11,5 @@ __pycache__/
 # knowledge base: generated views and the tracker's parking file
 kb/index.md
 kb/topics/*/links.md
-kb/briefs/*.inputs.md
 tracker/tasks.pending.csv
 *.tmp

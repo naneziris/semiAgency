@@ -6,7 +6,7 @@ over the data. Appending never rewrites existing parts — it inserts <row> elem
 </sheetData> and bumps the <dimension> and table refs. Reading resolves shared strings and inline
 strings and ignores everything else.
 
-Used by tracker_init.py, append_tasks.py and brief_collect.py. Run `python scripts/xlsxlite.py --selftest`.
+Used by tracker_init.py, append_tasks.py and kb_index.py. Run `python scripts/xlsxlite.py --selftest`.
 """
 import argparse
 import io

@@ -3,10 +3,10 @@
 
 Usage:
   python scripts/append_tasks.py engagements/<name>              # reads <name>/tasks.json, source from state.json kind
-  python scripts/append_tasks.py kb/triage/2026-09-15.todos.json  # any tasks file; --source overrides
+  python scripts/append_tasks.py path/to/tasks.json               # any tasks file; --source overrides
   python scripts/append_tasks.py --drain                           # only push tasks.pending.csv left over from a lock
 
-Tasks file shape (see .github/instructions/todos.instructions.md):
+Tasks file shape (see .github/instructions/tasks.instructions.md):
   {"tasks": [{"action": "...", "owner": "me", "due": "2026-09-18" | null, "urgency": "high|normal|low",
               "effort": "S|M|L", "depends_on": [], "source": "E3", "context": "2026-09-15", "notes": ""}],
    "candidates": [...]}                                              # candidates are never appended
@@ -49,10 +49,6 @@ def load_tasks(path):
         source = "manual"
         base = os.path.basename(path)
         context = base.split(".")[0]
-        if "/triage/" in path.replace("\\", "/") or "\\triage\\" in path:
-            source = "email-triage"
-        elif "/people/" in path.replace("\\", "/"):
-            source = "one-on-one"
     if not os.path.exists(tfile):
         raise FileNotFoundError(tfile)
     with open(tfile, encoding="utf-8") as f:
@@ -172,28 +168,28 @@ def _selftest():
     with tempfile.TemporaryDirectory() as d:
         tracker = os.path.join(d, "actions.xlsx")
         xlsxlite.create(tracker, HEADER)
-        tfile = os.path.join(d, "2026-09-15.todos.json")
+        tfile = os.path.join(d, "2026-09-15.tasks.json")
         with open(tfile, "w", encoding="utf-8") as f:
             json.dump({"tasks": [
                 {"action": "Confirm renewal", "owner": "me", "due": "2026-09-18", "urgency": "high", "effort": "S", "source": "E1"},
                 {"action": "Ask Jan for estimate", "owner": "delegate:jan-d", "source": "E4", "depends_on": ["Confirm renewal"]},
                 {"action": "", "owner": "me"},
             ], "candidates": [{"action": "maybe"}]}, f)
-        assert run(tfile, tracker, "email-triage") == 0
-        assert run(tfile, tracker, "email-triage") == 0  # idempotent
+        assert run(tfile, tracker, "manual") == 0
+        assert run(tfile, tracker, "manual") == 0  # idempotent
         h, rows = xlsxlite.read_rows(tracker)
         assert len(rows) == 2, rows
-        assert rows[0]["source"] == "email-triage" and rows[0]["notes"].startswith("[E1]"), rows[0]
+        assert rows[0]["source"] == "manual" and rows[0]["notes"].startswith("[E1]"), rows[0]
         assert rows[1]["depends_on"] == "Confirm renewal"
         # lock → pending → drain
         lock = os.path.join(d, "~$actions.xlsx")
         open(lock, "w").close()
         with open(tfile, "w", encoding="utf-8") as f:
             json.dump({"tasks": [{"action": "Third one", "source": "E9"}]}, f)
-        run(tfile, tracker, "email-triage")
+        run(tfile, tracker, "manual")
         pending = os.path.join(d, "tasks.pending.csv")
         assert os.path.exists(pending)
-        assert run(tfile, tracker, "email-triage") == 0  # still locked: nothing new, nothing lost
+        assert run(tfile, tracker, "manual") == 0  # still locked: nothing new, nothing lost
         os.remove(lock)
         assert run(None, tracker, drain_only=True) == 0
         h, rows = xlsxlite.read_rows(tracker)
@@ -216,7 +212,7 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("path", nargs="?", help="engagement dir or tasks .json file")
     ap.add_argument("--tracker", default=os.path.join("tracker", "actions.xlsx"))
-    ap.add_argument("--source", help="override source column (d2p|meeting-notes|email-triage|one-on-one|manual)")
+    ap.add_argument("--source", help="override source column (d2p|meeting-notes|manual)")
     ap.add_argument("--drain", action="store_true", help="only push parked rows from tasks.pending.csv")
     ap.add_argument("--selftest", action="store_true")
     a = ap.parse_args()

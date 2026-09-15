@@ -413,7 +413,7 @@ Run selftests. Then, using the sample engagement, run the prompts /sketch-option
 
 **Phase 5 — team follow-through (verify, don't build)**
 ```
-scripts/append_tasks.py and scripts/xlsxlite.py already exist and are tested; do not rewrite them. Extend validate.py for tasks.json (shape per .github/instructions/todos.instructions.md: `tasks` and `candidates` arrays, `action` required).
+scripts/append_tasks.py and scripts/xlsxlite.py already exist and are tested; do not rewrite them. Extend validate.py for tasks.json (shape per .github/instructions/tasks.instructions.md: `tasks` and `candidates` arrays, `action` required).
 Run python scripts/append_tasks.py --selftest. Then copy tracker/actions.xlsx to a temp dir and append the sample engagement's tasks.json to the copy twice; confirm exactly the expected number of new rows (dedup) and show me the output of python scripts/xlsxlite.py --dump <copy>.
 I will open the copy in Excel and confirm it opens clean and the Table extends over the new rows. If Excel reports a repair, do not patch append_tasks.py blindly: show me the sheet XML diff between the original and the copy first.
 ```

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Create the shared action tracker (tracker/actions.xlsx) with the fixed column set.
 
-Columns (docs/d2p/design.md §7, extended for email triage):
+Columns (docs/d2p/design.md §7):
   id | created | source | context | owner | action | due | urgency | effort | status | depends_on | notes
 
 Run once. Refuses to overwrite. If you already keep a tracker, don't run this — make sure its first
@@ -18,7 +18,7 @@ import xlsxlite  # noqa: E402
 
 HEADER = ["id", "created", "source", "context", "owner", "action", "due",
           "urgency", "effort", "status", "depends_on", "notes"]
-SOURCES = ["d2p", "meeting-notes", "email-triage", "one-on-one", "manual"]
+SOURCES = ["d2p", "meeting-notes", "manual"]
 DEFAULT = os.path.join("tracker", "actions.xlsx")
 
 

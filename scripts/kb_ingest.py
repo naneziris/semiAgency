@@ -5,10 +5,11 @@
   python scripts/kb_ingest.py <file>     # process one file (anywhere)
   python scripts/kb_ingest.py --selftest
 
-A daily-export is split by its H2 sections into kb/calendar/<date>.md, kb/email/<date>.md and
-kb/topics/<topic>/links/<date>.md. Other types land in their folder as one file. The raw handoff
-is kept in kb/archive/. Existing targets are never overwritten (a second file gets `.2`, `.3`...).
-Content is never edited — only a header is prepended to each part. Ends by rebuilding kb/index.md.
+Handoff types: topic-links (-> kb/topics/<topic>/links/<date>.md; a file with several topic sections is split),
+meeting (-> kb/meetings/), note (-> kb/notes/). Anything else is refused: email, calendar and 1-1 content
+stay in Microsoft 365 by design. The raw handoff is kept in kb/archive/. Existing targets are never
+overwritten (a second file gets `.2`, `.3`...). Content is never edited — only a header is prepended.
+Ends by rebuilding kb/index.md.
 """
 import argparse
 import datetime as dt
@@ -20,8 +21,8 @@ import tempfile
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-TYPES = {"daily-export", "calendar", "email", "topic-links", "one-on-one", "meeting", "note"}
-SECTION_TYPE = {"calendar": "calendar", "emails": "email", "email": "email"}
+TYPES = {"topic-links", "meeting", "note"}
+REFUSED = {"daily-export", "calendar", "email", "one-on-one"}
 DATE_RE = r"(\d{4}-\d{2}-\d{2})"
 
 
@@ -49,20 +50,19 @@ def parse_header(text, filename):
         meta = {}
         for i, ln in enumerate(lines[:15]):
             m = re.match(r"^\s*[-*]?\s*([a-zA-Z_-]+)\s*:\s*(.*?)\s*$", ln)
-            if m and m.group(1).lower() in ("handoff", "date", "source", "topic", "person", "subject"):
+            if m and m.group(1).lower() in ("handoff", "date", "source", "topic", "subject"):
                 meta[m.group(1).lower()] = m.group(2).strip("`* ")
                 body_start = i + 1
         if "handoff" not in meta:
             body_start = 0
     if "handoff" not in meta or "date" not in meta:
         base = os.path.basename(filename)
-        m = re.match(r"^%s-(daily-export|calendar|email|topic-links|one-on-one|meeting|note)(?:-(.+?))?\.md$" % DATE_RE, base)
+        m = re.match(r"^%s-(topic-links|meeting|note)(?:-(.+?))?\.md$" % DATE_RE, base)
         if m:
             meta.setdefault("date", m.group(1))
             meta.setdefault("handoff", m.group(2))
             if m.group(3):
-                key = {"one-on-one": "person", "topic-links": "topic"}.get(m.group(2), "subject")
-                meta.setdefault(key, m.group(3))
+                meta.setdefault("topic" if m.group(2) == "topic-links" else "subject", m.group(3))
     if "handoff" in meta:
         meta["handoff"] = meta["handoff"].strip("`* ").lower()
     if "date" in meta:
@@ -73,7 +73,7 @@ def parse_header(text, filename):
 
 
 def split_sections(body):
-    """Split a daily-export body by H2. Returns list of (heading, text)."""
+    """Split a body by H2. Returns list of (heading, text)."""
     parts = []
     cur_head, cur = None, []
     for ln in body.splitlines():
@@ -124,39 +124,27 @@ def route(kb, path, log):
         text = f.read()
     meta, body = parse_header(text, path)
     t, date = meta.get("handoff", ""), meta.get("date", "")
+    if t in REFUSED:
+        log.append("  !! refused %s: handoff type %r is not allowed locally — email, calendar and 1-1 content stay in M365 (docs/handoff-format.md)" % (
+            os.path.basename(path), t))
+        return False
     if t not in TYPES or not re.match(r"^\d{4}-\d{2}-\d{2}$", date or ""):
         log.append("  !! cannot route %s: handoff=%r date=%r — add a header (docs/handoff-format.md) or rename the file" % (
             os.path.basename(path), t, date))
         return False
     src = meta.get("source")
-    if t == "daily-export":
-        sections = split_sections(body)
+    if t == "topic-links":
+        # one file may carry several "## Topic links: <topic>" sections (several topics in one run)
+        sections = [(h, sec) for h, sec in split_sections(body) if re.match(r"^topic links\s*:", h.lower())]
         if not sections:
-            log.append("  !! daily-export has no '## ' sections; nothing routed")
-            return False
+            topic = slug(meta.get("topic", "") or "unsorted")
+            write_part(kb, "topics/%s/links/%s.md" % (topic, date), header(t, date, {"topic": topic}, src) + body, log)
         for head, sec in sections:
-            hl = head.lower().strip()
-            m = re.match(r"^topic links\s*:\s*(.+)$", hl)
-            if m:
-                topic = slug(m.group(1))
-                write_part(kb, "topics/%s/links/%s.md" % (topic, date),
-                           header("topic-links", date, {"topic": topic}, src) + "## Topic links: %s\n\n%s" % (topic, sec), log)
-            elif hl in SECTION_TYPE:
-                kind = SECTION_TYPE[hl]
-                write_part(kb, "%s/%s.md" % (kind, date), header(kind, date, None, src) + "## %s\n\n%s" % (head, sec), log)
-            else:
-                write_part(kb, "notes/%s-%s.md" % (date, slug(head)), header("note", date, {"subject": head}, src) + "## %s\n\n%s" % (head, sec), log)
-    elif t in ("calendar", "email"):
-        write_part(kb, "%s/%s.md" % (t, date), header(t, date, None, src) + body, log)
-    elif t == "topic-links":
-        topic = slug(meta.get("topic", "") or "unsorted")
-        write_part(kb, "topics/%s/links/%s.md" % (topic, date), header(t, date, {"topic": topic}, src) + body, log)
-    elif t == "one-on-one":
-        person = meta.get("person", "").strip()
-        if not person:
-            log.append("  !! one-on-one handoff without person: — add `person: <name>` to the header")
-            return False
-        write_part(kb, "people/%s/%s.md" % (slug(person), date), header(t, date, {"person": person}, src) + body, log)
+            topic = slug(re.match(r"^topic links\s*:\s*(.+)$", head.lower()).group(1))
+            write_part(kb, "topics/%s/links/%s.md" % (topic, date),
+                       header(t, date, {"topic": topic}, src) + "## Topic links: %s\n\n%s" % (topic, sec), log)
+        if re.search(r"^\s*\|\s*from\s*\|", body, flags=re.M | re.I) or re.search(r"^- from:", body, flags=re.M):
+            log.append("  !! WARNING: this links file carries a sender/from column — the agent drifted; re-paste JOB 3 of agent-builder/daily-brief.md")
     elif t == "meeting":
         subject = meta.get("subject", "") or "meeting"
         target = write_part(kb, "meetings/%s-%s.md" % (date, slug(subject)), header(t, date, {"subject": subject}, src) + body, log)
@@ -166,7 +154,7 @@ def route(kb, path, log):
         subject = meta.get("subject", "") or "note"
         write_part(kb, "notes/%s-%s.md" % (date, slug(subject)), header(t, date, {"subject": subject}, src) + body, log)
     # archive raw
-    arch = free_path(os.path.join(kb, "archive", "%s-%s.md" % (date, t if t != "one-on-one" else "one-on-one-" + slug(meta.get("person", "")))))
+    arch = free_path(os.path.join(kb, "archive", "%s-%s.md" % (date, t)))
     os.makedirs(os.path.dirname(arch), exist_ok=True)
     shutil.move(path, arch)
     log.append("  raw kept as %s" % os.path.relpath(arch, kb))
@@ -198,28 +186,21 @@ def run(kb, single=None):
 
 
 SAMPLE = """---
-handoff: daily-export
+handoff: topic-links
 date: 2026-09-15
-source: agent-builder/daily-exporter
+topic: ai
+source: agent-builder/daily-brief
 ---
-## Calendar
-### 2026-09-15
-| start | end | title | with | kind | link | notes |
-|---|---|---|---|---|---|---|
-| 09:00 | 09:30 | Weekly 1-1 Maria K | Maria K | 1-1 | | recurring |
-| 09:15 | 10:00 | Platform sync | Jan D, Ali R | meeting | | overlaps 1-1 |
+## Topic links: ai
+| url | title | one-line |
+|---|---|---|
+| https://example.org/a | A | Something |
+| https://example.org/b | B | |
 
-## Emails
-### E1 — Re: vendor contract renewal
-- from: Sabine L
-- gist: needs sign-off.
-- asks: confirm by Thu.
-- deadline: 2026-09-18
-
-## Topic links: AI
-| url | title | from | one-line |
-|---|---|---|---|
-| https://example.org/a | A | newsletter | Something |
+## Topic links: platform
+| url | title | one-line |
+|---|---|---|
+| https://example.org/c | C | Other |
 """
 
 
@@ -229,30 +210,31 @@ def _selftest():
         os.makedirs(os.path.join(kb, "inbox"))
         with open(os.path.join(kb, "inbox", "paste.md"), "w", encoding="utf-8") as f:
             f.write(SAMPLE)
-        # fence-less variant, 1-1, and a file-name-only variant
-        with open(os.path.join(kb, "inbox", "x.md"), "w", encoding="utf-8") as f:
-            f.write("handoff: one-on-one\ndate: 2026-09-14\nperson: Maria K\n\n## Meetings covered\n- a\n")
         with open(os.path.join(kb, "inbox", "2026-09-13-note-vendor-call.md"), "w", encoding="utf-8") as f:
             f.write("Just text.\n")
+        with open(os.path.join(kb, "inbox", "m.md"), "w", encoding="utf-8") as f:
+            f.write("handoff: meeting\ndate: 2026-09-12\nsubject: Vendor sync\n\n## Transcript\n[00:00:01] A: hi\n")
+        with open(os.path.join(kb, "inbox", "refused.md"), "w", encoding="utf-8") as f:
+            f.write("---\nhandoff: email\ndate: 2026-09-15\n---\n### E1 — secret\n")
         with open(os.path.join(kb, "inbox", "bad.md"), "w", encoding="utf-8") as f:
             f.write("no header at all\n")
         rc = run(kb)
-        assert rc == 1  # bad.md stays
-        for rel in ["calendar/2026-09-15.md", "email/2026-09-15.md", "topics/ai/links/2026-09-15.md",
-                    "people/maria-k/2026-09-14.md", "notes/2026-09-13-vendor-call.md",
-                    "archive/2026-09-15-daily-export.md", "archive/2026-09-14-one-on-one-maria-k.md", "inbox/bad.md"]:
+        assert rc == 1  # refused.md and bad.md stay
+        for rel in ["topics/ai/links/2026-09-15.md", "topics/platform/links/2026-09-15.md",
+                    "notes/2026-09-13-vendor-call.md", "meetings/2026-09-12-vendor-sync.md",
+                    "archive/2026-09-15-topic-links.md", "inbox/bad.md", "inbox/refused.md"]:
             assert os.path.exists(os.path.join(kb, rel)), rel
-        with open(os.path.join(kb, "calendar/2026-09-15.md"), encoding="utf-8") as f:
-            cal = f.read()
-        assert cal.startswith("---\nhandoff: calendar\ndate: 2026-09-15") and "| 09:00 | 09:30 |" in cal, cal
+        assert not os.path.exists(os.path.join(kb, "email"))
         with open(os.path.join(kb, "topics/ai/links/2026-09-15.md"), encoding="utf-8") as f:
-            assert "topic: ai" in f.read()
-        # second export same day → .2
+            t = f.read()
+        assert "topic: ai" in t and "https://example.org/b" in t and "example.org/c" not in t, t
+        # second paste same day -> .2 ; and a drifted file with a from column warns
         with open(os.path.join(kb, "inbox", "again.md"), "w", encoding="utf-8") as f:
-            f.write(SAMPLE)
+            f.write(SAMPLE.replace("| url | title | one-line |", "| url | title | from | one-line |"))
         os.remove(os.path.join(kb, "inbox", "bad.md"))
+        os.remove(os.path.join(kb, "inbox", "refused.md"))
         assert run(kb) == 0
-        assert os.path.exists(os.path.join(kb, "calendar/2026-09-15.2.md"))
+        assert os.path.exists(os.path.join(kb, "topics/ai/links/2026-09-15.2.md"))
     print("kb_ingest selftest OK")
 
 

@@ -1,60 +1,56 @@
 # semiAgency
 
-Your recurring work — stakeholder proposals, meetings, email, team 1-1s, topic news, a morning brief — as file-based workflows: GitHub Copilot reasons, stdlib Python scripts do the mechanics, Microsoft 365 data arrives as pasted handoffs, and you approve at a handful of gates. Nothing leaves this machine.
+Your recurring work as human-gated workflows. Anything that touches your email, calendar or 1-1 notes runs inside Microsoft 365 Copilot Chat (two Agent Builder agents) and stays there. Stakeholder proposals, meeting write-ups and topic news triage run locally in VS Code with GitHub Copilot, stdlib Python scripts and files you own. The only thing that crosses over is a list of topic links.
 
-Read once: `docs/architecture.md` (how it fits) · `agent-builder/README.md` (the M365 side) · `docs/handoff-format.md` (the contract between them).
+Read once: `docs/architecture.md` (how it fits) · `agent-builder/README.md` (the M365 side) · `docs/handoff-format.md` (what may cross).
 
 ## One-time setup (about 3 hours, in this order)
 
-1. **Workspace.** Open this folder in VS Code; `git init`; check `chat.promptFiles` and instruction files are on (default). Python 3 on PATH.
-2. **Scripts that ship.** `python scripts/selftest_all.py` — the six KB/tracker scripts must print OK.
-3. **Tracker.** `python scripts/tracker_init.py` → `tracker/actions.xlsx`. Open it once in Excel, save, close. (If you already have a tracker, give it the same header row and a Table named `Actions` — see `scripts/tracker_init.py`.)
-4. **M365 agents.** Build **Daily Exporter** and **1-1 Prep** in Agent Builder from `agent-builder/*.md` (5 minutes each). Run "Export today" once and ingest it — this validates the whole bridge before anything else.
-5. **Topic profile.** In Copilot Chat: `@interviewer /interview-topic topic=ai` — 10 minutes of questions, writes `kb/topics/ai/profile.md`.
-6. **D2P scripts.** Follow `docs/d2p/README.md` "Before the first engagement" and the Phase prompts in `docs/d2p/bootstrap.md` §3 — Copilot writes the pptx/ingest/validate scripts against your corporate deck. This is the long part; it is also independent of steps 3–5, so the daily routine works before it is done.
-7. **Power Automate.** `agent-builder/power-automate-1-1-agenda.md` — 15 minutes, optional but it is the only unattended piece.
+1. **Workspace.** Open this folder in VS Code; `git init`; Python 3 on PATH; prompt and instruction files enabled (default).
+2. **Scripts that ship.** `python scripts/selftest_all.py` — five OK lines expected.
+3. **Tracker.** `python scripts/tracker_init.py` → `tracker/actions.xlsx`. Open once in Excel, save, close.
+4. **M365 agents.** Build **Daily Brief** and **1-1 Prep** in Agent Builder from `agent-builder/*.md` (5 minutes each). Run **Morning brief** once to validate.
+5. **Topic profile.** In Copilot Chat: `@interviewer /interview-topic topic=ai` — 10 minutes of questions, writes `kb/topics/ai/profile.md`. Then run the agent's **Topic links** starter once, paste into `kb/inbox/`, `python scripts/kb_ingest.py`, `@librarian /triage-topic topic=ai` — validates the one bridge.
+6. **D2P scripts.** `docs/d2p/README.md` "Before the first engagement" and the Phase prompts in `docs/d2p/bootstrap.md` §3 — Copilot writes the pptx/ingest/validate scripts against your corporate deck. The long part; independent of steps 3–5.
+7. **Power Automate.** `agent-builder/power-automate-1-1-agenda.md` — 15 minutes, the only unattended piece.
 
-## Every morning (~10 minutes)
+## Every morning (~5 minutes)
 
 | step | where | what |
 |---|---|---|
-| 1 | M365 Copilot Chat → **Daily Exporter** | click **Export today**, copy the answer |
-| 2 | VS Code | new file in `kb/inbox/`, paste, save |
-| 3 | terminal | `python scripts/kb_ingest.py` |
-| 4 | Copilot Chat | `@librarian /triage-inbox` → open `kb/triage/<date>.todos.json`, delete/fix, then terminal: `python scripts/append_tasks.py kb/triage/<date>.todos.json` |
-| 5 | Copilot Chat | `@librarian /triage-topic topic=ai` → read `kb/topics/ai/digests/<date>.md`; feedback via `/refine-topic` when it misjudged |
-| 6 | Copilot Chat | `@librarian /morning-brief` → `kb/briefs/<date>.md` |
-
-Short on time: steps 1–3 and 6. The brief lists what you skipped.
+| 1 | M365 Copilot Chat → **Daily Brief** | **Morning brief** → read; add accepted actions to Microsoft To Do; move clashing meetings. Optionally **Triage inbox** for the full list and **Draft replies** |
+| 2 | same agent | **Topic links** → copy → new file in `kb/inbox/` → terminal `python scripts/kb_ingest.py` |
+| 3 | VS Code Copilot Chat | `@librarian /triage-topic topic=ai` → read `kb/topics/ai/digests/<date>.md`; `/refine-topic` when it misjudged |
 
 ## Per event
 
-- **A meeting happened (not a 1-1).** `python scripts/new_engagement.py --kind meeting --name <date>-<subject>`, transcript into `inputs/`, `@analyst /summarize-meeting`, review `tasks.json`, `python scripts/append_tasks.py engagements/<name>`. Full detail: `docs/d2p/scenarios.md` Scenario C.
-- **A 1-1 is tomorrow.** M365 Copilot Chat → **1-1 Prep** → read it, paste the agenda into the invite. Optionally paste the handoff into `kb/inbox/` for history. The Power Automate flow pings you at 16:00 if the agenda is still empty.
-- **A stakeholder engagement starts.** `docs/d2p/README.md` — the full proposal flow with gates G1–G5.
+- **A meeting happened (not a 1-1).** `python scripts/new_engagement.py --kind meeting --name <date>-<subject>`, transcript into `inputs/`, `@analyst /summarize-meeting`, review `tasks.json`, `python scripts/append_tasks.py engagements/<name>`. Detail: `docs/d2p/scenarios.md` Scenario C. No transcript file? `agent-builder/meeting-exporter.md`.
+- **A 1-1 is tomorrow.** M365 Copilot Chat → **1-1 Prep** → read, paste the agenda into the invite, add your own actions to To Do. Separate flow; nothing local. The Power Automate flow pings you at 16:00 if the agenda is still empty.
+- **A stakeholder engagement starts.** `docs/d2p/README.md` — gates G1–G5.
 - **A deck from existing material.** `docs/d2p/scenarios.md` Scenario B/F.
-- **A new topic to follow.** Add it to the Daily Exporter's starter prompts, then `@interviewer /interview-topic topic=<slug>`.
+- **A new topic to follow.** Add it to the Daily Brief **Topic links** starter, then `@interviewer /interview-topic topic=<slug>`.
 
 ## Gates — what you never skip
 
 | gate | where | what you check |
 |---|---|---|
 | G1–G5 | D2P | facts cited, option chosen, storyline chosen, deck looked at, tasks reviewed (`docs/d2p/README.md`) |
-| T1 | email triage | the `.todos.json` before it is appended: is it really asked of you, is the due date real, should it be delegated |
 | T2 | topic digest | 👍/👎 on flagged items; the profile only changes through `/refine-topic` |
-| B1 | morning brief | the Top 3 — it is the model's judgement; disagree in the file, it's yours |
+| — | brief / triage / 1-1 prep | read in chat before acting; the agent cannot write anything, so every action you take is a deliberate one |
 
 ## Where things are
 
-`kb/index.md` (regenerated by every ingest) tells you what exists and what is waiting: un-ingested inbox files, links without a digest, engagements at a gate, tracker counts. When lost, read that.
+`kb/index.md` (regenerated by every ingest) lists topics, link days without a digest, meetings waiting for an engagement, and tracker counts. For engagements, `python scripts/status.py engagements/<name>` says the next action.
 
 ## When things go wrong
 
 | symptom | do |
 |---|---|
-| `kb_ingest.py` says it cannot route a file | the header lines got lost in the paste — add `handoff: …` and `date: …` at the top, or rename the file `<date>-<type>.md` |
-| the Daily Exporter starts prioritising or summarising bodies | tell it in chat; if it persists, its instruction text drifted — re-paste from `agent-builder/daily-exporter.md` |
-| `append_tasks.py` says the tracker is locked | close Excel or just run it again later — rows are parked in `tracker/tasks.pending.csv` and drained next time |
-| Excel complains the tracker is corrupt | `python scripts/xlsxlite.py --dump tracker/actions.xlsx` still reads it; export that to CSV, delete the xlsx, `tracker_init.py`, re-append. Then tell me which Excel version — the appender is deliberately minimal |
+| `kb_ingest.py` refuses a file as `email`/`calendar`/`one-on-one` | correct — that content stays in M365; delete the file |
+| `kb_ingest.py` warns about a `from` column in a links file | the agent drifted; re-paste JOB 3 from `agent-builder/daily-brief.md` into its instructions |
+| `kb_ingest.py` cannot route a file | header lines lost in the paste — add `handoff: topic-links` and `date: …` at the top, or rename the file `<date>-topic-links-<topic>.md` |
+| the Daily Brief invents deadlines or asks | tell it in chat; if it persists add "If in doubt, write none" to the instructions |
+| `append_tasks.py` says the tracker is locked | close Excel or run again later — rows are parked in `tracker/tasks.pending.csv` and drained next time |
+| Excel says the tracker is corrupt | `python scripts/xlsxlite.py --dump tracker/actions.xlsx` still reads it; export to CSV, delete, `tracker_init.py`, re-append; report which Excel version |
 | the digest flags junk | that's T2: `/refine-topic` with the item number and why |
 | Copilot wants to `pip install` | reject; "stdlib only, see copilot-instructions.md" |

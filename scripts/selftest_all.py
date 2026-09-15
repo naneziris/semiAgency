@@ -6,7 +6,7 @@ import subprocess
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-SHIPPED = ["xlsxlite", "tracker_init", "append_tasks", "kb_ingest", "kb_index", "brief_collect"]
+SHIPPED = ["xlsxlite", "tracker_init", "append_tasks", "kb_ingest", "kb_index"]
 COPILOT_BUILT = ["ooxml", "new_engagement", "ingest", "validate", "status", "followup_agenda",
                  "inspect_components", "skeletonize_deck", "build_deck", "storyboard", "lint_deck", "timing"]
 
