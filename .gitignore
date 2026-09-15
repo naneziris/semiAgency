@@ -1,0 +1,16 @@
+# generated per-engagement artifacts
+engagements/*/normalized/
+engagements/*/storyboard.html
+engagements/*/deck.pptx
+engagements/*/tasks.pending.csv
+brand/components.json
+brand/components.md
+__pycache__/
+*.pyc
+.DS_Store
+# knowledge base: generated views and the tracker's parking file
+kb/index.md
+kb/topics/*/links.md
+kb/briefs/*.inputs.md
+tracker/tasks.pending.csv
+*.tmp
