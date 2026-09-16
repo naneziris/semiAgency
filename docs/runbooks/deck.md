@@ -2,15 +2,17 @@
 
 A presentation on a subject you already have material for: a status update, a briefing, a decision paper, a training slot, or a draft deck that needs a proper storyline for a new audience. No options, no proposal document. Three gates. About 45 minutes of your attention for a 15-slide deck, most of it at G1.
 
-`<dir>` = `engagements/<name>`. Prompts run in Copilot Chat, agent mode, `@analyst` unless `@critic` is named.
+Short version: `docs/after-meeting.md`. Prompts run in Copilot Chat, agent mode, `@analyst` unless `@critic` is named. Scripts and prompts default to the engagement you started last (`engagements/CURRENT`); `<dir>` and `engagement=<name>` below are only needed to point at another one.
 
 ## Step 0 — start [5 min]
 
 ```
-python scripts/new_engagement.py --kind deck --name 2026-09-q3-update --subject "Q3 platform status" --audience "Steering committee" --minutes 15
+python scripts/new_engagement.py
 ```
 
-Into `<dir>/inputs/`: transcript (`transcript.md`), your notes (`notes.md`), documents (PDF → open in Word → save as `.docx` first), and — if you have one — the draft deck as `inputs/draft.pptx`. Titles alone give structure, not facts: add the material the titles were meant to summarise. Fill `inputs/audience.md` (10 min): who is in the room, what they decide, what they push back on, the language they use. The storylines and the speech are only as good as this.
+Answer the questions (2 = deck, subject, folder name, audience, minutes); the script waits while you fill `inputs/`, then lists what it found and prints the next prompt. Scripted: `python scripts/new_engagement.py --kind deck --name 2026-09-q3-update --subject "Q3 platform status" --audience "Steering committee" --minutes 15`.
+
+Into `inputs/`: transcript (`transcript.md`), your notes (`notes.md`), documents (PDF → open in Word → save as `.docx` first), and — if you have one — the draft deck as `inputs/draft.pptx`. Titles alone give structure, not facts: add the material the titles were meant to summarise. Fill `inputs/audience.md` (10 min): who is in the room, what they decide, what they push back on, the language they use. The storylines and the speech are only as good as this.
 
 ## Step 1 — facts → G1 [15–20 min]
 
@@ -20,7 +22,7 @@ Into `<dir>/inputs/`: transcript (`transcript.md`), your notes (`notes.md`), doc
 - [ ] Anything you can't confirm → Unverified (it will never reach a slide)
 - [ ] Gaps: add sources to `inputs/` and re-run, or accept that some titles get cut
 
-`python scripts/status.py <dir> --pass G1`
+`python scripts/status.py --pass`
 
 New material later? `/merge-followup engagement=<name> file=inputs/<new>.md` appends and updates statuses; re-pass G1.
 
@@ -31,26 +33,25 @@ New material later? `/merge-followup engagement=<name> file=inputs/<new>.md` app
 - [ ] Coverage list has every K id on a slide
 - [ ] The ask lands on its own slide
 
-`python scripts/status.py <dir> --pass G3 --storyline S1`
+`python scripts/status.py --pass` — it asks which storyline (or `--pass G3 --storyline S1`)
 
 ## Step 3 — deck → G4 [15 min]
 
 `/deck-outline engagement=<name>` → `deck.json` + `storyboard.html`. Slides of the draft that were already finished are kept as `{"clone": "inputs/draft.pptx#7"}` (same corporate master only; validate checks). Review the storyboard, edit `deck.json` if needed, then:
 
 ```
-python scripts/build_deck.py <dir>
-python scripts/lint_deck.py  <dir>
+python scripts/build_deck.py
 ```
 
-Open `deck.pptx`. Fix by editing `deck.json` and rebuilding.
+builds and lints. Open `deck.pptx`. Fix by editing `deck.json` and rebuilding.
 
 - [ ] Corporate master everywhere, no overflow, slide count fits the minutes
 
-`python scripts/status.py <dir> --pass G4` — hand-edit the pptx freely after this.
+`python scripts/status.py --pass` — hand-edit the pptx freely after this.
 
 ## Step 4 — speech and Q&A (optional) [20 min]
 
-`/speech engagement=<name>` → `python scripts/timing.py <dir>` → `python scripts/build_deck.py <dir> --notes-only`. `@critic /critique engagement=<name>` for the questions this audience will ask.
+`/speech engagement=<name>` → `python scripts/build_deck.py --notes-only` (runs the timing check, then embeds the notes). `@critic /critique engagement=<name>` for the questions this audience will ask.
 
 ## Variants
 

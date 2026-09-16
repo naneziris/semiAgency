@@ -1,4 +1,5 @@
 # generated per-engagement artifacts
+engagements/CURRENT
 engagements/*/normalized/
 engagements/*/storyboard.html
 engagements/*/deck.pptx

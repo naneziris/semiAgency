@@ -12,6 +12,7 @@ This repo turns stakeholder discovery into a proposal, a corporate-styled .pptx,
 - Machine-read artifacts are JSON (`state.json`, `deck.json`, `tasks.json`, `brand/components.json`). Human-read artifacts are markdown.
 - After writing or editing any engagement artifact, run `python scripts/validate.py <path>` and fix what it reports before finishing.
 - Do exactly the stage the prompt asks for. Do not advance `state.json` yourself; `scripts/status.py` tells the user the next action.
+- The engagement to work on is `engagements/<name>` where `<name>` is the prompt's `engagement` input, or - when it was not given - the single line in `engagements/CURRENT`. Never guess from folder listings; if neither exists, stop and say so. Scripts accept the engagement dir as an optional argument and fall back to the same file.
 - When unsure about a fact, write it under "Unverified" rather than asserting it. Never invent evidence, deadlines, or commitments.
 
 ## Engagement kinds (state.json `kind`) and their prompts

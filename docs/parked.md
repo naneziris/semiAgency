@@ -32,4 +32,4 @@ The interest-profile idea is sound; what it lacked was a cheap link source. If n
 
 ## Git history
 
-`v0.5.0` — all eight candidates, local knowledge base, Agent Builder exporter. `v0.6.0` — M365-side triage/brief, sanitized links only. `v0.7.0` — D2P only, CSV tracker, runbooks. `v0.8.0` — adds `m365/` build sheets.
+`v0.5.0` — all eight candidates, local knowledge base, Agent Builder exporter. `v0.6.0` — M365-side triage/brief, sanitized links only. `v0.7.0` — D2P only, CSV tracker, runbooks. `v0.8.0` — adds `m365/` build sheets. `v0.9.0` — `new_engagement.py` ships and asks its questions, `engagements/CURRENT`, `docs/after-meeting.md`, fewer commands per step.

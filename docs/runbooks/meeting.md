@@ -2,15 +2,15 @@
 
 The everyday write-up: a meeting happened, you want a one-page record and your action points in the tracker. One gate. 5–10 minutes. One engagement per meeting — the folder name is the date and subject, and `notes.md` becomes your searchable record.
 
-`<dir>` = `engagements/<name>`. Prompts run in Copilot Chat, agent mode, `@analyst`.
+Short version: `docs/after-meeting.md`. Prompts run in Copilot Chat, agent mode, `@analyst`. Scripts and prompts default to the engagement you started last (`engagements/CURRENT`); `<dir>` and `engagement=<name>` below are only needed to point at another one.
 
 ## Step 0 — start [1 min]
 
 ```
-python scripts/new_engagement.py --kind meeting --name 2026-09-08-vendor-sync
+python scripts/new_engagement.py
 ```
 
-Drop the transcript (`inputs/transcript.md`), your notes (`inputs/notes.md`) and any attachments into `<dir>/inputs/`.
+Answer 3 (meeting) and the subject; the folder name defaults to `<date>-<subject>`. Drop the transcript (`inputs/transcript.md`), your notes (`inputs/notes.md`) and any attachments into `inputs/`, press Enter, and paste the prompt it prints. Scripted: `python scripts/new_engagement.py --kind meeting --name 2026-09-08-vendor-sync`.
 
 ## Step 1 — write-up + actions → G5 [5 min]
 
@@ -20,18 +20,17 @@ Drop the transcript (`inputs/transcript.md`), your notes (`inputs/notes.md`) and
 - [ ] `tasks.json`: promote from `candidates` if you actually own something; delete what you don't
 
 ```
-python scripts/append_tasks.py <dir>
-python scripts/status.py <dir> --pass G5
+python scripts/append_tasks.py
 ```
 
-Rows land in `tracker/actions.csv` with `source = meeting-notes`; re-running appends nothing twice. Open the CSV in Excel to work the list (status, notes); the script never rewrites existing rows.
+shows the rows, appends them, and asks whether to pass G5. Rows land in `tracker/actions.csv` with `source = meeting-notes`; re-running appends nothing twice. Open the CSV in Excel to work the list (status, notes); the script never rewrites existing rows.
 
 ## Step 2 — follow-up needed? [2 min]
 
 If `notes.md` says `## Follow-up needed: Y`:
 
 ```
-python scripts/followup_agenda.py <dir>
+python scripts/followup_agenda.py
 ```
 
 → `followups/agenda-1.md` and `agenda-1.ics` (double-click → Outlook invite with the agenda in the body). After the follow-up meeting, start a new `meeting` engagement for it, or — if it is part of a proposal — `/merge-followup` in that engagement.

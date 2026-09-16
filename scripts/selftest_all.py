@@ -6,8 +6,8 @@ import subprocess
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-SHIPPED = ["append_tasks"]
-COPILOT_BUILT = ["ooxml", "new_engagement", "ingest", "validate", "status", "followup_agenda",
+SHIPPED = ["append_tasks", "new_engagement"]
+COPILOT_BUILT = ["ooxml", "ingest", "validate", "status", "followup_agenda",
                  "inspect_components", "skeletonize_deck", "build_deck", "storyboard", "lint_deck", "timing"]
 
 failed = 0

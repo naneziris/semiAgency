@@ -11,19 +11,24 @@ meeting    inputs ─▶ notes.md + tasks.json ─▶ tracker
                                   ▲ G5
 ```
 
-## Which runbook?
+## After a meeting
 
-1. Will there be a *choice between solution approaches*? → **`docs/runbooks/proposal.md`**
-2. Is the output a *deck* but the content is already decided (notes, docs, a draft deck)? → **`docs/runbooks/deck.md`**
-3. Is the output *a record and my actions*, no deck? → **`docs/runbooks/meeting.md`**
+```
+python scripts/new_engagement.py      # asks what you need, waits while you fill inputs/, prints the prompt to paste
+<paste that prompt in Copilot Chat>   # /discovery-synthesize, /content or /meeting-notes
+python scripts/status.py              # where you are, the checklist, the next prompt
+python scripts/status.py --pass       # records the gate (asks for the option / storyline when needed)
+```
 
-`python scripts/new_engagement.py` with no `--kind` asks you these three questions. `python scripts/status.py engagements/<name>` prints the current step of the right runbook, so once started you don't need the docs open.
+Repeat the last three until `status.py` says done. That is the whole flow; **`docs/after-meeting.md`** is the one page to read. Scripts and prompts default to the engagement you started last (`engagements/CURRENT`), so you never type its name unless you run two in parallel (`new_engagement.py --use <name>` switches).
+
+Three kinds, chosen in the first question: **proposal** (there will be a choice between solution approaches — `docs/runbooks/proposal.md`), **deck** (content already decided, you need slides — `docs/runbooks/deck.md`), **meeting** (a record and your actions, no deck — `docs/runbooks/meeting.md`). The runbooks are the per-kind detail that `status.py` prints step by step.
 
 ## One-time setup (~2 hours, on the corporate machine)
 
 1. Open this folder in VS Code; `git init`; Python 3 on PATH; prompt and instruction files enabled (default).
 2. `python scripts/append_tasks.py --init` → `tracker/actions.csv`.
-3. **Have Copilot write the scripts.** `scripts/` holds only `append_tasks.py`; the rest are built here because they need your corporate deck. Run the Phase prompts in `docs/bootstrap.md` §3 in order, committing after each, until `python scripts/selftest_all.py` is all OK and the Phase 3 test deck opens in PowerPoint without a repair prompt.
+3. **Have Copilot write the scripts.** `scripts/` ships `new_engagement.py` and `append_tasks.py`; the rest are built here because they need your corporate deck. Run the Phase prompts in `docs/bootstrap.md` §3 in order, committing after each, until `python scripts/selftest_all.py` is all OK and the Phase 3 test deck opens in PowerPoint without a repair prompt.
 4. **Calibrate the corporate look.** `brand/components.pptx`: one clean example of each slide kind you use (8–15 slides) from your own past decks; tag custom text shapes `{{col1_head}}` etc. via the Selection Pane; then `python scripts/inspect_components.py` and check `brand/components.md`. Details: `docs/design.md` §5.1.
 5. `python scripts/skeletonize_deck.py <past-deck.pptx>` on 2–3 decks you were happy with (structure and density, never styling).
 6. Write `brand/voice.md`: your terms, banned words, emphasis glossary, `words_per_minute`.
@@ -41,6 +46,8 @@ meeting    inputs ─▶ notes.md + tasks.json ─▶ tracker
 Everything between gates is regenerable from the file above it. Fix upstream, re-run — never patch downstream by hand.
 
 ## Prompts (Copilot Chat, agent mode)
+
+`engagement=<name>` is optional everywhere: without it a prompt works on `engagements/CURRENT`. `status.py` prints the next prompt with the name filled in; paste that.
 
 | kind | prompt | writes |
 |---|---|---|
@@ -65,7 +72,9 @@ Each prompt checks the engagement `kind` and tells you the right one if you pick
 |---|---|
 | Copilot wants to `pip install` | reject; "stdlib only, see copilot-instructions.md" |
 | `validate.py` fails after a Copilot step | paste the error back: "fix these validation errors" |
-| `status.py` says a gate isn't passed but you did the work | gates are recorded, not inferred: run `--pass` |
+| `status.py` says a gate isn't passed but you did the work | gates are recorded, not inferred: run `python scripts/status.py --pass` |
+| a script or prompt works on the wrong engagement | `engagements/CURRENT` points elsewhere: `python scripts/new_engagement.py --use <name>` |
+| you closed the terminal before adding inputs | `python scripts/new_engagement.py --check` re-runs the inputs check and prints the next prompt |
 | PowerPoint offers to repair `deck.pptx` | `python scripts/build_deck.py --selftest`; if it passes, bisect with `--only-kinds title-slide,bullets` (`docs/bootstrap.md` §5) |
 | text lands in the wrong shape | the tag isn't in `brand/components.md` → shape is grouped or unnamed; fix in `components.pptx`, re-run `inspect_components.py` |
 | synthesis is thin or invents things | transcript too long for one pass; check `normalized/T1.part01.md` exists; G1 exists for exactly this |
