@@ -1,5 +1,8 @@
 ## O1 — <name>
 **Summary**
+**Value**
+New capability: 
+Saved effort: 
 **Fit to needs**
 | need | how addressed | strength |
 |---|---|---|
@@ -15,6 +18,7 @@
 | | O1 | O2 | O3 |
 |---|---|---|---|
 | coverage of H needs | | | |
+| new capability | | | |
 | effort | | | |
 | main risk | | | |
 | time to first value | | | |
