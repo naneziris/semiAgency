@@ -10,6 +10,7 @@ Three cases, entirely inside Microsoft 365, with no premium Power Automate, no C
 | 4 | `04-meeting-summariser-agent.md` | Agent Builder agent over the Meetings library: same-day summary, 1-1 prep, open actions | on demand (one click) | 10 min |
 | 5 | `05-email-drafter-agent.md` | Agent Builder agent with your voice profile + exemplar mails: rough text in, subject + body out | one paste | 20 min + collecting exemplars |
 | 6 | `06-agenda-check-flow.md` | Power Automate: the day before a recurring 1-1, ping you if the invite's agenda is empty | yes | 15 min |
+| 7 | `07-fit-finder-agent.md` | Agent Builder agent **shared with colleagues**: an AI idea someone saw → a brief for their own team (what it is here, new value vs saved effort, build-with inside the tenant, two-day test), ending in a handoff to Discovery2Presentation | on demand, by anyone it's shared with | 20 min + writing the context file |
 
 Build in this order: 1 (validates scheduled prompts in your tenant) → 2 (validates the trigger on your transcript folder) → 3 → 4 → 5 → 6.
 
@@ -20,6 +21,10 @@ Build in this order: 1 (validates scheduled prompts in your tenant) → 2 (valid
 - Power Automate → can you create a cloud flow with the SharePoint, OneDrive, Outlook, OneNote and Teams connectors (all standard)? A DLP policy sometimes blocks OneNote or Teams; you'll see it when adding the action.
 - Create the SharePoint document library **Meetings** (on a site you own, or your OneDrive if you prefer — the flows and the agent point at one place). Inside it, one folder `1-1`.
 - Agent Builder → create a test agent and check the **Knowledge** step offers *SharePoint*. Sheets 4 and 5 point their knowledge at the library.
+
+## Shared agents (sheet 7 onwards)
+
+Sheets 1–6 are your personal setup. From 7 on, agents are built to be **shared**: Agent Builder → the agent → Share → people or the unit's group; they appear under *Agents* in Copilot Chat and Teams. Post the link once in the team channel with the first starter prompt as the example. Instruction changes are live for everyone immediately, so note the date of the last change at the top of the sheet. Entry bar: a shared agent gets a sheet only if someone other than Nikos is expected to use it; if after a month nobody but the author has opened it, move the sheet to `docs/parked.md` with one line on why.
 
 ## What stays manual, and why
 

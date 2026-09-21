@@ -82,6 +82,6 @@ Each prompt checks the engagement `kind` and tells you the right one if you pick
 
 Reference: `docs/design.md` (why it is built this way), `docs/bootstrap.md` (script specs and build prompts).
 
-**Everything that lives in Microsoft 365** — daily brief, meeting filing and prep, email drafts, 1-1 agenda check — is in `m365/` (build sheets: scheduled prompts, Power Automate flows with standard connectors, two Agent Builder agents). It never touches this workspace. `docs/parked.md` records the earlier attempts and why they were dropped.
+**Everything that lives in Microsoft 365** — daily brief, meeting filing and prep, email drafts, 1-1 agenda check — is in `m365/` (build sheets: scheduled prompts, Power Automate flows with standard connectors, Agent Builder agents). It never touches this workspace. `docs/parked.md` records the earlier attempts and why they were dropped.
 
-**Shared agents** — standalone Agent Builder agents built to hand to colleagues (first one: Fit Finder, which turns an AI idea someone saw into a brief for their own team and feeds the good ones into Discovery2Presentation) — are in `agents/`. Entry bar: someone other than Nikos uses it.
+Sheets 7+ in `m365/` are Agent Builder agents built to **share with colleagues** (first one: Fit Finder, which turns an AI idea someone saw into a brief for their own team and feeds the good ones into Discovery2Presentation). Entry bar: someone other than Nikos uses it.

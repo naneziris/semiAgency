@@ -1,4 +1,4 @@
-# 1 · Fit Finder — shared Agent Builder agent
+# 7 · Fit Finder — shared Agent Builder agent
 
 Last changed: 2026-09-16
 
