@@ -1,0 +1,1 @@
+Write the executive summary (max 180 words) for the attached status report `context/status-q3.md`. Audience: our division head, who reads it on a phone between meetings and has not followed the project. Lead with the decision she has to make. Do not use the words "leverage", "synergy" or "robust".

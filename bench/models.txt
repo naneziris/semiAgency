@@ -1,0 +1,4 @@
+# one model id per line; get ids from /model in an interactive copilot session
+claude-sonnet-4.5
+claude-haiku-4.5
+gpt-5.4

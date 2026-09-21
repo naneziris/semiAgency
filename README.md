@@ -66,6 +66,10 @@ Everything between gates is regenerable from the file above it. Fix upstream, re
 
 Each prompt checks the engagement `kind` and tells you the right one if you picked wrong.
 
+## Also in this repo: `bench/` — a personal model benchmark for Copilot users
+
+Independent of D2P. Copy `bench/` into an empty workspace and it walks you through building your own benchmark of the models in the Copilot picker: collect 5–10 tasks where AI recently failed you (`/bench-setup`), run them per model (`/bench-run`, or the Copilot CLI runner), turn your reactions into pass/fail checks (`/bench-feedback`), let one judge model grade everything (`/bench-judge`), open `index.html`. Ten minutes per new model after the first afternoon. Read `bench/README.md`; it is meant to be shared with colleagues as is.
+
 ## When things don't go as planned
 
 | symptom | do |
