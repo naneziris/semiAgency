@@ -1,0 +1,623 @@
+{
+  "title": "SemiAgency City",
+  "tagline": "Every building is one thing the SemiAgency suite does. Walk in, read the sign, copy what you need.",
+  "output": "city.html",
+  "redact": {
+    "Nikos": "the D2P owner",
+    "Europe/Zurich": "<your time zone>",
+    "W. Europe Standard Time": "<your Windows time zone>"
+  },
+  "never_embed": [
+    "engagements/",
+    "brand/",
+    "tracker/",
+    "bench/runs/",
+    "bench/results/",
+    "docs/upgrades/"
+  ],
+  "audiences": {
+    "everyone": "Everyone",
+    "vscode": "VS Code + GitHub Copilot",
+    "m365": "Microsoft 365 Copilot"
+  },
+  "districts": [
+    {
+      "id": "meeting",
+      "name": "Meeting Quarter",
+      "subtitle": "You just came out of a meeting. Discovery2Presentation turns it into a proposal, a deck or a record — with you at every gate.",
+      "audience": "vscode",
+      "color": "#dbe9f6"
+    },
+    {
+      "id": "harbour",
+      "name": "M365 Harbour",
+      "subtitle": "Inside the Microsoft 365 tenant: scheduled prompts, Power Automate flows and Agent Builder agents. No local machine needed.",
+      "audience": "m365",
+      "color": "#dff2e6"
+    },
+    {
+      "id": "lab",
+      "name": "The Lab",
+      "subtitle": "Tools for people who want to know, not guess.",
+      "audience": "vscode",
+      "color": "#f3e8f7"
+    },
+    {
+      "id": "foundations",
+      "name": "Foundations",
+      "subtitle": "What you set up once.",
+      "audience": "vscode",
+      "color": "#f6ecd9"
+    },
+    {
+      "id": "arrivals",
+      "name": "New Arrivals",
+      "subtitle": "Features found in the repo that nobody has placed on the map yet. Add them to city/city.json.",
+      "audience": "everyone",
+      "color": "#eeeeee",
+      "auto": true
+    }
+  ],
+  "buildings": [
+    {
+      "id": "town-hall",
+      "district": "meeting",
+      "name": "Town Hall",
+      "shape": "hall",
+      "pitch": "Start here after any meeting. One command asks what you need and prints the first prompt to paste.",
+      "audience": "vscode",
+      "steps": [
+        {
+          "say": "In the VS Code terminal, inside the semiAgency folder:",
+          "copy": "python scripts/new_engagement.py"
+        },
+        {
+          "say": "Answer the questions (proposal / deck / meeting, subject, name, audience). Drop the transcript, your notes and any documents into the `inputs/` folder it opens, then press Enter. It prints the prompt for the next building."
+        },
+        {
+          "say": "Lost? This tells you where you are and what to paste next:",
+          "copy": "python scripts/status.py"
+        }
+      ],
+      "docs": [
+        {
+          "title": "After a meeting — the one page to follow",
+          "file": "docs/after-meeting.md"
+        }
+      ],
+      "hotspot": "parthenon"
+    },
+    {
+      "id": "archive",
+      "district": "meeting",
+      "name": "The Archive",
+      "shape": "columns",
+      "pitch": "Facts first. Copilot reads the transcript, notes and documents and writes a fact base where every row cites its source. Gate G1: you check it, and you never skip this one.",
+      "audience": "vscode",
+      "steps": [
+        {
+          "say": "Copilot Chat, agent mode. For a proposal:",
+          "copy": "/discovery-synthesize"
+        },
+        {
+          "say": "For a deck from material you already have:",
+          "copy": "/content"
+        },
+        {
+          "say": "Before a discovery meeting, to get a brief and a question guide:",
+          "copy": "/discovery-prep"
+        },
+        {
+          "say": "A follow-up meeting or a new document later on:",
+          "copy": "/merge-followup file=inputs/followup-1.md"
+        },
+        {
+          "say": "Then check the citations (jump to the three items Copilot flagged), move what you cannot cite to Unverified, and pass the gate:",
+          "copy": "python scripts/status.py --pass"
+        }
+      ],
+      "prompts": [
+        "discovery-synthesize",
+        "content",
+        "discovery-prep",
+        "merge-followup"
+      ],
+      "hotspot": "archive-temple"
+    },
+    {
+      "id": "design-studio",
+      "district": "meeting",
+      "name": "Design Studio",
+      "shape": "studio",
+      "pitch": "From facts to a decision. Copilot sketches 2–3 different solution options (you choose one: gate G2), writes the proposal and two ways to tell it (you pick the storyline: gate G3).",
+      "audience": "vscode",
+      "steps": [
+        {
+          "say": "Proposal: sketch the options, then choose one at the gate.",
+          "copy": "/options"
+        },
+        {
+          "say": "Write the proposal and two storylines from the chosen option:",
+          "copy": "/proposal"
+        },
+        {
+          "say": "Deck without a proposal: storylines straight from the content.",
+          "copy": "/storylines"
+        },
+        {
+          "say": "Each gate:",
+          "copy": "python scripts/status.py --pass"
+        }
+      ],
+      "prompts": [
+        "options",
+        "proposal",
+        "storylines"
+      ],
+      "hotspot": "tower-hall"
+    },
+    {
+      "id": "print-house",
+      "district": "meeting",
+      "name": "Print House",
+      "shape": "factory",
+      "pitch": "The real deck, in the corporate template, built from the storyline. Copilot writes the outline using only slide kinds that exist in your template; a script renders the .pptx. Gate G4: you open it before anyone else does.",
+      "audience": "vscode",
+      "steps": [
+        {
+          "say": "Outline and storyboard:",
+          "copy": "/deck-outline"
+        },
+        {
+          "say": "Build the .pptx (lints it afterwards):",
+          "copy": "python scripts/build_deck.py"
+        },
+        {
+          "say": "Open the deck, fix upstream if something is wrong (never patch the .pptx by hand), then:",
+          "copy": "python scripts/status.py --pass"
+        }
+      ],
+      "prompts": [
+        "deck-outline"
+      ],
+      "hotspot": "print-house"
+    },
+    {
+      "id": "theatre",
+      "district": "meeting",
+      "name": "The Theatre",
+      "shape": "dome",
+      "pitch": "Rehearsal. Timed speaker notes per slide, and a hostile critic who lists the unsupported claims and the questions the audience will ask.",
+      "audience": "vscode",
+      "steps": [
+        {
+          "say": "Speaker notes with emphasis markup, timed to your slot:",
+          "copy": "/speech"
+        },
+        {
+          "say": "Embed the notes into the deck (runs the timing check first):",
+          "copy": "python scripts/build_deck.py --notes-only"
+        },
+        {
+          "say": "The critic — run it early, the earlier the cheaper the fix:",
+          "copy": "@critic /critique"
+        },
+        {
+          "say": "The dry run stays yours: out loud, with a timer."
+        }
+      ],
+      "prompts": [
+        "speech",
+        "critique"
+      ],
+      "agents": [
+        "critic"
+      ],
+      "hotspot": "theatre"
+    },
+    {
+      "id": "task-depot",
+      "district": "meeting",
+      "name": "Task Depot",
+      "shape": "warehouse",
+      "pitch": "After the presentation: a one-page brief for your team, and their meeting turned into tasks you review before anything reaches the tracker (gate G5).",
+      "audience": "vscode",
+      "steps": [
+        {
+          "say": "Team brief and timed agenda for the team meeting:",
+          "copy": "/team-brief"
+        },
+        {
+          "say": "Team meeting notes or transcript → tasks for review:",
+          "copy": "/team-tasks file=inputs/team-meeting.md"
+        },
+        {
+          "say": "Reviewed tasks into the tracker (shows the rows, offers to pass G5):",
+          "copy": "python scripts/append_tasks.py"
+        }
+      ],
+      "prompts": [
+        "team-brief",
+        "team-tasks"
+      ],
+      "hotspot": "warehouse"
+    },
+    {
+      "id": "notary",
+      "district": "meeting",
+      "name": "The Notary",
+      "shape": "house",
+      "pitch": "No deck, just the record: a one-page write-up of the meeting and your actions as tasks, cited to the transcript. Gate G5 before they reach the tracker.",
+      "audience": "vscode",
+      "steps": [
+        {
+          "say": "Start a `meeting` kind at the Town Hall, then:",
+          "copy": "/meeting-notes"
+        },
+        {
+          "say": "Review `tasks.json`, then:",
+          "copy": "python scripts/append_tasks.py"
+        }
+      ],
+      "prompts": [
+        "meeting-notes"
+      ],
+      "hotspot": "stone-house"
+    },
+    {
+      "id": "radio-tower",
+      "district": "harbour",
+      "name": "Radio Tower",
+      "shape": "tower",
+      "pitch": "The daily brief: a scheduled prompt in Copilot Chat that reads your calendar, inbox and tasks every weekday morning. Ten minutes to set up, then it just appears.",
+      "audience": "m365",
+      "docs": [
+        {
+          "title": "Build sheet 1 — Daily brief",
+          "file": "m365/01-daily-brief.md",
+          "copy_blocks": true
+        }
+      ],
+      "hotspot": "radio-tower"
+    },
+    {
+      "id": "harbour-office",
+      "district": "harbour",
+      "name": "Harbour Office",
+      "shape": "office",
+      "pitch": "Meeting filing, automatic: when a Teams transcript lands, a Power Automate flow creates the meeting's folder in SharePoint, a OneNote page and pings you in Teams. Standard connectors only.",
+      "audience": "m365",
+      "docs": [
+        {
+          "title": "Build sheet 2 — Meeting filing flow",
+          "file": "m365/02-meeting-filing-flow.md",
+          "copy_blocks": true
+        }
+      ],
+      "hotspot": "harbour-office"
+    },
+    {
+      "id": "lighthouse",
+      "district": "harbour",
+      "name": "Lighthouse",
+      "shape": "lighthouse",
+      "pitch": "Evening prep: at 18:00 a scheduled prompt looks at tomorrow's meetings, summarises the last ones from the library, lists open actions and proposes an agenda.",
+      "audience": "m365",
+      "docs": [
+        {
+          "title": "Build sheet 3 — Evening prep prompt",
+          "file": "m365/03-evening-prep-prompt.md",
+          "copy_blocks": true
+        }
+      ],
+      "hotspot": "lighthouse"
+    },
+    {
+      "id": "library",
+      "district": "harbour",
+      "name": "The Library",
+      "shape": "columns",
+      "pitch": "Meeting Summariser, an Agent Builder agent over the Meetings library: same-day summary, 1-1 prep, what is open from the last two weeks. On demand, one click.",
+      "audience": "m365",
+      "docs": [
+        {
+          "title": "Build sheet 4 — Meeting Summariser agent",
+          "file": "m365/04-meeting-summariser-agent.md",
+          "copy_blocks": true
+        }
+      ],
+      "hotspot": "library-temple"
+    },
+    {
+      "id": "post-office",
+      "district": "harbour",
+      "name": "Post Office",
+      "shape": "house",
+      "pitch": "Email Drafter: rough text and a recipient in, subject line and a ready-to-send body in your own voice out. Learns the voice from rules you write once and 15–20 of your sent mails.",
+      "audience": "m365",
+      "docs": [
+        {
+          "title": "Build sheet 5 — Email Drafter agent",
+          "file": "m365/05-email-drafter-agent.md",
+          "copy_blocks": true
+        }
+      ],
+      "hotspot": "post-office"
+    },
+    {
+      "id": "clock-tower",
+      "district": "harbour",
+      "name": "Clock Tower",
+      "shape": "clock",
+      "pitch": "1-1 agenda check: the day before a recurring 1-1, a flow pings you if the invite has no agenda. It never writes one and never cancels — that is your call.",
+      "audience": "m365",
+      "docs": [
+        {
+          "title": "Build sheet 6 — Agenda check flow",
+          "file": "m365/06-agenda-check-flow.md",
+          "copy_blocks": true
+        }
+      ],
+      "hotspot": "clock-tower"
+    },
+    {
+      "id": "embassy",
+      "district": "harbour",
+      "name": "The Embassy",
+      "shape": "embassy",
+      "pitch": "Fit Finder, an agent shared with colleagues: describe an AI idea you saw and your team, get a one-page brief — what it would be here, the value beyond saved hours, what to build it with in the tenant, a two-day test. Good ones hand over to the Meeting Quarter.",
+      "audience": "everyone",
+      "docs": [
+        {
+          "title": "Build sheet 7 — Fit Finder (shared agent)",
+          "file": "m365/07-fit-finder-agent.md",
+          "copy_blocks": true
+        }
+      ],
+      "hotspot": "embassy-houses"
+    },
+    {
+      "id": "observatory",
+      "district": "lab",
+      "name": "Observatory",
+      "shape": "observatory",
+      "pitch": "bench: your personal benchmark of the models in the Copilot picker. Tasks that failed you, run per model, graded by your own pass/fail checks. Ten minutes per new model after the first afternoon.",
+      "audience": "vscode",
+      "steps": [
+        {
+          "say": "Copy the `bench/` folder into an empty workspace, open it in VS Code, then in Copilot Chat:",
+          "copy": "/bench-setup"
+        },
+        {
+          "say": "Pick a model in the picker and run a case (repeat per model):",
+          "copy": "/bench-run case=<name> model=<id>"
+        },
+        {
+          "say": "Or all cases on all models through the Copilot CLI:",
+          "copy": "python scripts/bench_cli.py --models claude-sonnet-4.5,gpt-5.4 --repeat 3"
+        },
+        {
+          "say": "Turn your reactions into checks, grade with one judge model, look:",
+          "copy": "/bench-feedback case=<name>"
+        },
+        {
+          "say": "",
+          "copy": "/bench-judge judge_model=<id>"
+        },
+        {
+          "say": "",
+          "copy": "python scripts/bench_report.py"
+        }
+      ],
+      "docs": [
+        {
+          "title": "bench/README.md",
+          "file": "bench/README.md"
+        }
+      ],
+      "hotspot": "observatory"
+    },
+    {
+      "id": "workshop",
+      "district": "foundations",
+      "name": "The Workshop",
+      "shape": "workshop",
+      "pitch": "One-time setup of the Meeting Quarter on your machine (~2 hours): Copilot builds the deck scripts against your corporate template, you tag one example of each slide kind, you write your voice file. Nothing leaves the machine.",
+      "audience": "vscode",
+      "steps": [
+        {
+          "say": "Open the semiAgency folder in VS Code, `git init`, Python 3 on PATH. Then:",
+          "copy": "python scripts/append_tasks.py --init"
+        },
+        {
+          "say": "Have Copilot write the scripts: run the Phase prompts of `docs/bootstrap.md` §3 in order, until:",
+          "copy": "python scripts/selftest_all.py"
+        },
+        {
+          "say": "Calibrate the corporate look (`brand/components.pptx`, then):",
+          "copy": "python scripts/inspect_components.py"
+        }
+      ],
+      "docs": [
+        {
+          "title": "README — one-time setup and the five gates",
+          "file": "README.md"
+        },
+        {
+          "title": "Bootstrap kit (what Copilot builds)",
+          "file": "docs/bootstrap.md"
+        }
+      ],
+      "hotspot": "workshop"
+    },
+    {
+      "id": "city-hall-annex",
+      "district": "foundations",
+      "name": "Cartographer",
+      "shape": "small",
+      "pitch": "This map. It is generated from the repo; when a new prompt, agent or build sheet appears, the script places it in New Arrivals until someone gives it a building.",
+      "audience": "vscode",
+      "steps": [
+        {
+          "say": "Rebuild the city after any change:",
+          "copy": "python scripts/build_city.py"
+        },
+        {
+          "say": "Fail if something is unmapped (for a pre-commit check):",
+          "copy": "python scripts/build_city.py --check"
+        }
+      ],
+      "hotspot": "cartographer-house"
+    }
+  ],
+  "lots_per_district": {
+    "meeting": 2,
+    "harbour": 2,
+    "lab": 3,
+    "foundations": 1,
+    "arrivals": 2
+  },
+  "journeys": [
+    {
+      "id": "proposal",
+      "q": "I met stakeholders and must come back with a proposal",
+      "when": "Someone described a problem to you in a meeting and now expects options, a recommendation and a deck they can decide on. Six stops, each ending in a gate where you check and approve. Takes an afternoon the first time.",
+      "stops": [
+        {
+          "building": "town-hall",
+          "say": "Start an engagement of kind 'proposal'. Drop the transcript and your notes in the folder it opens."
+        },
+        {
+          "building": "archive",
+          "say": "Copilot writes the fact base with a citation on every row. You check the three it flags. Gate G1 — never skip it."
+        },
+        {
+          "building": "design-studio",
+          "say": "Two or three solution options; you choose one (G2). Then the proposal with two storylines; you pick how it is told (G3)."
+        },
+        {
+          "building": "print-house",
+          "say": "The deck in the corporate template, built from your storyline. Open it before anyone else (G4)."
+        },
+        {
+          "building": "theatre",
+          "say": "Timed speaker notes, and the critic who lists what will not survive the room. Rehearse out loud."
+        },
+        {
+          "building": "task-depot",
+          "say": "After presenting: brief the team, turn their meeting into tasks, review them, then the tracker (G5)."
+        }
+      ]
+    },
+    {
+      "id": "deck",
+      "q": "I know the content, I need a deck",
+      "when": "No decision to make, no options to compare — the message is clear and you need corporate slides plus something to say. Four stops.",
+      "stops": [
+        {
+          "building": "town-hall",
+          "say": "Start an engagement of kind 'deck'. Put your notes, documents or a draft deck in the folder."
+        },
+        {
+          "building": "archive",
+          "say": "Copilot extracts the key messages and facts (/content), cited. You check them — gate G1."
+        },
+        {
+          "building": "design-studio",
+          "say": "Two storylines from the content (/storylines); you pick one (G3)."
+        },
+        {
+          "building": "print-house",
+          "say": "Outline, then the .pptx. Open it (G4). Speaker notes live next door at the Theatre."
+        }
+      ]
+    },
+    {
+      "id": "meeting",
+      "q": "I just want a record of a meeting and my actions",
+      "when": "A meeting happened, you owe nobody a deck, but you want a clean one-page write-up and your actions captured before you forget. Two stops, ten minutes.",
+      "stops": [
+        {
+          "building": "town-hall",
+          "say": "Start an engagement of kind 'meeting' with the transcript and your notes."
+        },
+        {
+          "building": "notary",
+          "say": "One page of notes cited to the transcript plus your actions as tasks. Review them, then they go to the tracker (G5)."
+        }
+      ]
+    },
+    {
+      "id": "m365",
+      "q": "I live in Outlook and Teams — no VS Code",
+      "when": "You want your mornings, meeting filing and email drafting handled inside Microsoft 365 with no local setup. Build the stops in this order; each one takes 10–45 minutes once, then runs by itself or on one click.",
+      "stops": [
+        {
+          "building": "radio-tower",
+          "say": "A scheduled prompt that writes your morning brief every weekday. Proves scheduled prompts work in your tenant."
+        },
+        {
+          "building": "harbour-office",
+          "say": "A flow that files every meeting transcript into a SharePoint folder and a OneNote page, automatically."
+        },
+        {
+          "building": "lighthouse",
+          "say": "An evening prompt that prepares tomorrow's meetings from what was filed."
+        },
+        {
+          "building": "library",
+          "say": "An agent you ask for a same-day summary, a 1-1 prep, or what is still open."
+        },
+        {
+          "building": "post-office",
+          "say": "An agent that turns rough text into a ready-to-send email in your voice."
+        },
+        {
+          "building": "clock-tower",
+          "say": "A flow that pings you when tomorrow's 1-1 has no agenda."
+        }
+      ]
+    },
+    {
+      "id": "model",
+      "q": "Which Copilot model should I use for my work?",
+      "when": "You wonder whether the expensive model is worth it, or which one is best at your kind of task. One stop; an afternoon once, ten minutes per new model afterwards.",
+      "stops": [
+        {
+          "building": "observatory",
+          "say": "Collect tasks that failed you, run them on each model, grade with your own pass/fail checks, look at the side-by-side."
+        }
+      ]
+    },
+    {
+      "id": "idea",
+      "q": "I saw an AI idea — would it work for us?",
+      "when": "A demo, a newsletter or a vendor pitch made you think 'what would that be for my team?'. One conversation with a shared agent; if the answer is promising, it hands over to the proposal journey.",
+      "stops": [
+        {
+          "building": "embassy",
+          "say": "Describe the idea and your team; get a one-page brief with value, build-with and a two-day test."
+        },
+        {
+          "building": "town-hall",
+          "say": "If the brief says 'continue', the idea enters the Meeting Quarter as a proposal engagement."
+        }
+      ]
+    },
+    {
+      "id": "setup",
+      "q": "I am setting this up on my machine (technical)",
+      "when": "Once, before the Meeting Quarter works on your computer: Copilot builds the deck scripts against your corporate template. About two hours.",
+      "stops": [
+        {
+          "building": "workshop",
+          "say": "Open the folder in VS Code, run the bootstrap prompts, calibrate the corporate look, write your voice file."
+        },
+        {
+          "building": "city-hall-annex",
+          "say": "Rebuild this map whenever a feature is added."
+        }
+      ]
+    }
+  ]
+}

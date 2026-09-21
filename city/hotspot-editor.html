@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><title>Hotspot editor — SemiAgency City</title>
+<style>
+body{margin:0;font:14px/1.4 system-ui,sans-serif;color:#1d2733;background:#f4f6f8;display:grid;grid-template-columns:1fr 320px;height:100vh}
+#stage{position:relative;overflow:auto;background:#dde3ea}
+#stage img{display:block;user-select:none;-webkit-user-drag:none}
+#stage svg{position:absolute;left:0;top:0}
+polygon{fill:rgba(255,180,0,.25);stroke:#ffb400;stroke-width:2;cursor:pointer}
+polygon.sel{fill:rgba(31,111,208,.3);stroke:#1f6fd0}
+polyline{fill:none;stroke:#e0504a;stroke-width:2;stroke-dasharray:6 4}
+circle.pt{fill:#fff;stroke:#e0504a;stroke-width:2}
+text.lbl{font-size:13px;font-weight:600;fill:#1d2733;paint-order:stroke;stroke:#fff;stroke-width:3px;pointer-events:none;text-anchor:middle}
+aside{padding:14px;border-left:1px solid #d6dee6;background:#fff;overflow:auto}
+aside h1{font-size:16px;margin:0 0 8px}
+aside p{margin:6px 0;color:#5b6773}
+button,input[type=file]{font:inherit}button{border:1px solid #d6dee6;background:#fff;border-radius:6px;padding:5px 10px;cursor:pointer;margin:2px 2px 2px 0}
+button.pri{background:#1f6fd0;color:#fff;border-color:#1f6fd0}
+ul{list-style:none;padding:0;margin:8px 0}li{display:flex;align-items:center;gap:6px;padding:3px 4px;border-radius:4px;cursor:pointer}li.sel{background:#e9f1fb}li code{flex:1}li button{padding:1px 6px;font-size:12px}
+kbd{border:1px solid #d6dee6;border-radius:4px;padding:0 5px;font-size:12px;background:#fff}
+#status{font-size:12px;color:#5b6773;margin-top:8px}
+</style></head><body>
+<div id="stage"><img id="img" alt=""><svg id="ov"></svg></div>
+<aside>
+<h1>Hotspot editor</h1>
+<p>1. Open the scene image (the same file you will save as <code>city/scene.png</code> or <code>.jpg</code>).</p>
+<input type="file" id="file" accept="image/*">
+<p>2. Click around a building to trace it (4–8 points are enough). Press <kbd>Enter</kbd> or double-click to close it, then give it an id (e.g. <code>h01</code>, or a name like <code>lighthouse</code>). <kbd>Esc</kbd> cancels the polygon in progress, <kbd>Backspace</kbd> removes the last point.</p>
+<p>3. Trace <b>every</b> building in the picture, including the ones you have no feature for yet — those become free lots. Then export and save the file as <code>city/hotspots.json</code>. In <code>city/city.json</code> give each building a <code>"hotspot": "&lt;id&gt;"</code>.</p>
+<button class="pri" id="export">Export hotspots.json</button>
+<button id="import">Import existing…</button><input type="file" id="importFile" accept=".json" style="display:none">
+<button id="clear">Clear all</button>
+<ul id="list"></ul>
+<div id="status">No image loaded.</div>
+</aside>
+<script>
+const img=document.getElementById('img'), ov=document.getElementById('ov'), list=document.getElementById('list'), status=document.getElementById('status');
+let shapes=[], cur=[], sel=-1, W=0, H=0, imageName='';
+document.getElementById('file').onchange=e=>{const f=e.target.files[0]; if(!f) return; imageName=f.name; const url=URL.createObjectURL(f); img.onload=()=>{W=img.naturalWidth;H=img.naturalHeight; img.width=W; img.height=H; ov.setAttribute('width',W); ov.setAttribute('height',H); ov.setAttribute('viewBox',`0 0 ${W} ${H}`); draw(); status.textContent=`${f.name}: ${W}×${H}px, ${shapes.length} hotspots`;}; img.src=url;};
+function pos(e){const r=ov.getBoundingClientRect(); return [Math.round((e.clientX-r.left)*W/r.width), Math.round((e.clientY-r.top)*H/r.height)];}
+ov.addEventListener('click',e=>{ if(!W) return; if(e.target.tagName==='polygon' && !cur.length){ sel=+e.target.dataset.i; draw(); return;} cur.push(pos(e)); draw(); });
+ov.addEventListener('dblclick',e=>{e.preventDefault(); close();});
+document.addEventListener('keydown',e=>{ if(e.target.tagName==='INPUT') return; if(e.key==='Enter') close(); if(e.key==='Escape'){cur=[];sel=-1;draw();} if(e.key==='Backspace'){ if(cur.length){cur.pop();draw();} else if(sel>=0){ if(confirm('Delete '+shapes[sel].id+'?')){shapes.splice(sel,1);sel=-1;draw();} } } });
+function close(){ if(cur.length<3){ return; } const id=prompt('Hotspot id (letters, digits, hyphens):', 'h'+String(shapes.length+1).padStart(2,'0')); if(!id){cur=[];draw();return;} const clean=id.trim().toLowerCase().replace(/[^a-z0-9-]+/g,'-'); if(shapes.some(s=>s.id===clean)){alert('id already used');return;} shapes.push({id:clean, points:cur.slice()}); cur=[]; sel=shapes.length-1; draw(); }
+function centroid(pts){let x=0,y=0;pts.forEach(p=>{x+=p[0];y+=p[1];});return [x/pts.length,y/pts.length];}
+function draw(){ let s=''; shapes.forEach((sh,i)=>{ const c=centroid(sh.points); s+=`<polygon class="${i===sel?'sel':''}" data-i="${i}" points="${sh.points.map(p=>p.join(',')).join(' ')}"/><text class="lbl" x="${c[0]}" y="${c[1]}">${sh.id}</text>`; });
+  if(cur.length){ s+=`<polyline points="${cur.map(p=>p.join(',')).join(' ')}"/>`+cur.map(p=>`<circle class="pt" cx="${p[0]}" cy="${p[1]}" r="4"/>`).join(''); }
+  ov.innerHTML=s; list.innerHTML=shapes.map((sh,i)=>`<li class="${i===sel?'sel':''}" data-i="${i}"><code>${sh.id}</code><span>${sh.points.length} pts</span><button data-r="${i}" title="rename">✎</button><button data-d="${i}" title="delete">×</button></li>`).join('');
+  list.querySelectorAll('li').forEach(li=>li.onclick=e=>{ const i=+li.dataset.i; if(e.target.dataset.r!==undefined){ const id=prompt('New id:',shapes[i].id); if(id){shapes[i].id=id.trim().toLowerCase().replace(/[^a-z0-9-]+/g,'-');} } else if(e.target.dataset.d!==undefined){ if(confirm('Delete '+shapes[i].id+'?')) shapes.splice(i,1); sel=-1; } else sel=i; draw(); });
+  if(W) status.textContent=`${imageName}: ${W}×${H}px, ${shapes.length} hotspots${cur.length?`, drawing (${cur.length} pts — Enter to close)`:''}`;
+}
+document.getElementById('export').onclick=()=>{ const data={image:imageName,width:W,height:H,hotspots:shapes}; const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'})); a.download='hotspots.json'; a.click(); };
+document.getElementById('import').onclick=()=>document.getElementById('importFile').click();
+document.getElementById('importFile').onchange=e=>{ const f=e.target.files[0]; if(!f) return; f.text().then(t=>{ try{ const d=JSON.parse(t); shapes=d.hotspots||[]; sel=-1; draw(); }catch(err){ alert('not a hotspots.json'); } }); };
+document.getElementById('clear').onclick=()=>{ if(confirm('Remove all hotspots?')){shapes=[];cur=[];sel=-1;draw();} };
+</script></body></html>
