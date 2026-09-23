@@ -2,7 +2,7 @@
   "title": "SemiAgency City",
   "output": "index.html",
   "redact": {
-    "Nikos": "the D2P owner",
+    "Nikos": "the person who runs this toolkit",
     "Europe/Zurich": "<your time zone>",
     "W. Europe Standard Time": "<your Windows time zone>"
   },
@@ -18,13 +18,13 @@
   "audiences": {
     "everyone": "Everyone",
     "vscode": "VS Code + GitHub Copilot",
-    "m365": "Outlook, Teams & Copilot Chat"
+    "m365": "Outlook, Teams & Microsoft 365 Copilot Chat"
   },
   "modes": {
     "auto": "Runs by itself",
-    "click": "One click in Copilot Chat",
+    "click": "One click in Microsoft 365 Copilot Chat",
     "paste": "You type or paste",
-    "prompt": "Paste a command in Copilot Chat",
+    "prompt": "Paste a command in VS Code Copilot Chat (agent mode)",
     "run": "Run in the terminal",
     "setup": "Set up once",
     "read": "Read me"
@@ -75,7 +75,7 @@
     {
       "id": "harbour",
       "name": "M365 Harbour",
-      "subtitle": "Everything inside Outlook, Teams and Copilot Chat — no VS Code. Four piers, one per daily need; the buildings are what you build once.",
+      "subtitle": "Everything inside Outlook, Teams and Microsoft 365 Copilot Chat — no VS Code. Four piers, one per daily need; the buildings are what you build once.",
       "audience": "m365",
       "color": "#3a9a6e"
     },
@@ -150,7 +150,7 @@
       "pitch": "Optional, before you meet the stakeholders: a brief with what you already know, 3–5 hypotheses and a question guide from easy to sensitive.",
       "steps": [
         {
-          "say": "Start a `proposal` engagement at the Town Hall with whatever you have (their email, org chart, old documents), then in Copilot Chat:",
+          "say": "Start a `proposal` engagement at the Town Hall with whatever you have (their email, org chart, old documents), then in VS Code, Copilot Chat (agent mode):",
           "copy": "/discovery-prep"
         },
         {
@@ -173,7 +173,7 @@
       "pitch": "Facts first. Copilot reads the transcript, notes and documents and writes a fact base where every row cites its source. Gate G1: you check it, and you never skip this one.",
       "steps": [
         {
-          "say": "Copilot Chat, agent mode:",
+          "say": "In VS Code, Copilot Chat (agent mode):",
           "copy": "/discovery-synthesize"
         },
         {
@@ -228,7 +228,7 @@
       "pitch": "From facts to a decision. Copilot sketches 2–3 genuinely different solution approaches — one deliberately small — and does not recommend. Gate G2: you choose one.",
       "steps": [
         {
-          "say": "Copilot Chat:",
+          "say": "In VS Code, Copilot Chat (agent mode):",
           "copy": "/options"
         },
         {
@@ -252,7 +252,7 @@
       "pitch": "The proposal itself, written from the option you chose, plus two different ways to tell it to this audience. Gate G3: the text is true, and you pick the storyline.",
       "steps": [
         {
-          "say": "Copilot Chat:",
+          "say": "In VS Code, Copilot Chat (agent mode):",
           "copy": "/proposal"
         },
         {
@@ -328,7 +328,7 @@
       "pitch": "The hardest audience on the hill: a read-only critic that lists unsupported claims, gaps, inflated value claims and the 8–12 questions the room will ask. Best run early — any time after G1 — and at the latest before you present.",
       "steps": [
         {
-          "say": "Copilot Chat:",
+          "say": "In VS Code, Copilot Chat (agent mode):",
           "copy": "@critic /critique"
         },
         {
@@ -383,7 +383,7 @@
       "pitch": "Copilot extracts the key messages and facts from your notes, documents or a draft deck, each cited. A draft .pptx counts: its titles become candidate messages. Gate G1: you check them.",
       "steps": [
         {
-          "say": "Start a `deck` engagement at the Town Hall, then in Copilot Chat:",
+          "say": "Start a `deck` engagement at the Town Hall, then in VS Code, Copilot Chat (agent mode):",
           "copy": "/content"
         },
         {
@@ -412,7 +412,7 @@
       "pitch": "Two different ways to tell your content to this audience. With a draft deck: one that evolves the draft, one that re-sequences it. Gate G3: you pick.",
       "steps": [
         {
-          "say": "Copilot Chat:",
+          "say": "In VS Code, Copilot Chat (agent mode):",
           "copy": "/storylines"
         },
         {
@@ -496,7 +496,7 @@
       "pitch": "No deck, just the record: a one-page write-up of the meeting cited to the transcript, and your actions as tasks. Nothing reaches the tracker before you review it (gate G5). Prefer Teams and SharePoint? The Library in the harbour does the same without VS Code.",
       "steps": [
         {
-          "say": "Start a `meeting` engagement at the Town Hall, then in Copilot Chat:",
+          "say": "Start a `meeting` engagement at the Town Hall, then in VS Code, Copilot Chat (agent mode):",
           "copy": "/meeting-notes"
         },
         {
@@ -522,13 +522,20 @@
       "hotspot": "embassy",
       "mode": "click",
       "audience": "everyone",
-      "pitch": "Fit Finder, a shared agent in Copilot Chat: describe an AI idea you saw and your team; it asks for what is missing and writes a one-page brief — what it would be here, the value beyond saved hours, what to build it with inside the tenant, a two-day test.",
+      "pitch": "Fit Finder turns an AI idea someone saw into a one-page brief for their team: what it would be here, the value beyond saved hours, what to build it with inside the tenant, and a two-day test. It's an M365 Agent Builder agent that you build once from sheet 7 and share with colleagues. You can also run it in VS Code as /fit-finder.",
       "steps": [
         {
-          "say": "Copilot Chat or Teams → Agents → **Fit Finder**. Pick a starter below or type freely."
+          "say": "**Build it once (whoever runs this toolkit for your team, ~20 minutes + the context file):** follow build sheet 7 below. First write the context file, `fit-finder-context`: the tools it may recommend, your data rules and past ideas. The agent does not create it, and without it the briefs are generic. Then create the agent in Agent Builder and share it with your colleagues."
         },
         {
-          "say": "If the brief ends in *continue*: send it to the D2P owner. It enters the Acropolis as a proposal engagement, with the brief as an input."
+          "say": "**Use it (colleagues):** Microsoft 365 Copilot Chat or Teams → Agents → **Fit Finder**, then a starter below."
+        },
+        {
+          "say": "**Or in VS Code** (reads `brand/fit-finder-context.md`, same instructions):",
+          "copy": "/fit-finder"
+        },
+        {
+          "say": "**If the brief says the idea is worth pursuing,** it tells you who to send it to. That person books about an hour with you and one or two colleagues who do the work today, to understand how it works now. No slides; bring one real example. They come back with a short written proposal (two or three ways to do it, plus a recommendation) for you or your manager to decide on. On their side, the proposal is made at the Town Hall and the Proposal Acropolis."
         }
       ],
       "asks": [
@@ -558,6 +565,9 @@
           "title": "Build sheet 7 — Fit Finder (shared agent)",
           "file": "m365/07-fit-finder-agent.md"
         }
+      ],
+      "prompts": [
+        "fit-finder"
       ]
     },
     {
@@ -571,7 +581,7 @@
       "pitch": "bench: your personal benchmark of the models in the Copilot picker. Tasks that failed you, run per model, graded by your own pass/fail checks. Ten minutes per new model after the first afternoon.",
       "steps": [
         {
-          "say": "Copy the `bench/` folder into an empty workspace, open it in VS Code, then in Copilot Chat:",
+          "say": "Copy the `bench/` folder into an empty workspace, open it in VS Code, then in Copilot Chat (agent mode):",
           "copy": "/bench-setup"
         },
         {
@@ -612,7 +622,7 @@
       "hotspot": "radio-tower",
       "mode": "auto",
       "audience": "m365",
-      "pitch": "The morning brief: a scheduled prompt that reads your calendar, inbox and To Do every weekday at 07:00 and answers in Copilot Chat → Chats. Top 3, today's timeline with clashes and focus slots, what waits on you, what you wait for.",
+      "pitch": "The morning brief: a scheduled prompt that reads your calendar, inbox and To Do every weekday at 07:00 and answers in Microsoft 365 Copilot Chat → Chats. Top 3, today's timeline with clashes and focus slots, what waits on you, what you wait for.",
       "asks": [
         {
           "say": "(nothing — it arrives by itself every weekday at 07:00)",
@@ -1058,7 +1068,7 @@
       "q": "Start my day knowing what matters",
       "when": "You want what's on, what clashes and what waits on you — before opening five apps.",
       "bring": "nothing — it reads your calendar, inbox and To Do",
-      "get": "a one-page brief in Copilot Chat every weekday at 07:00",
+      "get": "a one-page brief in Microsoft 365 Copilot Chat every weekday at 07:00",
       "time": "10 minutes once",
       "stops": [
         {
@@ -1133,17 +1143,17 @@
       "audience": "everyone",
       "q": "Check whether an AI idea would work for us",
       "when": "A demo, a newsletter or a vendor pitch made you think 'what would that be for my team?'.",
-      "bring": "the idea, what your team does, what it can build, known limits",
-      "get": "a one-page brief with a two-day test",
+      "bring": "the idea, what your team does, what it can build, known limits (and, once, the context file for the agent)",
+      "get": "a one-page brief with a two-day test; for good ideas, who to send it to for a proposal",
       "time": "one conversation",
       "stops": [
         {
           "building": "embassy",
-          "say": "Describe the idea and your team; get the brief."
+          "say": "Ask Fit Finder (shared M365 agent, or /fit-finder in VS Code) with the idea and your team; get the brief."
         },
         {
           "building": "town-hall",
-          "say": "If the brief says 'continue', the D2P owner starts a proposal engagement with it."
+          "say": "Worth pursuing? Send the brief to the person it names. They talk to you for about an hour, then come back with a short proposal (options and a recommendation). Their side of the work starts here, as a proposal."
         }
       ]
     },
@@ -1169,7 +1179,7 @@
       "audience": "everyone",
       "q": "Set this up (technical)",
       "when": "Once, before the local flows or the harbour work for you. Also where the map is rebuilt.",
-      "bring": "VS Code + Python 3 and your corporate template, or an M365 tenant with Copilot Chat",
+      "bring": "VS Code + Python 3 and your corporate template, or an M365 tenant with Microsoft 365 Copilot Chat",
       "get": "working local scripts, built M365 pieces, an up-to-date map",
       "time": "~2 hours local, ~2 hours M365",
       "stops": [

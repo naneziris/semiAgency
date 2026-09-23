@@ -311,7 +311,7 @@ def next_step(root, d):
     say()
     if kind in ("proposal", "deck"):
         say("Optional but worth 10 minutes: fill inputs/audience.md (who is in the room, what they decide, what they push back on).")
-    say("Next, in Copilot Chat (agent mode), paste:")
+    say("Next, in VS Code, Copilot Chat (agent mode), paste:")
     say("    %s engagement=%s" % (KINDS[kind]["first_prompt"], name))
     say("When it stops, in the terminal:")
     say("    python scripts/status.py")

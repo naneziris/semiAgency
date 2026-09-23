@@ -166,11 +166,13 @@ F1–F3 are one engine (Discovery2Presentation, "D2P") with three `kind`s. F4–
 
 **Input** — the idea, what the team does and for whom, what the team can build, known hard limits (the agent asks for what's missing).
 
-**Steps** — Fit Finder conversation (Embassy) → brief → if "continue": you start an F1 engagement (Town Hall) with the brief as an input.
+**Setup (once, by whoever runs SemiAgency for the team)** — write the context file (`brand/fit-finder-context.md`, and the same text as `fit-finder-context.docx` on SharePoint): the tools it may recommend, data rules, past ideas. The agent does not create it. Then build the agent from `m365/07-fit-finder-agent.md` and share it.
+
+**Steps** — Fit Finder conversation (Embassy): the shared M365 agent, or `/fit-finder` in VS Code with the same instructions → brief → if "continue": you start an F1 engagement (Town Hall) with the brief as an input.
 
 **Output** — a ≤ 450-word brief: what it is here, new value vs saved effort (blunt if efficiency-only), build-with inside the tenant, a two-day test with stop/continue criteria, next step.
 
-> ⚠ The handoff crosses environments: the colleague has M365; F1 needs *your* VS Code. The map should say the handoff goes to the D2P owner, not to the colleague.
+> The handoff crosses environments: the colleague has M365, and F1 runs in *your* VS Code. So the brief's **Next step** names a real person and says in plain words what happens next: an hour's conversation, then a short proposal with options and a recommendation. It never says "discovery session" or "engagement". The name and timing come from the context file.
 
 ---
 
@@ -258,6 +260,7 @@ Scripts you touch directly (the terminal half):
 | → *Shorter* / *Softer / firmer* | | Adjust the last draft | — | revised draft |
 | 1-1 agenda check (Clock Tower) | Power Automate, 16:00 | Catch unprepared 1-1s | tomorrow's `1-1 …` invites | Teams ping if agenda empty |
 | Fit Finder (Embassy) → *I saw this* | shared Agent Builder | Translate an idea to my team | idea + team + skills + limits | one-page brief |
+| `/fit-finder` (Embassy, VS Code) | prompt, runs the same instructions locally | Same as the shared agent, without building it | idea + team (+ `brand/fit-finder-context.md`) | one-page brief in chat |
 | → *Is it worth it?* | | Blunt value judgement | idea | new value vs efficiency verdict |
 | → *Just the test* | | Smallest experiment | idea + team | two-day test, stop/continue criteria |
 | → *Compare two* | | Pick between ideas | idea A, idea B, team | which fits better and why |

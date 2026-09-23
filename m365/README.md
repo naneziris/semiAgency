@@ -24,7 +24,11 @@ Build in this order: 1 (validates scheduled prompts in your tenant) → 2 (valid
 
 ## Shared agents (sheet 7 onwards)
 
-Sheets 1–6 are your personal setup. From 7 on, agents are built to be **shared**: Agent Builder → the agent → Share → people or the unit's group; they appear under *Agents* in Copilot Chat and Teams. Post the link once in the team channel with the first starter prompt as the example. Instruction changes are live for everyone immediately, so note the date of the last change at the top of the sheet. Entry bar: a shared agent gets a sheet only if someone other than Nikos is expected to use it; if after a month nobody but the author has opened it, move the sheet to `docs/parked.md` with one line on why.
+Sheets 1–6 are your personal setup. From 7 on, agents are built to be **shared**: Agent Builder → the agent → Share → people or the unit's group; they appear under *Agents* in Copilot Chat and Teams. Post the link once in the team channel with the first starter prompt as the example. Instruction changes are live for everyone immediately, so note the date of the last change at the top of the sheet. Entry bar: a shared agent gets a sheet only if someone other than its author is expected to use it; if after a month nobody but the author has opened it, move the sheet to `docs/parked.md` with one line on why.
+
+## Handoffs between sheets
+
+When one piece sends you to another, it names it the way you see it and says where: a Teams ping from flow 2 or 6 names the agent and the exact sentence to send it. Fit Finder names a person and says what happens next. Keep that rule when you add a sheet: no sheet numbers, internal terms or roles in anything a user reads.
 
 ## What stays manual, and why
 

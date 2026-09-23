@@ -1,4 +1,4 @@
-# 1 · Daily brief — scheduled prompt
+# 1 · Daily brief — scheduled prompt (on the map: Radio Tower)
 
 Where: Microsoft 365 Copilot Chat (app, web, Teams or Outlook) → type the prompt below → in the prompt box, choose **Schedule** (clock icon) → weekdays, 07:00, Europe/Zurich. The answer appears each morning in the **Chats** list, marked as scheduled. Up to 10 scheduled prompts per user; this is your first.
 

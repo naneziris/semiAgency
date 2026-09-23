@@ -1,8 +1,8 @@
-# 6 · 1-1 agenda check — Power Automate flow (standard connectors only)
+# 6 · 1-1 agenda check — Power Automate flow (standard connectors only) (on the map: Clock Tower)
 
-Every working day at 16:00: for each recurring 1-1 tomorrow, read the invite body; if there is no `Agenda` section with content, post you a Teams message "Agenda for tomorrow's 1-1 with <name> is empty — run Meeting Summariser → Prep 1-1 and paste an agenda, or cancel." Nothing else. It doesn't write the agenda (no model step without premium) and it doesn't cancel anything (that's your call for a wellbeing-adjacent meeting).
+Every working day at 16:00: for each recurring 1-1 tomorrow, read the invite body; if there is no `Agenda` section with content, post you a Teams message "Agenda for tomorrow's 1-1 with <name> is empty — in Microsoft 365 Copilot Chat → Agents → Meeting Summariser, send “Prepare my next 1-1 with <name>”, then paste the agenda into the invite, or cancel." Nothing else. It doesn't write the agenda (no model step without premium) and it doesn't cancel anything (that's your call for a wellbeing-adjacent meeting).
 
-Prerequisite that makes this trivial: name every recurring 1-1 **"1-1 <name>"**. The attendee-count alternative is the fragile part; avoid it.
+Prerequisites: sheet 4 (Meeting Summariser) is built, because the ping sends you there; and sheet 2 has been filing your 1-1s for a few weeks, otherwise Prep 1-1 has no history to work from. The one that makes this flow trivial: name every recurring 1-1 **"1-1 <name>"**. The attendee-count alternative is the fragile part; avoid it.
 
 ## Build (Scheduled cloud flow, ~15 minutes)
 
@@ -13,7 +13,7 @@ Prerequisite that makes this trivial: name every recurring 1-1 **"1-1 <name>"**.
    - **Compose — bodyText**: strip tags well enough to test for emptiness: `replace(replace(replace(replace(item()?['body'], '<br>', ' '), '&nbsp;', ' '), '<p>', ' '), '</p>', ' ')`.
    - **Compose — agenda**: `if(contains(outputs('bodyText'), 'Agenda'), trim(last(split(outputs('bodyText'), 'Agenda'))), '')`.
    - **Condition**: `length(outputs('agenda'))` is less than 15 (the HTML wrapper after "Agenda" is a few characters; 15 means "nothing typed").
-     - Yes → **Teams: Post message in a chat or channel**, Flow bot, chat with you: `Agenda for tomorrow's "@{item()?['subject']}" at @{formatDateTime(item()?['start'], 'HH:mm')} is empty. Prep it (Meeting Summariser → Prep 1-1) and paste an agenda into the invite, or cancel. @{item()?['webLink']}`
+     - Yes → **Teams: Post message in a chat or channel**, Flow bot, chat with you: `Agenda for tomorrow's "@{item()?['subject']}" at @{formatDateTime(item()?['start'], 'HH:mm')} is empty. Prep it in Microsoft 365 Copilot Chat → Agents → Meeting Summariser (starter: Prep 1-1), then paste the agenda into the invite, or cancel. @{item()?['webLink']}`
      - No → nothing.
 5. Save. Test with a real empty-agenda 1-1 tomorrow.
 

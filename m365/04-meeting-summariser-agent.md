@@ -1,4 +1,4 @@
-# 4 · Meeting Summariser — Agent Builder agent
+# 4 · Meeting Summariser — Agent Builder agent (on the map: The Library)
 
 On-demand counterpart of the evening prompt: a same-day summary right after a meeting, a 1-1 prep whenever you want it, "what's open from the last two weeks". Reads the Meetings library that flow 2 fills. Because the material is in SharePoint, this works — Agent Builder can't read OneNote, but it reads a document library fine.
 
@@ -36,7 +36,7 @@ Do not summarise anything outside the requested folder(s). Do not rate the meeti
 
 After a meeting: drop notes/attachments into the folder flow 2 created → **Summarise** with the folder name from the Teams ping. Read; add your actions to To Do; optionally paste the summary into the OneNote page.
 
-Before a 1-1: **Prep 1-1** → read → paste the agenda into the invite (sheet 6 pings you if you forget).
+Before a 1-1: **Prep 1-1** → read → paste the agenda into the invite (the 1-1 agenda check, sheet 6, pings you in Teams at 16:00 the day before if the agenda is still empty).
 
 ## Also check once
 

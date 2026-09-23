@@ -20,7 +20,14 @@ This repo turns stakeholder discovery into a proposal, a corporate-styled .pptx,
 - `deck` — `/content` → G1 → `/storylines` → G3 → `/deck-outline` → G4 → `/speech`.
 - `meeting` — `/meeting-notes` → G5.
 - `@critic /critique` works for proposal and deck at any point after G1.
-Every prompt checks `kind` first and, on a mismatch, names the right prompt instead of running.
+- `/fit-finder` needs no engagement and writes no files: it is a conversation that ends in a brief, using the instructions in `m365/07-fit-finder-agent.md` and the context in `brand/fit-finder-context.md`.
+Every prompt checks `kind` first. On a mismatch, don't just name another prompt. Say: "This engagement was started as a <kind>, so its step here is `<prompt>`. If you meant a <kind this prompt is for>, start a new engagement in the terminal: `python scripts/new_engagement.py`."
+
+## Handoffs (whenever you send the user to another step, prompt, script or tool)
+- Say **where** it runs, every time: "in the terminal: `python scripts/…`" or "in Copilot Chat (agent mode): `/…`". Never just "run X" or "use X".
+- When a step is blocked by a gate, give the command that gets past it, not only the gate name: "Gate G2 isn't passed yet. In the terminal: `python scripts/status.py` shows the checklist and the command that passes it."
+- End every stage with the exact next step. If nothing follows inside this tool, say what happens outside it (e.g. "hold the team meeting, then …").
+- Name other tools the way the user sees them: an M365 agent by its name and where to find it ("Microsoft 365 Copilot Chat → Agents → Meeting Summariser"), a person by name (never a role or an internal term).
 
 ## ID scheme (used everywhere; scripts check for orphans)
 - Needs/pains/constraints in discovery.md: `N1`, `N2`, … (never renumber; mark superseded ones `~~N4~~`)

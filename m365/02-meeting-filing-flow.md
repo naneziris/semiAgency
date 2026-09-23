@@ -1,4 +1,4 @@
-# 2 · Meeting filing — Power Automate flow (standard connectors only)
+# 2 · Meeting filing — Power Automate flow (standard connectors only) (on the map: Harbour Office)
 
 What it does, by itself, every time a transcript lands: finds the meeting in your calendar, creates a folder `Meetings/<yyyy-MM-dd> <subject>/` (or `Meetings/1-1/<person>/<yyyy-MM-dd>/` for a recurring meeting with one other attendee), copies the transcript in, creates a OneNote page with the meeting facts and a link to the folder, and posts you a Teams message with the link. That folder is where you then drop your manual notes and attachments — no naming, the flow named it. The summary is generated later by the evening prompt (sheet 3) or on demand by the agent (sheet 4).
 
@@ -56,7 +56,7 @@ Notebook: yours. Section: `if(outputs('isOneOnOne'), '1-1', 'Meetings')` — the
 </body></html>
 ```
 
-**11. Microsoft Teams: Post message in a chat or channel** — Post as: Flow bot. Post in: Chat with Flow bot. Recipient: you. Message: `Filed: @{outputs('folderPath')} — @{outputs('folderUrl')} . Drop your notes and attachments there. OneNote page created in @{if(outputs('isOneOnOne'),'1-1','Meetings')}.`
+**11. Microsoft Teams: Post message in a chat or channel** — Post as: Flow bot. Post in: Chat with Flow bot. Recipient: you. Message: `Filed: @{outputs('folderPath')} — @{outputs('folderUrl')} . Drop your notes and attachments there, then in Microsoft 365 Copilot Chat → Agents → Meeting Summariser, send: Summarise the meeting “@{outputs('folderPath')}”. OneNote page created in @{if(outputs('isOneOnOne'),'1-1','Meetings')}.`
 
 Save. **Test** by uploading a copy of an old transcript into the trigger folder while a matching past meeting exists in the -4h window (move a calendar copy if needed).
 

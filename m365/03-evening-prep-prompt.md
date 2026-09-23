@@ -1,4 +1,4 @@
-# 3 · Evening prep — scheduled prompt
+# 3 · Evening prep — scheduled prompt (on the map: Lighthouse)
 
 Where: Copilot Chat → schedule weekdays at 18:00. This is the "check this before my next meeting" step, done for you: for each meeting tomorrow it reads the Meetings library (filled by flow 2 plus your dropped notes), summarises the last occurrences, lists open actions and proposes an agenda. Output in the Chats list; read it at 18:05 or with the morning brief.
 

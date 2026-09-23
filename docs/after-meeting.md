@@ -14,7 +14,7 @@ Put in `inputs/`:
 
 | file | what |
 |---|---|
-| `transcript.md` | the Teams transcript. None arrived? In M365 Copilot Chat (Work): *"Reproduce the transcript of my meeting '<title>' on <date> as `[hh:mm:ss] Speaker: text` lines, in order, without summarising."* Save the answer as `inputs/transcript.md`. |
+| `transcript.md` | the Teams transcript. If you built the Harbour Office flow (`m365/02`), it's already filed in the meeting's folder in the SharePoint *Meetings* library; download it from there. None arrived? In M365 Copilot Chat (Work): *"Reproduce the transcript of my meeting '<title>' on <date> as `[hh:mm:ss] Speaker: text` lines, in order, without summarising."* Save the answer as `inputs/transcript.md`. |
 | `notes.md` | your own notes, as they are |
 | documents | anything the stakeholders gave you: `.docx`, `.pptx`, `.md`. A PDF: open it in Word, save as `.docx` (the built-in PDF reader is best-effort). |
 

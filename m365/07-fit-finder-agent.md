@@ -1,4 +1,4 @@
-# 7 · Fit Finder — shared Agent Builder agent
+# 7 · Fit Finder — shared Agent Builder agent (on the map: The Embassy)
 
 Last changed: 2026-09-16
 
@@ -38,12 +38,16 @@ Two or three tools from the context file, and what each does in this solution. I
 Numbered steps, at most six, that one person can do in two working days with the tools above, ending in a real person using it once and saying whether they would use it again. State what result would mean "stop" and what would mean "continue". If the test honestly needs an engineer, say so and say for which step — do not pretend a low-code version exists when it doesn't.
 
 **Next step**
-If value in section 2 is real and the test result is "continue": "Send this brief to Nikos for a discovery session; it becomes the input of a proposal." Otherwise: "Run the test first, or park it."
+If the value in section 2 is real and the test says "continue", write the handoff in plain words, taking the person, the channel and the timing from "How to take an idea further" in the context file, in this shape: "Send this brief to <person> (<Teams / email>). They will book about an hour with you and one or two colleagues who do this work today, to understand how it works now and what better would look like. No slides needed; bring one real example. Within <n> weeks they come back with a short written proposal: two or three ways to do it and a recommendation, for you or your manager to decide on." Never use the words "discovery session", "engagement", "D2P" or "proposal flow" with the colleague. Otherwise: "Run the two-day test first, or park the idea."
 
 RULES. Be direct and specific to this team; generic advice that would fit any company is a failure. Prefer the colleague's own words for their products and processes. Use the past ideas in the context file: if this idea resembles one that was tried, say so and what happened. Never invent figures, customer names or results. If the colleague argues with your judgement, revise only what they gave new facts for. Do not write code. Do not ask for or discuss confidential customer data; if they paste it, tell them to remove it and continue with a description.
 === END ===
 
 ## Context file — template for `fit-finder-context.docx` (write it once, ~45 minutes; this is what makes the output specific to us)
+
+**Required, and you write it. The agent does not produce it.** The conversation gives the agent the colleague's side (the idea, their team, what they can build, their limits). This file gives it yours: the only tools it may recommend in section 3, your data rules, and past ideas it compares against. Without it, section 3 has nothing it may name and the brief turns generic.
+
+Write it once as `brand/fit-finder-context.md` on your machine. The local `/fit-finder` prompt reads that file, and `brand/` never leaves the machine. Then paste the same text into a Word document saved as `fit-finder-context.docx` in the SharePoint folder above. Update both when a past idea gets a result.
 
 ```
 # Fit Finder — context (last updated <date>)
@@ -70,19 +74,23 @@ Two or three sentences: the unit, what it produces, for whom, in what industry. 
 - Prototypes use fake or anonymised data unless the owner of the data agrees.
 
 ## What "engineers available" means here
-- Who can be asked for a two-day prototype, and how (e.g. "post in <channel>; Nikos triages").
+- Who can be asked for a two-day prototype, and how (e.g. "post in <channel>; <name> triages").
 
 ## Past ideas and what happened (3–6, one paragraph each)
 - <Idea> — <team> — <year>. Tried as <what>. Result: <kept / dropped>, because <one reason>. Lesson: <one line>.
 - …
 
 ## How to take an idea further
-- Send the brief to Nikos → discovery session (about an hour) → proposal → decision. Typical elapsed time: <n> weeks.
+- Send the brief to: <name>, <Teams chat or email address>.
+- What happens then: <name> books about an hour with the colleague and one or two people who do the work today. No slides; they bring one real example.
+- What comes back: a short written proposal with two or three options and a recommendation, within <n> weeks, for the colleague or their manager to decide on.
 ```
 
 ## Use
 
-Copilot Chat → Agents → Fit Finder → **I saw this**, describe the idea and the team → answer up to three questions → read the brief → if "Next step" points to a discovery session, forward the brief; it becomes the first file in that engagement's `inputs/`.
+**In VS Code (no Agent Builder needed):** Copilot Chat, agent mode → `/fit-finder`. It follows the INSTRUCTIONS block above word for word and reads `brand/fit-finder-context.md`. It's handy for trying the instructions before you share the agent, and for your own ideas. Colleagues without VS Code use the shared agent.
+
+**In Microsoft 365:** Copilot Chat → Agents → Fit Finder → **I saw this**, describe the idea and the team → answer up to three questions → read the brief → if "Next step" says to send it on, the colleague sends it to you. For you, it becomes the first file in a new proposal engagement's `inputs/`.
 
 ## Check the first five briefs
 

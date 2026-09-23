@@ -1,8 +1,161 @@
+diff --git a/.github/agents/critic.agent.md b/.github/agents/critic.agent.md
+index 27475a0..581234d 100644
+--- a/.github/agents/critic.agent.md
++++ b/.github/agents/critic.agent.md
+@@ -3,5 +3,5 @@ description: Read-only reviewer. Finds unsupported claims, gaps against discover
+ tools: ['codebase', 'search']
+ ---
+ You are a hostile but fair reviewer. You may read anything in the repo; you cannot edit.
+-Output a markdown report with three sections: `## Unsupported claims` (each with the sentence and which N id it would need), `## Gaps` (H-priority needs not addressed), `## Weakest points` (max 5, each with a concrete fix suggestion), `## Value claims` (every sentence in options.md / proposal.md / deck / speech that presents saved effort as a new capability, or a new capability with no N id behind it; quote it and say which it is).
++Output a markdown report with four sections: `## Unsupported claims` (each with the sentence and which N id it would need), `## Gaps` (H-priority needs not addressed), `## Weakest points` (max 5, each with a concrete fix suggestion), `## Value claims` (every sentence in options.md / proposal.md / deck / speech that presents saved effort as a new capability, or a new capability with no N id behind it; quote it and say which it is).
+ Be specific: quote the text you object to. Do not praise.
+diff --git a/.github/copilot-instructions.md b/.github/copilot-instructions.md
+index 04e7b6d..8915bbb 100644
+--- a/.github/copilot-instructions.md
++++ b/.github/copilot-instructions.md
+@@ -20,7 +20,14 @@ This repo turns stakeholder discovery into a proposal, a corporate-styled .pptx,
+ - `deck` — `/content` → G1 → `/storylines` → G3 → `/deck-outline` → G4 → `/speech`.
+ - `meeting` — `/meeting-notes` → G5.
+ - `@critic /critique` works for proposal and deck at any point after G1.
+-Every prompt checks `kind` first and, on a mismatch, names the right prompt instead of running.
++- `/fit-finder` needs no engagement and writes no files: it is a conversation that ends in a brief, using the instructions in `m365/07-fit-finder-agent.md` and the context in `brand/fit-finder-context.md`.
++Every prompt checks `kind` first. On a mismatch, don't just name another prompt. Say: "This engagement was started as a <kind>, so its step here is `<prompt>`. If you meant a <kind this prompt is for>, start a new engagement in the terminal: `python scripts/new_engagement.py`."
++
++## Handoffs (whenever you send the user to another step, prompt, script or tool)
++- Say **where** it runs, every time: "in the terminal: `python scripts/…`" or "in Copilot Chat (agent mode): `/…`". Never just "run X" or "use X".
++- When a step is blocked by a gate, give the command that gets past it, not only the gate name: "Gate G2 isn't passed yet. In the terminal: `python scripts/status.py` shows the checklist and the command that passes it."
++- End every stage with the exact next step. If nothing follows inside this tool, say what happens outside it (e.g. "hold the team meeting, then …").
++- Name other tools the way the user sees them: an M365 agent by its name and where to find it ("Microsoft 365 Copilot Chat → Agents → Meeting Summariser"), a person by name (never a role or an internal term).
+ 
+ ## ID scheme (used everywhere; scripts check for orphans)
+ - Needs/pains/constraints in discovery.md: `N1`, `N2`, … (never renumber; mark superseded ones `~~N4~~`)
+diff --git a/.github/prompts/critique.prompt.md b/.github/prompts/critique.prompt.md
+index 7cab6db..a565dbd 100644
+--- a/.github/prompts/critique.prompt.md
++++ b/.github/prompts/critique.prompt.md
+@@ -3,4 +3,4 @@ mode: agent
+ description: "[proposal, deck] Hostile review of proposal/deck/speech against the fact base, plus the questions you will get"
+ ---
+ Engagement: `${input:engagement}`; if that is empty, use the one line in `engagements/CURRENT`. `<dir>` = `engagements/<that name>`. Agent: `@critic` (read-only).
+-Read the fact base (`discovery.md` or `content.md`) and whatever exists of `proposal.md`, `deck.json`, `speech.md`. Produce the critic report, then add `## Questions the audience will ask` — 8–12 pointed questions with a one-line suggested answer each, marking the 3 most dangerous. Write the report to `critique.md`. Works at any stage after G1; the earlier you run it, the cheaper the fix.
++Read the fact base (`discovery.md` or `content.md`) and whatever exists of `proposal.md`, `deck.json`, `speech.md`. Produce the critic report, then add `## Questions the audience will ask` — 8–12 pointed questions with a one-line suggested answer each, marking the 3 most dangerous. Write the report to `critique.md`. Works at any stage after G1; the earlier you run it, the cheaper the fix. End by telling the user where each kind of finding is fixed, upstream and never in the .pptx: a missing or wrong fact goes in the fact base (edit it, then `python scripts/validate.py` in the terminal; new material via `/merge-followup`); proposal text is fixed by re-running `/proposal`; slides by `/deck-outline` then `python scripts/build_deck.py` in the terminal; notes by `/speech`.
+diff --git a/.github/prompts/deck-outline.prompt.md b/.github/prompts/deck-outline.prompt.md
+index 6a377e2..d74fc17 100644
+--- a/.github/prompts/deck-outline.prompt.md
++++ b/.github/prompts/deck-outline.prompt.md
+@@ -3,7 +3,7 @@ mode: agent
+ description: "[proposal, deck] Chosen storyline → deck.json using only corporate components, then storyboard (gate G4 follows)"
+ ---
+ Engagement: `${input:engagement}`; if that is empty, use the one line in `engagements/CURRENT`. `<dir>` = `engagements/<that name>`. Agent: `@analyst`.
+-1. Read `state.json`. If `gates.G3.passed` is false or `chosen_storyline` is null, stop and tell the user to pass G3 first.
++1. Read `state.json`. If `gates.G3.passed` is false or `chosen_storyline` is null, stop: a storyline must be chosen first (gate G3). In the terminal: `python scripts/status.py --pass`, which asks S1 or S2.
+ 2. Read `brand/components.md` (allowed kinds, tags, capacities), the chosen storyline's section in `storylines.md`, and the content source: `proposal.md` when `kind` is `proposal`, `content.md` when `kind` is `deck`.
+ 3. Write `deck.json` per `.github/instructions/deck.instructions.md`, following the chosen storyline's slide outline exactly (order and kinds); fill fields from the content source with citations preserved as `refs` (N/O ids for proposals, K/F ids for decks), not as visible text. Set `meta.storyline`. If a draft `.pptx` is among the inputs, keep slides that are already complete with a `clone` entry rather than re-typing them.
+ 4. Run `python scripts/validate.py <dir>/deck.json` then `python scripts/storyboard.py <dir>`.
+diff --git a/.github/prompts/discovery-prep.prompt.md b/.github/prompts/discovery-prep.prompt.md
+index b108f38..aaf147e 100644
+--- a/.github/prompts/discovery-prep.prompt.md
++++ b/.github/prompts/discovery-prep.prompt.md
+@@ -7,4 +7,4 @@ Engagement: `${input:engagement}`; if that is empty, use the one line in `engage
+ 1. Run `python scripts/ingest.py <dir>` and read `normalized/manifest.json`, then every file in `normalized/`.
+ 2. Write `brief.md`: `## Context` (what we know, cited), `## Hypotheses` (3–5, each labelled HYPOTHESIS with what would confirm/refute it), `## Question guide` (themes: current process, pain, constraints, success measures, decision makers; 12–20 open questions, easy → sensitive), `## Logistics` (who should be in the room and why).
+ 3. Run `python scripts/validate.py <dir>/brief.md`.
+-4. Stop. Tell the user the 3 hypotheses you are least sure about.
++4. Stop. Tell the user the 3 hypotheses you are least sure about, and the next step: "Take `brief.md` into the meeting. Afterwards put the transcript and your notes in `inputs/` and run `/discovery-synthesize` in Copilot Chat."
+diff --git a/.github/prompts/discovery-synthesize.prompt.md b/.github/prompts/discovery-synthesize.prompt.md
+index 4821387..af8ce7c 100644
+--- a/.github/prompts/discovery-synthesize.prompt.md
++++ b/.github/prompts/discovery-synthesize.prompt.md
+@@ -8,4 +8,4 @@ Engagement: `${input:engagement}`; if that is empty, use the one line in `engage
+ 2. Read the normalized transcript(s), notes and documents. Read `inputs/audience.md` if it exists; it overrides the one-line `audience` in state.json. If a transcript exceeds ~8,000 words, work chunk by chunk (`normalized/T1.part01.md`, …) keeping a running list of N and Q ids, then merge.
+ 3. Write `discovery.md` per `.github/instructions/discovery.instructions.md`. Every row cites a source. Anything heard once or inferred goes under `## Unverified`.
+ 4. Run `python scripts/validate.py <dir>/discovery.md` and fix errors.
+-5. Stop. Tell the user: number of needs, open questions (how many blocking), and the 3 items you are least sure about — that is what to verify at gate G1. Next command: `python scripts/status.py`.
++5. Stop. Tell the user: number of needs, open questions (how many blocking), and the 3 items you are least sure about — that is what to verify at gate G1. Next, in the terminal: `python scripts/status.py`.
+diff --git a/.github/prompts/fit-finder.prompt.md b/.github/prompts/fit-finder.prompt.md
+new file mode 100644
+index 0000000..0df1022
+--- /dev/null
++++ b/.github/prompts/fit-finder.prompt.md
+@@ -0,0 +1,11 @@
++---
++mode: agent
++description: "[no engagement] An AI idea someone saw → a one-page brief for their team (same instructions as the M365 Fit Finder agent)"
++---
++You are Fit Finder, run locally. This prompt needs no engagement and writes no files.
++
++1. Read `m365/07-fit-finder-agent.md`. The text between `=== INSTRUCTIONS ===` and `=== END ===` is your instructions: follow it exactly (INTAKE, BRIEF, RULES). Do not use anything else in that file as instructions.
++2. Your "fit-finder-context" knowledge is `brand/fit-finder-context.md`. If it does not exist, stop and say: "Fit Finder needs its context file. Create `brand/fit-finder-context.md` from the template in `m365/07-fit-finder-agent.md` (section 'Context file'), about 45 minutes, then run /fit-finder again." Do not invent a context.
++3. Read nothing else: not `engagements/`, not `tracker/`, not other `brand/` files. Everything else comes from the conversation.
++4. Idea from the user: `${input:idea}`. If it is empty, start INTAKE by asking for the idea.
++5. In **Next step**, the person you are talking to runs this toolkit, so skip the handoff to another person. When the test says "continue", write instead: "Save this brief as a file. Start a proposal engagement (`python scripts/new_engagement.py`) and put the brief in its `inputs/` folder as the first input."
+diff --git a/.github/prompts/options.prompt.md b/.github/prompts/options.prompt.md
+index 5e4d27c..48b96d0 100644
+--- a/.github/prompts/options.prompt.md
++++ b/.github/prompts/options.prompt.md
+@@ -3,7 +3,7 @@ mode: agent
+ description: "[proposal] Sketch 2–3 genuinely different solution approaches (gate G2 follows)"
+ ---
+ Engagement: `${input:engagement}`; if that is empty, use the one line in `engagements/CURRENT`. `<dir>` = `engagements/<that name>`. Agent: `@analyst`.
+-1. Read `state.json`; if `kind` is not `proposal`, stop — options only apply to proposals. If `gates.G1.passed` is false, stop: verify facts first. Read `discovery.md`; if any blocking Q is open, stop and say so.
++1. Read `state.json`; if `kind` is not `proposal`, stop — options only apply to proposals. If `gates.G1.passed` is false, stop: the facts in `discovery.md` must be checked first (gate G1); in the terminal, `python scripts/status.py` shows the checklist and the command that passes it. Read `discovery.md`; if any blocking Q is open, stop and say so, and that the next step is a follow-up meeting: in the terminal, `python scripts/followup_agenda.py` writes its agenda and invite; afterwards `/merge-followup file=inputs/followup-1.md` in Copilot Chat.
+ 2. Write `options.md` per `.github/instructions/options.instructions.md`. Make the options different in shape (e.g., minimal/rules-based vs. agentic vs. process-change-only), not three flavours of one idea. At least one option deliberately small. Fill `**Value**` honestly: an option whose new capability is `none — efficiency only` is allowed and often right; an option that dresses up time saved as a new capability is not.
+ 3. Run `python scripts/validate.py <dir>/options.md` and fix errors.
+-4. Stop. Do not recommend. List which H-priority needs each option leaves uncovered. Next: `python scripts/status.py --pass` (it asks which option).
++4. Stop. Do not recommend. List which H-priority needs each option leaves uncovered. Next, in the terminal: `python scripts/status.py --pass` (it asks which option).
+diff --git a/.github/prompts/proposal.prompt.md b/.github/prompts/proposal.prompt.md
+index 75760ad..00a30fe 100644
+--- a/.github/prompts/proposal.prompt.md
++++ b/.github/prompts/proposal.prompt.md
+@@ -3,8 +3,8 @@ mode: agent
+ description: "[proposal] Write proposal.md from the chosen option, then two storylines with a recommendation (gate G3 follows)"
+ ---
+ Engagement: `${input:engagement}`; if that is empty, use the one line in `engagements/CURRENT`. `<dir>` = `engagements/<that name>`. Agent: `@analyst`.
+-1. Read `state.json`. If `kind` is not `proposal`, stop: decks use `/storylines`. Use `gates.G2.chosen_option`; if missing, stop and ask the user to pass G2 first.
++1. Read `state.json`. If `kind` is not `proposal`, stop: decks use `/storylines`. Use `gates.G2.chosen_option`; if missing, stop: an option must be chosen first (gate G2). In the terminal: `python scripts/status.py --pass`, which asks which option.
+ 2. Read `discovery.md`, `options.md`, and `brand/voice.md` if present.
+ 3. Write `proposal.md` per `.github/instructions/proposal.instructions.md`. Run `python scripts/validate.py <dir>/proposal.md` and fix errors, especially traceability gaps.
+ 4. Read `brand/components.md` and `brand/examples/*.json`. Write `storylines.md` per `.github/instructions/storylines.instructions.md`: two genuinely different tellings of THIS proposal for the audience in `state.json` (`audience`, `minutes`; `inputs/audience.md` overrides). Run validate on it.
+-5. Stop. Summarize: the 3 proposal claims you are least sure about (gate G3 check) and your storyline recommendation in 3 lines. Next: `python scripts/status.py --pass` (it asks S1 or S2).
++5. Stop. Summarize: the 3 proposal claims you are least sure about (gate G3 check) and your storyline recommendation in 3 lines. Next, in the terminal: `python scripts/status.py --pass` (it asks S1 or S2).
+diff --git a/.github/prompts/storylines.prompt.md b/.github/prompts/storylines.prompt.md
+index 70ef02a..0ba4a89 100644
+--- a/.github/prompts/storylines.prompt.md
++++ b/.github/prompts/storylines.prompt.md
+@@ -3,8 +3,8 @@ mode: agent
+ description: "[deck] Two storylines + recommendation for a non-proposal deck (gate G3 follows)"
+ ---
+ Engagement: `${input:engagement}`; if that is empty, use the one line in `engagements/CURRENT`. `<dir>` = `engagements/<that name>`. Agent: `@analyst`.
+-1. Read `state.json`. If `kind` is not `deck`, stop: proposals use `/proposal`. If `gates.G1.passed` is false, stop and ask the user to verify `content.md` first.
++1. Read `state.json`. If `kind` is not `deck`, stop: proposals use `/proposal`. If `gates.G1.passed` is false, stop: the facts in `content.md` must be checked first (gate G1); in the terminal, `python scripts/status.py` shows the checklist and the command that passes it.
+ 2. Read `content.md`, `brand/components.md`, `brand/examples/*.json`, `brand/voice.md` if present, and `inputs/audience.md` if it exists (it overrides the one-line `audience` in state.json).
+ 3. If `normalized/manifest.json` lists a `.pptx` input (a draft deck), S1 MUST be "evolve the draft" (its slide order kept, re-framed for the audience, listing slides to drop or merge) and S2 MUST be "re-sequence" (the order this audience needs). Otherwise choose two contrasting tellings freely. Write `storylines.md` per `.github/instructions/storylines.instructions.md`; the Coverage list references every K id and the F ids each slide carries.
+ 4. Run `python scripts/validate.py <dir>/storylines.md`.
+-5. Stop. Give your recommendation in 3 lines. Next: `python scripts/status.py --pass` (it asks S1 or S2).
++5. Stop. Give your recommendation in 3 lines. Next, in the terminal: `python scripts/status.py --pass` (it asks S1 or S2).
+diff --git a/.github/prompts/team-brief.prompt.md b/.github/prompts/team-brief.prompt.md
+index 93a9673..fadf4d6 100644
+--- a/.github/prompts/team-brief.prompt.md
++++ b/.github/prompts/team-brief.prompt.md
+@@ -3,4 +3,4 @@ mode: agent
+ description: "[proposal] One-page team brief + timed agenda for the team meeting after the stakeholder presentation"
+ ---
+ Engagement: `${input:engagement}`; if that is empty, use the one line in `engagements/CURRENT`. `<dir>` = `engagements/<that name>`. Agent: `@analyst`.
+-Read `proposal.md` and `discovery.md`. Write `team-brief.md`, max one page: `## What the stakeholders told us` (5 bullets, cited), `## What we proposed` (5 bullets), `## What I need from the team` (decisions, estimates, owners), `## Open risks`, `## Proposed agenda` (30 minutes, timed).
++Read `proposal.md` and `discovery.md`. Write `team-brief.md`, max one page: `## What the stakeholders told us` (5 bullets, cited), `## What we proposed` (5 bullets), `## What I need from the team` (decisions, estimates, owners), `## Open risks`, `## Proposed agenda` (30 minutes, timed). Then stop and tell the user the next step: "Hold the team meeting with this agenda. Afterwards save its notes or transcript as `inputs/team-meeting.md` and run `/team-tasks file=inputs/team-meeting.md` in Copilot Chat."
 diff --git a/README.md b/README.md
-index 237af4a..15117fb 100644
+index 237af4a..27a1b02 100644
 --- a/README.md
 +++ b/README.md
-@@ -70,9 +70,9 @@ Each prompt checks the engagement `kind` and tells you the right one if you pick
+@@ -61,6 +61,7 @@ Everything between gates is regenerable from the file above it. Fix upstream, re
+ | proposal, deck | `/deck-outline` | `deck.json` + `storyboard.html` → build → G4 |
+ | proposal, deck | `/speech` | `speech.md` |
+ | proposal, deck | `@critic /critique` | `critique.md` |
++| none | `/fit-finder` | a brief in chat (the M365 Fit Finder agent run locally; needs `brand/fit-finder-context.md`) |
+ | proposal | `/team-brief`, `/team-tasks file=…` | `team-brief.md`, `tasks.json` → G5 |
+ | meeting | `/meeting-notes` | `notes.md` + `tasks.json` → G5 |
+ 
+@@ -70,9 +71,9 @@ Each prompt checks the engagement `kind` and tells you the right one if you pick
  
  Independent of D2P. Copy `bench/` into an empty workspace and it walks you through building your own benchmark of the models in the Copilot picker: collect 5–10 tasks where AI recently failed you (`/bench-setup`), run them per model (`/bench-run`, or the Copilot CLI runner), turn your reactions into pass/fail checks (`/bench-feedback`), let one judge model grade everything (`/bench-judge`), open `index.html`. Ten minutes per new model after the first afternoon. Read `bench/README.md`; it is meant to be shared with colleagues as is.
  
@@ -14,6 +167,27 @@ index 237af4a..15117fb 100644
  
  ## When things don't go as planned
  
+@@ -88,8 +89,10 @@ Independent of D2P. Copy `bench/` into an empty workspace and it walks you throu
+ | synthesis is thin or invents things | transcript too long for one pass; check `normalized/T1.part01.md` exists; G1 exists for exactly this |
+ | tracker CSV locked | close Excel, run `append_tasks.py` again |
+ 
++**Upgrading** your copy to a new version (from a GitHub ZIP, no `git pull` needed): `docs/upgrades/README.md` → *Manual upgrade*, a table of the folders and files to keep from your old version.
++
+ Reference: `docs/design.md` (why it is built this way), `docs/bootstrap.md` (script specs and build prompts).
+ 
+ **Everything that lives in Microsoft 365** — daily brief, meeting filing and prep, email drafts, 1-1 agenda check — is in `m365/` (build sheets: scheduled prompts, Power Automate flows with standard connectors, Agent Builder agents). It never touches this workspace. `docs/parked.md` records the earlier attempts and why they were dropped.
+ 
+-Sheets 7+ in `m365/` are Agent Builder agents built to **share with colleagues** (first one: Fit Finder, which turns an AI idea someone saw into a brief for their own team and feeds the good ones into Discovery2Presentation). Entry bar: someone other than Nikos uses it.
++Sheets 7+ in `m365/` are Agent Builder agents built to **share with colleagues** (first one: Fit Finder, which turns an AI idea someone saw into a brief for their own team and feeds the good ones into Discovery2Presentation). Entry bar: someone other than its author uses it.
+diff --git a/brand/README.md b/brand/README.md
+index 5f11670..ea207e1 100644
+--- a/brand/README.md
++++ b/brand/README.md
+@@ -3,3 +3,4 @@ Never leaves the corporate machine.
+ - components.json / components.md : generated by scripts/inspect_components.py
+ - examples/       : generated by scripts/skeletonize_deck.py from past decks
+ - voice.md        : your terminology and emphasis glossary (edit by hand)
++- fit-finder-context.md : Fit Finder's context (tools it may recommend, data rules, past ideas); template in m365/07-fit-finder-agent.md. Read by /fit-finder; the same text goes to SharePoint as fit-finder-context.docx for the shared agent
 diff --git a/city/README.md b/city/README.md
 index 1bbf303..3f296db 100644
 --- a/city/README.md
@@ -181,18 +355,21 @@ index 1bbf303..3f296db 100644
 +
 +If you built with `--link-image`, also copy the image: add `mkdir _site/city && cp city/scene.jpg _site/city/` to the *Keep only the map* step.
 diff --git a/city/city.json b/city/city.json
-index ed520ae..f035e35 100644
+index ed520ae..2af04a2 100644
 --- a/city/city.json
 +++ b/city/city.json
-@@ -1,7 +1,6 @@
+@@ -1,9 +1,8 @@
  {
    "title": "SemiAgency City",
 -  "tagline": "Every building is one thing the SemiAgency suite does. Walk in, read the sign, copy what you need.",
 -  "output": "city.html",
 +  "output": "index.html",
    "redact": {
-     "Nikos": "the D2P owner",
+-    "Nikos": "the D2P owner",
++    "Nikos": "the person who runs this toolkit",
      "Europe/Zurich": "<your time zone>",
+     "W. Europe Standard Time": "<your Windows time zone>"
+   },
 @@ -15,39 +14,77 @@
      "bench/results/",
      "docs/upgrades/"
@@ -202,13 +379,13 @@ index ed520ae..f035e35 100644
      "everyone": "Everyone",
      "vscode": "VS Code + GitHub Copilot",
 -    "m365": "Microsoft 365 Copilot"
-+    "m365": "Outlook, Teams & Copilot Chat"
++    "m365": "Outlook, Teams & Microsoft 365 Copilot Chat"
 +  },
 +  "modes": {
 +    "auto": "Runs by itself",
-+    "click": "One click in Copilot Chat",
++    "click": "One click in Microsoft 365 Copilot Chat",
 +    "paste": "You type or paste",
-+    "prompt": "Paste a command in Copilot Chat",
++    "prompt": "Paste a command in VS Code Copilot Chat (agent mode)",
 +    "run": "Run in the terminal",
 +    "setup": "Set up once",
 +    "read": "Read me"
@@ -276,7 +453,7 @@ index ed520ae..f035e35 100644
 +    {
 +      "id": "harbour",
 +      "name": "M365 Harbour",
-+      "subtitle": "Everything inside Outlook, Teams and Copilot Chat — no VS Code. Four piers, one per daily need; the buildings are what you build once.",
++      "subtitle": "Everything inside Outlook, Teams and Microsoft 365 Copilot Chat — no VS Code. Four piers, one per daily need; the buildings are what you build once.",
 +      "audience": "m365",
 +      "color": "#3a9a6e"
 +    },
@@ -353,7 +530,7 @@ index ed520ae..f035e35 100644
 +      "pitch": "Optional, before you meet the stakeholders: a brief with what you already know, 3–5 hypotheses and a question guide from easy to sensitive.",
 +      "steps": [
 +        {
-+          "say": "Start a `proposal` engagement at the Town Hall with whatever you have (their email, org chart, old documents), then in Copilot Chat:",
++          "say": "Start a `proposal` engagement at the Town Hall with whatever you have (their email, org chart, old documents), then in VS Code, Copilot Chat (agent mode):",
 +          "copy": "/discovery-prep"
 +        },
 +        {
@@ -378,7 +555,7 @@ index ed520ae..f035e35 100644
        "steps": [
          {
 -          "say": "Copilot Chat, agent mode. For a proposal:",
-+          "say": "Copilot Chat, agent mode:",
++          "say": "In VS Code, Copilot Chat (agent mode):",
            "copy": "/discovery-synthesize"
          },
          {
@@ -451,7 +628,7 @@ index ed520ae..f035e35 100644
        "steps": [
          {
 -          "say": "Proposal: sketch the options, then choose one at the gate.",
-+          "say": "Copilot Chat:",
++          "say": "In VS Code, Copilot Chat (agent mode):",
            "copy": "/options"
          },
          {
@@ -480,7 +657,7 @@ index ed520ae..f035e35 100644
          {
 -          "say": "Deck without a proposal: storylines straight from the content.",
 -          "copy": "/storylines"
-+          "say": "Copilot Chat:",
++          "say": "In VS Code, Copilot Chat (agent mode):",
 +          "copy": "/proposal"
          },
          {
@@ -571,7 +748,7 @@ index ed520ae..f035e35 100644
 +      "steps": [
          {
 -          "say": "The critic — run it early, the earlier the cheaper the fix:",
-+          "say": "Copilot Chat:",
++          "say": "In VS Code, Copilot Chat (agent mode):",
            "copy": "@critic /critique"
          },
          {
@@ -614,7 +791,7 @@ index ed520ae..f035e35 100644
            "copy": "/team-tasks file=inputs/team-meeting.md"
          },
          {
-@@ -240,190 +370,473 @@
+@@ -240,190 +370,483 @@
          "team-brief",
          "team-tasks"
        ],
@@ -632,7 +809,7 @@ index ed520ae..f035e35 100644
 +      "pitch": "Copilot extracts the key messages and facts from your notes, documents or a draft deck, each cited. A draft .pptx counts: its titles become candidate messages. Gate G1: you check them.",
 +      "steps": [
 +        {
-+          "say": "Start a `deck` engagement at the Town Hall, then in Copilot Chat:",
++          "say": "Start a `deck` engagement at the Town Hall, then in VS Code, Copilot Chat (agent mode):",
 +          "copy": "/content"
 +        },
 +        {
@@ -661,7 +838,7 @@ index ed520ae..f035e35 100644
 +      "pitch": "Two different ways to tell your content to this audience. With a draft deck: one that evolves the draft, one that re-sequences it. Gate G3: you pick.",
 +      "steps": [
 +        {
-+          "say": "Copilot Chat:",
++          "say": "In VS Code, Copilot Chat (agent mode):",
 +          "copy": "/storylines"
 +        },
 +        {
@@ -749,7 +926,7 @@ index ed520ae..f035e35 100644
        "steps": [
          {
 -          "say": "Start a `meeting` kind at the Town Hall, then:",
-+          "say": "Start a `meeting` engagement at the Town Hall, then in Copilot Chat:",
++          "say": "Start a `meeting` engagement at the Town Hall, then in VS Code, Copilot Chat (agent mode):",
            "copy": "/meeting-notes"
          },
          {
@@ -777,13 +954,20 @@ index ed520ae..f035e35 100644
 +      "hotspot": "embassy",
 +      "mode": "click",
 +      "audience": "everyone",
-+      "pitch": "Fit Finder, a shared agent in Copilot Chat: describe an AI idea you saw and your team; it asks for what is missing and writes a one-page brief — what it would be here, the value beyond saved hours, what to build it with inside the tenant, a two-day test.",
++      "pitch": "Fit Finder turns an AI idea someone saw into a one-page brief for their team: what it would be here, the value beyond saved hours, what to build it with inside the tenant, and a two-day test. It's an M365 Agent Builder agent that you build once from sheet 7 and share with colleagues. You can also run it in VS Code as /fit-finder.",
 +      "steps": [
 +        {
-+          "say": "Copilot Chat or Teams → Agents → **Fit Finder**. Pick a starter below or type freely."
++          "say": "**Build it once (whoever runs this toolkit for your team, ~20 minutes + the context file):** follow build sheet 7 below. First write the context file, `fit-finder-context`: the tools it may recommend, your data rules and past ideas. The agent does not create it, and without it the briefs are generic. Then create the agent in Agent Builder and share it with your colleagues."
 +        },
 +        {
-+          "say": "If the brief ends in *continue*: send it to the D2P owner. It enters the Acropolis as a proposal engagement, with the brief as an input."
++          "say": "**Use it (colleagues):** Microsoft 365 Copilot Chat or Teams → Agents → **Fit Finder**, then a starter below."
++        },
++        {
++          "say": "**Or in VS Code** (reads `brand/fit-finder-context.md`, same instructions):",
++          "copy": "/fit-finder"
++        },
++        {
++          "say": "**If the brief says the idea is worth pursuing,** it tells you who to send it to. That person books about an hour with you and one or two colleagues who do the work today, to understand how it works now. No slides; bring one real example. They come back with a short written proposal (two or three ways to do it, plus a recommendation) for you or your manager to decide on. On their side, the proposal is made at the Town Hall and the Proposal Acropolis."
 +        }
 +      ],
 +      "asks": [
@@ -813,6 +997,9 @@ index ed520ae..f035e35 100644
 +          "title": "Build sheet 7 — Fit Finder (shared agent)",
 +          "file": "m365/07-fit-finder-agent.md"
 +        }
++      ],
++      "prompts": [
++        "fit-finder"
 +      ]
 +    },
 +    {
@@ -826,7 +1013,7 @@ index ed520ae..f035e35 100644
 +      "pitch": "bench: your personal benchmark of the models in the Copilot picker. Tasks that failed you, run per model, graded by your own pass/fail checks. Ten minutes per new model after the first afternoon.",
 +      "steps": [
 +        {
-+          "say": "Copy the `bench/` folder into an empty workspace, open it in VS Code, then in Copilot Chat:",
++          "say": "Copy the `bench/` folder into an empty workspace, open it in VS Code, then in Copilot Chat (agent mode):",
 +          "copy": "/bench-setup"
 +        },
 +        {
@@ -868,7 +1055,7 @@ index ed520ae..f035e35 100644
 +      "hotspot": "radio-tower",
 +      "mode": "auto",
        "audience": "m365",
-+      "pitch": "The morning brief: a scheduled prompt that reads your calendar, inbox and To Do every weekday at 07:00 and answers in Copilot Chat → Chats. Top 3, today's timeline with clashes and focus slots, what waits on you, what you wait for.",
++      "pitch": "The morning brief: a scheduled prompt that reads your calendar, inbox and To Do every weekday at 07:00 and answers in Microsoft 365 Copilot Chat → Chats. Top 3, today's timeline with clashes and focus slots, what waits on you, what you wait for.",
 +      "asks": [
 +        {
 +          "say": "(nothing — it arrives by itself every weekday at 07:00)",
@@ -1183,14 +1370,16 @@ index ed520ae..f035e35 100644
        "steps": [
          {
            "say": "Open the semiAgency folder in VS Code, `git init`, Python 3 on PATH. Then:",
-@@ -448,15 +861,40 @@
+@@ -448,15 +871,40 @@
            "file": "docs/bootstrap.md"
          }
        ],
 -      "hotspot": "workshop"
 +      "audience": "vscode"
-+    },
-+    {
+     },
+     {
+-      "id": "city-hall-annex",
+-      "district": "foundations",
 +      "id": "m365-setup",
 +      "district": "yard",
 +      "name": "Harbour Works",
@@ -1211,10 +1400,8 @@ index ed520ae..f035e35 100644
 +          "file": "m365/README.md"
 +        }
 +      ]
-     },
-     {
--      "id": "city-hall-annex",
--      "district": "foundations",
++    },
++    {
 +      "id": "cartographer",
 +      "district": "yard",
        "name": "Cartographer",
@@ -1228,7 +1415,7 @@ index ed520ae..f035e35 100644
        "steps": [
          {
            "say": "Rebuild the city after any change:",
-@@ -467,75 +905,141 @@
+@@ -467,75 +915,141 @@
            "copy": "python scripts/build_city.py --check"
          }
        ],
@@ -1304,40 +1491,40 @@ index ed520ae..f035e35 100644
 +        {
 +          "building": "p-facts",
 +          "say": "The fact base, every row cited. You check the three flagged items — gate G1."
-+        },
-+        {
-+          "building": "p-followup",
-+          "say": "Only if blocking questions remain: follow-up agenda, then merge what you learn."
-+        },
-+        {
-+          "building": "p-options",
-+          "say": "Two or three genuinely different options; you choose one — gate G2."
-+        },
-+        {
-+          "building": "p-proposal",
-+          "say": "The proposal and two storylines; you pick how it is told — gate G3."
          },
          {
 -          "building": "design-studio",
 -          "say": "Two or three solution options; you choose one (G2). Then the proposal with two storylines; you pick how it is told (G3)."
-+          "building": "p-print",
-+          "say": "The deck in the corporate template. Open it before anyone else — gate G4."
++          "building": "p-followup",
++          "say": "Only if blocking questions remain: follow-up agenda, then merge what you learn."
          },
          {
 -          "building": "print-house",
 -          "say": "The deck in the corporate template, built from your storyline. Open it before anyone else (G4)."
-+          "building": "p-rehearsal",
-+          "say": "Timed speaker notes, embedded in the deck."
++          "building": "p-options",
++          "say": "Two or three genuinely different options; you choose one — gate G2."
          },
          {
 -          "building": "theatre",
 -          "say": "Timed speaker notes, and the critic who lists what will not survive the room. Rehearse out loud."
-+          "building": "p-critic",
-+          "say": "The critic: unsupported claims and the questions the room will ask. Best early; at the latest now."
++          "building": "p-proposal",
++          "say": "The proposal and two storylines; you pick how it is told — gate G3."
          },
          {
 -          "building": "task-depot",
 -          "say": "After presenting: brief the team, turn their meeting into tasks, review them, then the tracker (G5)."
++          "building": "p-print",
++          "say": "The deck in the corporate template. Open it before anyone else — gate G4."
++        },
++        {
++          "building": "p-rehearsal",
++          "say": "Timed speaker notes, embedded in the deck."
++        },
++        {
++          "building": "p-critic",
++          "say": "The critic: unsupported claims and the questions the room will ask. Best early; at the latest now."
++        },
++        {
 +          "building": "p-team",
 +          "say": "After presenting: brief the team, turn their meeting into tasks, review — gate G5."
          }
@@ -1397,7 +1584,7 @@ index ed520ae..f035e35 100644
        "stops": [
          {
            "building": "town-hall",
-@@ -543,81 +1047,179 @@
+@@ -543,81 +1057,179 @@
          },
          {
            "building": "notary",
@@ -1416,7 +1603,7 @@ index ed520ae..f035e35 100644
 +      "q": "Start my day knowing what matters",
 +      "when": "You want what's on, what clashes and what waits on you — before opening five apps.",
 +      "bring": "nothing — it reads your calendar, inbox and To Do",
-+      "get": "a one-page brief in Copilot Chat every weekday at 07:00",
++      "get": "a one-page brief in Microsoft 365 Copilot Chat every weekday at 07:00",
 +      "time": "10 minutes once",
        "stops": [
          {
@@ -1510,19 +1697,19 @@ index ed520ae..f035e35 100644
 +      "audience": "everyone",
 +      "q": "Check whether an AI idea would work for us",
 +      "when": "A demo, a newsletter or a vendor pitch made you think 'what would that be for my team?'.",
-+      "bring": "the idea, what your team does, what it can build, known limits",
-+      "get": "a one-page brief with a two-day test",
++      "bring": "the idea, what your team does, what it can build, known limits (and, once, the context file for the agent)",
++      "get": "a one-page brief with a two-day test; for good ideas, who to send it to for a proposal",
 +      "time": "one conversation",
        "stops": [
          {
            "building": "embassy",
 -          "say": "Describe the idea and your team; get a one-page brief with value, build-with and a two-day test."
-+          "say": "Describe the idea and your team; get the brief."
++          "say": "Ask Fit Finder (shared M365 agent, or /fit-finder in VS Code) with the idea and your team; get the brief."
          },
          {
            "building": "town-hall",
 -          "say": "If the brief says 'continue', the idea enters the Meeting Quarter as a proposal engagement."
-+          "say": "If the brief says 'continue', the D2P owner starts a proposal engagement with it."
++          "say": "Worth pursuing? Send the brief to the person it names. They talk to you for about an hour, then come back with a short proposal (options and a recommendation). Their side of the work starts here, as a proposal."
 +        }
 +      ]
 +    },
@@ -1550,7 +1737,7 @@ index ed520ae..f035e35 100644
 +      "audience": "everyone",
 +      "q": "Set this up (technical)",
 +      "when": "Once, before the local flows or the harbour work for you. Also where the map is rebuilt.",
-+      "bring": "VS Code + Python 3 and your corporate template, or an M365 tenant with Copilot Chat",
++      "bring": "VS Code + Python 3 and your corporate template, or an M365 tenant with Microsoft 365 Copilot Chat",
 +      "get": "working local scripts, built M365 pieces, an up-to-date map",
 +      "time": "~2 hours local, ~2 hours M365",
        "stops": [
@@ -40551,12 +40738,25 @@ zT8>61iAewwF)IH64}O^=9e5mOnGhuaRbmHI*ktkC{sZ}*4Vze9?kv=+vHMgcDIGzU
 zJoY%wK{(EGInFUIX+~|eWgE1e^jx-UWWN5k^>B-n;;m+yc1qgwLdo9A>GHb2OP~MQ
 DrzGhc
 
+diff --git a/docs/after-meeting.md b/docs/after-meeting.md
+index 1c26e5c..3bada5d 100644
+--- a/docs/after-meeting.md
++++ b/docs/after-meeting.md
+@@ -14,7 +14,7 @@ Put in `inputs/`:
+ 
+ | file | what |
+ |---|---|
+-| `transcript.md` | the Teams transcript. None arrived? In M365 Copilot Chat (Work): *"Reproduce the transcript of my meeting '<title>' on <date> as `[hh:mm:ss] Speaker: text` lines, in order, without summarising."* Save the answer as `inputs/transcript.md`. |
++| `transcript.md` | the Teams transcript. If you built the Harbour Office flow (`m365/02`), it's already filed in the meeting's folder in the SharePoint *Meetings* library; download it from there. None arrived? In M365 Copilot Chat (Work): *"Reproduce the transcript of my meeting '<title>' on <date> as `[hh:mm:ss] Speaker: text` lines, in order, without summarising."* Save the answer as `inputs/transcript.md`. |
+ | `notes.md` | your own notes, as they are |
+ | documents | anything the stakeholders gave you: `.docx`, `.pptx`, `.md`. A PDF: open it in Word, save as `.docx` (the built-in PDF reader is best-effort). |
+ 
 diff --git a/docs/use-cases-and-flows.md b/docs/use-cases-and-flows.md
 new file mode 100644
-index 0000000..c76f1d3
+index 0000000..cdbdfbe
 --- /dev/null
 +++ b/docs/use-cases-and-flows.md
-@@ -0,0 +1,326 @@
+@@ -0,0 +1,329 @@
 +# SemiAgency — flows, agent use cases, and how the map should guide a newcomer
 +
 +Written 2026-09-23 as input for the map (`index.html`, formerly `city.html`) UX rework. Source of truth: `README.md`, `city/city.json`, `.github/prompts`, `.github/agents`, `m365/*.md`, `bench/`.
@@ -40725,11 +40925,13 @@ index 0000000..c76f1d3
 +
 +**Input** — the idea, what the team does and for whom, what the team can build, known hard limits (the agent asks for what's missing).
 +
-+**Steps** — Fit Finder conversation (Embassy) → brief → if "continue": you start an F1 engagement (Town Hall) with the brief as an input.
++**Setup (once, by whoever runs SemiAgency for the team)** — write the context file (`brand/fit-finder-context.md`, and the same text as `fit-finder-context.docx` on SharePoint): the tools it may recommend, data rules, past ideas. The agent does not create it. Then build the agent from `m365/07-fit-finder-agent.md` and share it.
++
++**Steps** — Fit Finder conversation (Embassy): the shared M365 agent, or `/fit-finder` in VS Code with the same instructions → brief → if "continue": you start an F1 engagement (Town Hall) with the brief as an input.
 +
 +**Output** — a ≤ 450-word brief: what it is here, new value vs saved effort (blunt if efficiency-only), build-with inside the tenant, a two-day test with stop/continue criteria, next step.
 +
-+> ⚠ The handoff crosses environments: the colleague has M365; F1 needs *your* VS Code. The map should say the handoff goes to the D2P owner, not to the colleague.
++> The handoff crosses environments: the colleague has M365, and F1 runs in *your* VS Code. So the brief's **Next step** names a real person and says in plain words what happens next: an hour's conversation, then a short proposal with options and a recommendation. It never says "discovery session" or "engagement". The name and timing come from the context file.
 +
 +---
 +
@@ -40817,6 +41019,7 @@ index 0000000..c76f1d3
 +| → *Shorter* / *Softer / firmer* | | Adjust the last draft | — | revised draft |
 +| 1-1 agenda check (Clock Tower) | Power Automate, 16:00 | Catch unprepared 1-1s | tomorrow's `1-1 …` invites | Teams ping if agenda empty |
 +| Fit Finder (Embassy) → *I saw this* | shared Agent Builder | Translate an idea to my team | idea + team + skills + limits | one-page brief |
++| `/fit-finder` (Embassy, VS Code) | prompt, runs the same instructions locally | Same as the shared agent, without building it | idea + team (+ `brand/fit-finder-context.md`) | one-page brief in chat |
 +| → *Is it worth it?* | | Blunt value judgement | idea | new value vs efficiency verdict |
 +| → *Just the test* | | Smallest experiment | idea + team | two-day test, stop/continue criteria |
 +| → *Compare two* | | Pick between ideas | idea A, idea B, team | which fits better and why |
@@ -40883,6 +41086,172 @@ index 0000000..c76f1d3
 +3. C (journey-aware modals) — needs a `journeys` tag per step.
 +4. A (front door) — once flows and cards exist, the picker is just routing.
 +5. F, H, I, J as polish.
+diff --git a/m365/01-daily-brief.md b/m365/01-daily-brief.md
+index ffceb0c..3963a20 100644
+--- a/m365/01-daily-brief.md
++++ b/m365/01-daily-brief.md
+@@ -1,4 +1,4 @@
+-# 1 · Daily brief — scheduled prompt
++# 1 · Daily brief — scheduled prompt (on the map: Radio Tower)
+ 
+ Where: Microsoft 365 Copilot Chat (app, web, Teams or Outlook) → type the prompt below → in the prompt box, choose **Schedule** (clock icon) → weekdays, 07:00, Europe/Zurich. The answer appears each morning in the **Chats** list, marked as scheduled. Up to 10 scheduled prompts per user; this is your first.
+ 
+diff --git a/m365/02-meeting-filing-flow.md b/m365/02-meeting-filing-flow.md
+index 8f49a0a..5fe7f25 100644
+--- a/m365/02-meeting-filing-flow.md
++++ b/m365/02-meeting-filing-flow.md
+@@ -1,4 +1,4 @@
+-# 2 · Meeting filing — Power Automate flow (standard connectors only)
++# 2 · Meeting filing — Power Automate flow (standard connectors only) (on the map: Harbour Office)
+ 
+ What it does, by itself, every time a transcript lands: finds the meeting in your calendar, creates a folder `Meetings/<yyyy-MM-dd> <subject>/` (or `Meetings/1-1/<person>/<yyyy-MM-dd>/` for a recurring meeting with one other attendee), copies the transcript in, creates a OneNote page with the meeting facts and a link to the folder, and posts you a Teams message with the link. That folder is where you then drop your manual notes and attachments — no naming, the flow named it. The summary is generated later by the evening prompt (sheet 3) or on demand by the agent (sheet 4).
+ 
+@@ -56,7 +56,7 @@ Notebook: yours. Section: `if(outputs('isOneOnOne'), '1-1', 'Meetings')` — the
+ </body></html>
+ ```
+ 
+-**11. Microsoft Teams: Post message in a chat or channel** — Post as: Flow bot. Post in: Chat with Flow bot. Recipient: you. Message: `Filed: @{outputs('folderPath')} — @{outputs('folderUrl')} . Drop your notes and attachments there. OneNote page created in @{if(outputs('isOneOnOne'),'1-1','Meetings')}.`
++**11. Microsoft Teams: Post message in a chat or channel** — Post as: Flow bot. Post in: Chat with Flow bot. Recipient: you. Message: `Filed: @{outputs('folderPath')} — @{outputs('folderUrl')} . Drop your notes and attachments there, then in Microsoft 365 Copilot Chat → Agents → Meeting Summariser, send: Summarise the meeting “@{outputs('folderPath')}”. OneNote page created in @{if(outputs('isOneOnOne'),'1-1','Meetings')}.`
+ 
+ Save. **Test** by uploading a copy of an old transcript into the trigger folder while a matching past meeting exists in the -4h window (move a calendar copy if needed).
+ 
+diff --git a/m365/03-evening-prep-prompt.md b/m365/03-evening-prep-prompt.md
+index 3640b83..7a89c02 100644
+--- a/m365/03-evening-prep-prompt.md
++++ b/m365/03-evening-prep-prompt.md
+@@ -1,4 +1,4 @@
+-# 3 · Evening prep — scheduled prompt
++# 3 · Evening prep — scheduled prompt (on the map: Lighthouse)
+ 
+ Where: Copilot Chat → schedule weekdays at 18:00. This is the "check this before my next meeting" step, done for you: for each meeting tomorrow it reads the Meetings library (filled by flow 2 plus your dropped notes), summarises the last occurrences, lists open actions and proposes an agenda. Output in the Chats list; read it at 18:05 or with the morning brief.
+ 
+diff --git a/m365/04-meeting-summariser-agent.md b/m365/04-meeting-summariser-agent.md
+index c1f228a..972dead 100644
+--- a/m365/04-meeting-summariser-agent.md
++++ b/m365/04-meeting-summariser-agent.md
+@@ -1,4 +1,4 @@
+-# 4 · Meeting Summariser — Agent Builder agent
++# 4 · Meeting Summariser — Agent Builder agent (on the map: The Library)
+ 
+ On-demand counterpart of the evening prompt: a same-day summary right after a meeting, a 1-1 prep whenever you want it, "what's open from the last two weeks". Reads the Meetings library that flow 2 fills. Because the material is in SharePoint, this works — Agent Builder can't read OneNote, but it reads a document library fine.
+ 
+@@ -36,7 +36,7 @@ Do not summarise anything outside the requested folder(s). Do not rate the meeti
+ 
+ After a meeting: drop notes/attachments into the folder flow 2 created → **Summarise** with the folder name from the Teams ping. Read; add your actions to To Do; optionally paste the summary into the OneNote page.
+ 
+-Before a 1-1: **Prep 1-1** → read → paste the agenda into the invite (sheet 6 pings you if you forget).
++Before a 1-1: **Prep 1-1** → read → paste the agenda into the invite (the 1-1 agenda check, sheet 6, pings you in Teams at 16:00 the day before if the agenda is still empty).
+ 
+ ## Also check once
+ 
+diff --git a/m365/05-email-drafter-agent.md b/m365/05-email-drafter-agent.md
+index 2db8ee9..bcd3810 100644
+--- a/m365/05-email-drafter-agent.md
++++ b/m365/05-email-drafter-agent.md
+@@ -1,4 +1,4 @@
+-# 5 · Email Drafter — Agent Builder agent
++# 5 · Email Drafter — Agent Builder agent (on the map: Post Office)
+ 
+ Rough text and a recipient in; subject and a ready-to-send body in your voice out. One paste into a new mail. The voice comes from two places: rules you write once (below) and 15–20 of your own sent emails the agent reads as exemplars.
+ 
+diff --git a/m365/06-agenda-check-flow.md b/m365/06-agenda-check-flow.md
+index 82c58f3..ea29838 100644
+--- a/m365/06-agenda-check-flow.md
++++ b/m365/06-agenda-check-flow.md
+@@ -1,8 +1,8 @@
+-# 6 · 1-1 agenda check — Power Automate flow (standard connectors only)
++# 6 · 1-1 agenda check — Power Automate flow (standard connectors only) (on the map: Clock Tower)
+ 
+-Every working day at 16:00: for each recurring 1-1 tomorrow, read the invite body; if there is no `Agenda` section with content, post you a Teams message "Agenda for tomorrow's 1-1 with <name> is empty — run Meeting Summariser → Prep 1-1 and paste an agenda, or cancel." Nothing else. It doesn't write the agenda (no model step without premium) and it doesn't cancel anything (that's your call for a wellbeing-adjacent meeting).
++Every working day at 16:00: for each recurring 1-1 tomorrow, read the invite body; if there is no `Agenda` section with content, post you a Teams message "Agenda for tomorrow's 1-1 with <name> is empty — in Microsoft 365 Copilot Chat → Agents → Meeting Summariser, send “Prepare my next 1-1 with <name>”, then paste the agenda into the invite, or cancel." Nothing else. It doesn't write the agenda (no model step without premium) and it doesn't cancel anything (that's your call for a wellbeing-adjacent meeting).
+ 
+-Prerequisite that makes this trivial: name every recurring 1-1 **"1-1 <name>"**. The attendee-count alternative is the fragile part; avoid it.
++Prerequisites: sheet 4 (Meeting Summariser) is built, because the ping sends you there; and sheet 2 has been filing your 1-1s for a few weeks, otherwise Prep 1-1 has no history to work from. The one that makes this flow trivial: name every recurring 1-1 **"1-1 <name>"**. The attendee-count alternative is the fragile part; avoid it.
+ 
+ ## Build (Scheduled cloud flow, ~15 minutes)
+ 
+@@ -13,7 +13,7 @@ Prerequisite that makes this trivial: name every recurring 1-1 **"1-1 <name>"**.
+    - **Compose — bodyText**: strip tags well enough to test for emptiness: `replace(replace(replace(replace(item()?['body'], '<br>', ' '), '&nbsp;', ' '), '<p>', ' '), '</p>', ' ')`.
+    - **Compose — agenda**: `if(contains(outputs('bodyText'), 'Agenda'), trim(last(split(outputs('bodyText'), 'Agenda'))), '')`.
+    - **Condition**: `length(outputs('agenda'))` is less than 15 (the HTML wrapper after "Agenda" is a few characters; 15 means "nothing typed").
+-     - Yes → **Teams: Post message in a chat or channel**, Flow bot, chat with you: `Agenda for tomorrow's "@{item()?['subject']}" at @{formatDateTime(item()?['start'], 'HH:mm')} is empty. Prep it (Meeting Summariser → Prep 1-1) and paste an agenda into the invite, or cancel. @{item()?['webLink']}`
++     - Yes → **Teams: Post message in a chat or channel**, Flow bot, chat with you: `Agenda for tomorrow's "@{item()?['subject']}" at @{formatDateTime(item()?['start'], 'HH:mm')} is empty. Prep it in Microsoft 365 Copilot Chat → Agents → Meeting Summariser (starter: Prep 1-1), then paste the agenda into the invite, or cancel. @{item()?['webLink']}`
+      - No → nothing.
+ 5. Save. Test with a real empty-agenda 1-1 tomorrow.
+ 
+diff --git a/m365/07-fit-finder-agent.md b/m365/07-fit-finder-agent.md
+index 76fbcc9..15b72b9 100644
+--- a/m365/07-fit-finder-agent.md
++++ b/m365/07-fit-finder-agent.md
+@@ -1,4 +1,4 @@
+-# 7 · Fit Finder — shared Agent Builder agent
++# 7 · Fit Finder — shared Agent Builder agent (on the map: The Embassy)
+ 
+ Last changed: 2026-09-16
+ 
+@@ -38,13 +38,17 @@ Two or three tools from the context file, and what each does in this solution. I
+ Numbered steps, at most six, that one person can do in two working days with the tools above, ending in a real person using it once and saying whether they would use it again. State what result would mean "stop" and what would mean "continue". If the test honestly needs an engineer, say so and say for which step — do not pretend a low-code version exists when it doesn't.
+ 
+ **Next step**
+-If value in section 2 is real and the test result is "continue": "Send this brief to Nikos for a discovery session; it becomes the input of a proposal." Otherwise: "Run the test first, or park it."
++If the value in section 2 is real and the test says "continue", write the handoff in plain words, taking the person, the channel and the timing from "How to take an idea further" in the context file, in this shape: "Send this brief to <person> (<Teams / email>). They will book about an hour with you and one or two colleagues who do this work today, to understand how it works now and what better would look like. No slides needed; bring one real example. Within <n> weeks they come back with a short written proposal: two or three ways to do it and a recommendation, for you or your manager to decide on." Never use the words "discovery session", "engagement", "D2P" or "proposal flow" with the colleague. Otherwise: "Run the two-day test first, or park the idea."
+ 
+ RULES. Be direct and specific to this team; generic advice that would fit any company is a failure. Prefer the colleague's own words for their products and processes. Use the past ideas in the context file: if this idea resembles one that was tried, say so and what happened. Never invent figures, customer names or results. If the colleague argues with your judgement, revise only what they gave new facts for. Do not write code. Do not ask for or discuss confidential customer data; if they paste it, tell them to remove it and continue with a description.
+ === END ===
+ 
+ ## Context file — template for `fit-finder-context.docx` (write it once, ~45 minutes; this is what makes the output specific to us)
+ 
++**Required, and you write it. The agent does not produce it.** The conversation gives the agent the colleague's side (the idea, their team, what they can build, their limits). This file gives it yours: the only tools it may recommend in section 3, your data rules, and past ideas it compares against. Without it, section 3 has nothing it may name and the brief turns generic.
++
++Write it once as `brand/fit-finder-context.md` on your machine. The local `/fit-finder` prompt reads that file, and `brand/` never leaves the machine. Then paste the same text into a Word document saved as `fit-finder-context.docx` in the SharePoint folder above. Update both when a past idea gets a result.
++
+ ```
+ # Fit Finder — context (last updated <date>)
+ 
+@@ -70,19 +74,23 @@ Two or three sentences: the unit, what it produces, for whom, in what industry.
+ - Prototypes use fake or anonymised data unless the owner of the data agrees.
+ 
+ ## What "engineers available" means here
+-- Who can be asked for a two-day prototype, and how (e.g. "post in <channel>; Nikos triages").
++- Who can be asked for a two-day prototype, and how (e.g. "post in <channel>; <name> triages").
+ 
+ ## Past ideas and what happened (3–6, one paragraph each)
+ - <Idea> — <team> — <year>. Tried as <what>. Result: <kept / dropped>, because <one reason>. Lesson: <one line>.
+ - …
+ 
+ ## How to take an idea further
+-- Send the brief to Nikos → discovery session (about an hour) → proposal → decision. Typical elapsed time: <n> weeks.
++- Send the brief to: <name>, <Teams chat or email address>.
++- What happens then: <name> books about an hour with the colleague and one or two people who do the work today. No slides; they bring one real example.
++- What comes back: a short written proposal with two or three options and a recommendation, within <n> weeks, for the colleague or their manager to decide on.
+ ```
+ 
+ ## Use
+ 
+-Copilot Chat → Agents → Fit Finder → **I saw this**, describe the idea and the team → answer up to three questions → read the brief → if "Next step" points to a discovery session, forward the brief; it becomes the first file in that engagement's `inputs/`.
++**In VS Code (no Agent Builder needed):** Copilot Chat, agent mode → `/fit-finder`. It follows the INSTRUCTIONS block above word for word and reads `brand/fit-finder-context.md`. It's handy for trying the instructions before you share the agent, and for your own ideas. Colleagues without VS Code use the shared agent.
++
++**In Microsoft 365:** Copilot Chat → Agents → Fit Finder → **I saw this**, describe the idea and the team → answer up to three questions → read the brief → if "Next step" says to send it on, the colleague sends it to you. For you, it becomes the first file in a new proposal engagement's `inputs/`.
+ 
+ ## Check the first five briefs
+ 
+diff --git a/m365/README.md b/m365/README.md
+index 2dd2abc..1cf9536 100644
+--- a/m365/README.md
++++ b/m365/README.md
+@@ -24,7 +24,11 @@ Build in this order: 1 (validates scheduled prompts in your tenant) → 2 (valid
+ 
+ ## Shared agents (sheet 7 onwards)
+ 
+-Sheets 1–6 are your personal setup. From 7 on, agents are built to be **shared**: Agent Builder → the agent → Share → people or the unit's group; they appear under *Agents* in Copilot Chat and Teams. Post the link once in the team channel with the first starter prompt as the example. Instruction changes are live for everyone immediately, so note the date of the last change at the top of the sheet. Entry bar: a shared agent gets a sheet only if someone other than Nikos is expected to use it; if after a month nobody but the author has opened it, move the sheet to `docs/parked.md` with one line on why.
++Sheets 1–6 are your personal setup. From 7 on, agents are built to be **shared**: Agent Builder → the agent → Share → people or the unit's group; they appear under *Agents* in Copilot Chat and Teams. Post the link once in the team channel with the first starter prompt as the example. Instruction changes are live for everyone immediately, so note the date of the last change at the top of the sheet. Entry bar: a shared agent gets a sheet only if someone other than its author is expected to use it; if after a month nobody but the author has opened it, move the sheet to `docs/parked.md` with one line on why.
++
++## Handoffs between sheets
++
++When one piece sends you to another, it names it the way you see it and says where: a Teams ping from flow 2 or 6 names the agent and the exact sentence to send it. Fit Finder names a person and says what happens next. Keep that rule when you add a sheet: no sheet numbers, internal terms or roles in anything a user reads.
+ 
+ ## What stays manual, and why
+ 
 diff --git a/scripts/build_city.py b/scripts/build_city.py
 index f30caff..0d6a4d5 100644
 --- a/scripts/build_city.py
@@ -41201,3 +41570,16 @@ index f30caff..0d6a4d5 100644
      out.write_text(page, encoding="utf-8")
      rel_out = out.relative_to(ROOT) if str(out).startswith(str(ROOT)) else out
      if data["scene"]:
+diff --git a/scripts/new_engagement.py b/scripts/new_engagement.py
+index 9d49c1c..6393987 100644
+--- a/scripts/new_engagement.py
++++ b/scripts/new_engagement.py
+@@ -311,7 +311,7 @@ def next_step(root, d):
+     say()
+     if kind in ("proposal", "deck"):
+         say("Optional but worth 10 minutes: fill inputs/audience.md (who is in the room, what they decide, what they push back on).")
+-    say("Next, in Copilot Chat (agent mode), paste:")
++    say("Next, in VS Code, Copilot Chat (agent mode), paste:")
+     say("    %s engagement=%s" % (KINDS[kind]["first_prompt"], name))
+     say("When it stops, in the terminal:")
+     say("    python scripts/status.py")

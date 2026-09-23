@@ -61,6 +61,7 @@ Everything between gates is regenerable from the file above it. Fix upstream, re
 | proposal, deck | `/deck-outline` | `deck.json` + `storyboard.html` → build → G4 |
 | proposal, deck | `/speech` | `speech.md` |
 | proposal, deck | `@critic /critique` | `critique.md` |
+| none | `/fit-finder` | a brief in chat (the M365 Fit Finder agent run locally; needs `brand/fit-finder-context.md`) |
 | proposal | `/team-brief`, `/team-tasks file=…` | `team-brief.md`, `tasks.json` → G5 |
 | meeting | `/meeting-notes` | `notes.md` + `tasks.json` → G5 |
 
@@ -88,8 +89,10 @@ Independent of D2P. Copy `bench/` into an empty workspace and it walks you throu
 | synthesis is thin or invents things | transcript too long for one pass; check `normalized/T1.part01.md` exists; G1 exists for exactly this |
 | tracker CSV locked | close Excel, run `append_tasks.py` again |
 
+**Upgrading** your copy to a new version (from a GitHub ZIP, no `git pull` needed): `docs/upgrades/README.md` → *Manual upgrade*, a table of the folders and files to keep from your old version.
+
 Reference: `docs/design.md` (why it is built this way), `docs/bootstrap.md` (script specs and build prompts).
 
 **Everything that lives in Microsoft 365** — daily brief, meeting filing and prep, email drafts, 1-1 agenda check — is in `m365/` (build sheets: scheduled prompts, Power Automate flows with standard connectors, Agent Builder agents). It never touches this workspace. `docs/parked.md` records the earlier attempts and why they were dropped.
 
-Sheets 7+ in `m365/` are Agent Builder agents built to **share with colleagues** (first one: Fit Finder, which turns an AI idea someone saw into a brief for their own team and feeds the good ones into Discovery2Presentation). Entry bar: someone other than Nikos uses it.
+Sheets 7+ in `m365/` are Agent Builder agents built to **share with colleagues** (first one: Fit Finder, which turns an AI idea someone saw into a brief for their own team and feeds the good ones into Discovery2Presentation). Entry bar: someone other than its author uses it.

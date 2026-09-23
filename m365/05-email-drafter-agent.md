@@ -1,4 +1,4 @@
-# 5 · Email Drafter — Agent Builder agent
+# 5 · Email Drafter — Agent Builder agent (on the map: Post Office)
 
 Rough text and a recipient in; subject and a ready-to-send body in your voice out. One paste into a new mail. The voice comes from two places: rules you write once (below) and 15–20 of your own sent emails the agent reads as exemplars.
 
