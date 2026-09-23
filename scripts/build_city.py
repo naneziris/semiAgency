@@ -1,6 +1,6 @@
-"""Build city.html — the shareable map of everything SemiAgency offers — from city/city.json and the repo.
+"""Build index.html — the shareable map of everything SemiAgency offers — from city/city.json and the repo.
 
-    python scripts/build_city.py            # writes city.html, reports unmapped features
+    python scripts/build_city.py            # writes index.html, reports unmapped features
     python scripts/build_city.py --check    # exit 1 if any feature in the repo is not placed on the map
 
 The page is self-contained (no network, no corporate data): it embeds the prompt files, the M365 build
@@ -303,13 +303,19 @@ def load_scene(m, link_image=False):
     return {"src": src, "w": w, "h": h, "hotspots": spots, "file": img.name, "bytes": len(data)}
 
 
-def assign_hotspots(buildings, scene):
-    """Buildings name their hotspot in city.json; unmapped (auto) buildings take free hotspots automatically.
-    Returns the list of hotspot ids left free (= free lots)."""
+def assign_hotspots(buildings, scene, landmarks=()):
+    """Buildings and landmarks name their hotspot in city.json; unmapped (auto) buildings take free hotspots
+    automatically. Returns the list of hotspot ids left free (= free lots)."""
     if not scene:
         return []
     by_id = {x["id"]: x for x in scene["hotspots"]}
     used = set()
+    for lm in landmarks:
+        if lm["hotspot"] not in by_id:
+            die(f"landmark '{lm['name']}' names hotspot '{lm['hotspot']}' which is not in city/hotspots.json")
+        if lm["hotspot"] in used:
+            die(f"hotspot '{lm['hotspot']}' is used by two landmarks")
+        used.add(lm["hotspot"])
     for b in buildings:
         hid = b.get("hotspot")
         if hid:
@@ -359,10 +365,15 @@ def build_data(m, link_image=False):
             d["docs"] = [doc_info({"file": rel, "title": rel}, m)]
         buildings.append(d)
     data = {k: m[k] for k in ("title", "tagline", "audiences", "districts", "lots_per_district", "journeys")}
+    data["modes"] = m.get("modes", {})
+    data["landmarks"] = m.get("landmarks", [])
+    data["area_label_at"] = m.get("area_label_at", {})
+    for d in buildings:
+        d["asks"] = [dict(a, when=a.get("when", ""), get=a.get("get", "")) for a in d.get("asks", [])]
     data["buildings"] = buildings
     data["built"] = date.today().isoformat()
     scene = load_scene(m, link_image)
-    data["free_lots"] = assign_hotspots(buildings, scene)
+    data["free_lots"] = assign_hotspots(buildings, scene, data["landmarks"] if scene else ())
     data["scene"] = scene
     return data, unmapped
 
@@ -460,19 +471,63 @@ details .desc{color:var(--mut);font-size:13px;margin:2px 0 6px}
 footer{color:var(--mut);font-size:12px;text-align:center;padding:16px}
 kbd{border:1px solid var(--line);border-radius:4px;padding:0 5px;font-size:12px;background:#fff}
 @media(max-width:700px){.modal{padding:16px 14px}.bld text{font-size:14px}}
+/* v2: areas, landmarks, modes, asks, front desk */
+button.chip .dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;vertical-align:0}
+button.chip[hidden]{display:none}
+.bld polygon.hs{stroke:color-mix(in srgb,var(--ac,#ffb400) 55%,transparent);stroke-width:1.6}
+.bld:hover polygon.hs{stroke-width:3}
+.bld:hover polygon.hs{fill:color-mix(in srgb,var(--ac,#ffb400) 28%,transparent);stroke:var(--ac,#ffb400)}
+#city.areas .bld polygon.hs{fill:color-mix(in srgb,var(--ac) 38%,transparent);stroke:color-mix(in srgb,var(--ac) 80%,#fff)}
+.bld.focus polygon.hs{fill:color-mix(in srgb,var(--ac,#1f6fd0) 30%,transparent);stroke:var(--ac,#1f6fd0);stroke-width:3.5}
+.bld .pill,.bld .pillbg{display:none}
+#city.alllabels .bld .pill,#city.alllabels .bld .pillbg,.bld.focus .pill,.bld.focus .pillbg,.bld:hover .pill,.bld:hover .pillbg{display:inline}
+#city.nolabels .apill,#city.nolabels .apillbg,#city.nolabels .lm .pill,#city.nolabels .lm .pillbg{display:none}
+#city.picked .apill,#city.picked .apillbg{opacity:.35}
+.apillbg{stroke:#fff;stroke-width:1.5;opacity:.93}
+.apill{fill:#fff;font-weight:700;pointer-events:none}
+.area-hit{cursor:pointer}
+.lm{cursor:pointer}
+.lm polygon{fill:rgba(255,255,255,0);stroke:rgba(255,255,255,0);stroke-width:2.5;stroke-dasharray:6 4;vector-effect:non-scaling-stroke}
+.lm:hover polygon,.lm.on polygon{fill:rgba(58,154,110,.22);stroke:#3a9a6e}
+.lm .pillbg{fill:rgba(58,154,110,.92);stroke:#fff}
+.lm .pill{fill:#fff;font-weight:600}
+.modal .areabar{height:6px;border-radius:6px 6px 0 0;margin:-22px -26px 16px}
+.modal .sub{font-size:14px;color:var(--mut);margin:2px 0 8px}
+.mode{border-radius:999px;padding:1px 9px;font-size:12px;font-weight:600;background:#eef2f6;border:1px solid var(--line)}
+.mode.auto{background:#e3f4ea;border-color:#9fd1b3}.mode.click{background:#e9f1fb;border-color:#a9c6ea}.mode.setup{background:#fdf0dd;border-color:#e8c48e}
+table.asks{border-collapse:collapse;width:100%;font-size:13px;margin:4px 0 8px}
+table.asks th{font-size:12px;text-align:left;color:var(--mut);font-weight:600;padding:4px 8px;border-bottom:1px solid var(--line)}
+table.asks td{padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+table.asks td.say{width:46%}
+table.asks .code{margin:0}
+table.asks .code pre{padding:6px 60px 6px 8px}
+table.asks tr.hi td{background:#fff7d6}
+table.asks tr.lo td{opacity:.5}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px;margin:8px 0 4px}
+.card{border:1px solid var(--line);border-left:6px solid var(--ac);border-radius:10px;padding:10px 12px;background:#fff;display:flex;flex-direction:column;gap:4px}
+.card h4{margin:0;font-size:15px}
+.card .k{font-size:12px;color:var(--mut)}
+.card .v{font-size:13px}
+.card button{align-self:flex-start;margin-top:4px}
+.grp{font-size:13px;font-weight:700;margin:14px 0 2px;color:var(--mut);text-transform:uppercase;letter-spacing:.05em}
+#guide .facts{font-size:12.5px;margin:0 0 8px;display:grid;grid-template-columns:auto 1fr;gap:2px 8px}
+#guide .facts b{color:var(--mut);font-weight:600}
+#guide{border-left:6px solid var(--gac,#e6c76b)}
+#guide.left{right:auto;left:16px}
 </style></head><body>
 <header>
   <h1>__TITLE__</h1>
   <div class="tag">__TAGLINE__</div>
 </header>
+<div class="bar" id="who"><span class="lbl">I work in</span></div>
 <div class="bar" id="way"><span class="lbl">I want to…</span></div>
-<div class="bar" id="aud"><span class="lbl">Or browse:</span></div>
+<div class="bar" id="aud"><span class="lbl">Areas</span></div>
 <div id="cityWrap">
   <svg id="city" xmlns="http://www.w3.org/2000/svg"></svg>
   <div id="tip"></div>
-  <div id="guide"><button class="x" id="gClose" aria-label="Clear selection">×</button><div class="who"></div><div class="when"></div><ol class="stops"></ol><div class="nav"><button class="chip" id="gPrev">‹ Previous stop</button><button class="chip" id="gNext">Next stop ›</button><span class="sp"></span><button class="chip" id="gOpen">Open this building</button></div></div>
+  <div id="guide"><button class="x" id="gClose" aria-label="Clear selection">×</button><div class="who"></div><div class="when"></div><div class="facts"></div><ol class="stops"></ol><div class="nav"><button class="chip" id="gPrev">‹ Previous stop</button><button class="chip" id="gNext">Next stop ›</button><span class="sp"></span><button class="chip" id="gOpen">Open this building</button></div></div>
 </div>
-<footer>Generated from the SemiAgency repo on __BUILT__ by <code>scripts/build_city.py</code>. Pick an "I want to…" to see the stops of that journey numbered on the map. Press <kbd>Esc</kbd> to close a building.</footer>
+<footer>Generated from the SemiAgency repo on __BUILT__ by <code>scripts/build_city.py</code>. Pick what you want to do to see its steps numbered on the map; click an area's name to see what lives there. Press <kbd>Esc</kbd> to close a building.</footer>
 <div id="ov"><div class="modal" role="dialog" aria-modal="true"><button class="x" id="mx" aria-label="Close">×</button><div id="mc"></div></div></div>
 <script>
 const DATA = __DATA__;
@@ -504,7 +559,7 @@ const HEIGHTS = {hall:110,columns:95,studio:100,factory:105,dome:110,warehouse:9
 
 /* ---------- layout */
 const W = 1440, BW = 62, GAP = 22;
-const rowsPlan = [["meeting","harbour"],["lab","foundations","arrivals"]];
+const rowsPlan = DATA.rows || [["agora","proposal","deck","record"],["harbour","idea","lab","yard","arrivals"]];
 function layout(){
   const byD = {}; DATA.buildings.forEach(b => (byD[b.district] = byD[b.district] || []).push(b));
   const slots = d => (byD[d]||[]).length + (DATA.lots_per_district[d]||0);
@@ -535,14 +590,25 @@ function renderScene(){
   let s = `<defs><filter id="soft"><feGaussianBlur stdDeviation="2"/></filter></defs><image href="${sc.src}" x="0" y="0" width="${sc.w}" height="${sc.h}"/>`;
   const byId = {}; sc.hotspots.forEach(h => byId[h.id] = h);
   const k = sc.w / 1440; // scale text with the image
-  DATA.free_lots.forEach(id => { const h = byId[id]; s += `<polygon class="lot" data-lot="${id}" points="${h.points.map(p=>p.join(',')).join(' ')}"><title>Free lot — a future feature will live here</title></polygon>`; });
-  DATA.buildings.forEach(b => { const h = byId[b.hotspot]; if (!h) return; const c = cen(h.points); b._x = c[0]; b._y = top(h.points);
-    const fs = 13*k, pw = (b.name.length*7.2+16)*k, py = bot(h.points) + 6*k;
-    s += `<g class="bld" data-id="${b.id}" data-aud="${b.audience}"><polygon class="hs" points="${h.points.map(p=>p.join(',')).join(' ')}"/>`;
-    s += `<rect class="pillbg" x="${c[0]-pw/2}" y="${py}" width="${pw}" height="${20*k}" rx="${10*k}"/><text class="pill" x="${c[0]}" y="${py+14*k}" style="font-size:${fs}px;text-anchor:middle">${esc(b.name)}</text></g>`; });
+  const pts = h => h.points.map(p=>p.join(',')).join(' ');
+  const pill = (x, y, text, fs, cls='pill', bg='pillbg', fill='') => { const pw = (text.length*fs*(cls==='apill'?0.64:0.58)+fs*1.4); return `<rect class="${bg}" x="${x-pw/2}" y="${y}" width="${pw}" height="${fs*1.6}" rx="${fs*0.8}" ${fill?`style="fill:${fill}"`:''}/><text class="${cls}" x="${x}" y="${y+fs*1.12}" style="font-size:${fs}px;text-anchor:middle">${esc(text)}</text>`; };
+  DATA.free_lots.forEach(id => { const h = byId[id]; s += `<polygon class="lot" data-lot="${id}" points="${pts(h)}"><title>Free lot — a future feature will live here</title></polygon>`; });
+  (DATA.landmarks||[]).forEach(lm => { const h = byId[lm.hotspot]; if (!h) return; const c = cen(h.points);
+    s += `<g class="lm" data-journey="${lm.journey}"><polygon points="${pts(h)}"><title>${esc(lm.name)} — show this route</title></polygon>${pill(c[0], bot(h.points)-6*k, lm.name.replace('Pier · ',''), 11.5*k)}</g>`; });
+  DATA.buildings.forEach(b => { const h = byId[b.hotspot]; if (!h) return; const c = cen(h.points); b._x = c[0]; b._y = top(h.points); b._c = c;
+    const ac = (DATA.districts.find(d=>d.id===b.district)||{}).color || '#ffb400';
+    s += `<g class="bld" data-id="${b.id}" data-aud="${b.audience}" style="--ac:${ac}"><polygon class="hs" points="${pts(h)}"/>`;
+    s += pill(c[0], bot(h.points) + 4*k, b.name, 12*k) + `</g>`; });
+  // one name label per area, at the centre of its buildings
+  DATA.districts.forEach(d => { const bs = DATA.buildings.filter(b => b.district===d.id && b._c && !b.auto); if (!bs.length) return;
+    let x = bs.reduce((a,b)=>a+b._c[0],0)/bs.length, y = Math.min(...bs.map(b=>b._y)) - 30*k; if (bs.length > 3) y = bs.reduce((a,b)=>a+b._c[1],0)/bs.length - 10*k;
+    const ov = (DATA.area_label_at||{})[d.id]; if (ov) { x = ov[0]; y = ov[1]; }
+    s += `<g class="area-hit" data-district="${d.id}">${pill(x, Math.max(4, y), d.name, 14*k, 'apill', 'apillbg', d.color)}</g>`; });
   s += `<polyline id="path" points=""/><g id="badges"></g>`;
   svg.innerHTML = s;
   svg.querySelectorAll('.bld').forEach(g => { g.addEventListener('click', () => openB(g.dataset.id)); g.addEventListener('mousemove', e => tip(e, g.dataset.id)); g.addEventListener('mouseleave', () => $('#tip').style.display='none'); });
+  svg.querySelectorAll('.lm').forEach(g => g.addEventListener('click', () => select({type:'journey', id:g.dataset.journey})));
+  svg.querySelectorAll('.area-hit').forEach(g => g.addEventListener('click', () => select({type:'district', id:g.dataset.district})));
   applyFilter(); applySelection();
 }
 let showLots = false, showLabels = true;
@@ -588,18 +654,33 @@ function truncate(s,n){ return s.length>n ? s.slice(0,n-1)+'…' : s; }
 /* ---------- tooltip */
 function tip(e, id){
   const b = DATA.buildings.find(x=>x.id===id); const t = $('#tip'); const wrap = $('#cityWrap').getBoundingClientRect();
-  t.innerHTML = `<b>${esc(b.name)}</b>${esc(b.pitch)}`; t.style.display='block';
+  const d = DATA.districts.find(x=>x.id===b.district)||{};
+  t.innerHTML = `<b>${esc(b.name)}</b>${b.sub?`<div style="color:${d.color||'#555'};font-weight:600;margin-bottom:3px">${esc(b.sub)}</div>`:''}${esc(b.pitch)}${b.mode&&DATA.modes[b.mode]?`<div style="margin-top:4px;color:#5b6773;font-size:12px">${esc(DATA.modes[b.mode])} · ${esc(d.name||'')}</div>`:''}`; t.style.display='block';
   let x = e.clientX - wrap.left + 14, y = e.clientY - wrap.top + 14; if (x + 290 > wrap.width) x -= 300; t.style.left = x+'px'; t.style.top = y+'px';
 }
 
 /* ---------- filter & wayfinder */
 let aud = 'all';
-function applyFilter(){ document.querySelectorAll('.bld').forEach(g => g.classList.toggle('dim', aud!=='all' && g.dataset.aud!==aud && g.dataset.aud!=='everyone')); document.querySelectorAll('#aud .chip').forEach(c=>c.classList.toggle('on', c.dataset.a===aud)); }
-(function(){ const bar = $('#aud'); const mk=(a,l)=>{const b=document.createElement('button'); b.className='chip'; b.dataset.a=a; b.textContent=l; b.onclick=()=>{aud=a; applyFilter();}; bar.appendChild(b);}; mk('all','Everything'); Object.entries(DATA.audiences).forEach(([a,l])=>{ if(a!=='everyone') mk(a,l); });
-  if (DATA.scene) { const t1=document.createElement('button'); t1.className='chip'; t1.textContent='Labels'; t1.classList.add('on'); t1.onclick=()=>{showLabels=!showLabels; t1.classList.toggle('on',showLabels); $('#city').classList.toggle('nolabels',!showLabels);}; bar.appendChild(t1);
+const areaColor = id => (DATA.districts.find(d=>d.id===id)||{}).color || '#e6c76b';
+const fits = a => aud==='all' || a===aud || a==='everyone';
+function applyFilter(){
+  document.querySelectorAll('.bld').forEach(g => g.classList.toggle('dim', !fits(g.dataset.aud)));
+  document.querySelectorAll('#who .chip').forEach(c=>c.classList.toggle('on', c.dataset.a===aud));
+  document.querySelectorAll('#way .chip[data-journey]').forEach(c => { const j = DATA.journeys.find(x=>x.id===c.dataset.journey); c.hidden = !fits(j.audience||'everyone'); });
+  document.querySelectorAll('#aud .chip[data-district]').forEach(c => { const d = DATA.districts.find(x=>x.id===c.dataset.district); c.hidden = !fits(d.audience||'everyone'); });
+}
+(function(){
+  const who = $('#who'); const mk=(a,l)=>{const b=document.createElement('button'); b.className='chip'; b.dataset.a=a; b.textContent=l; b.onclick=()=>{aud=a; applyFilter(); try{localStorage.setItem('city.aud',a);}catch(e){}}; who.appendChild(b);};
+  mk('all','Show me everything'); Object.entries(DATA.audiences).forEach(([a,l])=>{ if(a!=='everyone') mk(a,l); });
+  try { const saved = localStorage.getItem('city.aud'); if (saved && (saved==='all' || DATA.audiences[saved])) aud = saved; } catch(e) {}
+  const bar = $('#aud');
+  DATA.districts.forEach(d => { if (d.auto && !DATA.buildings.some(b=>b.district===d.id)) return; const c=document.createElement('button'); c.className='chip'; c.dataset.district=d.id; c.innerHTML=`<span class="dot" style="background:${d.color}"></span>${esc(d.name)}`; c.title=d.subtitle; c.onclick=()=>select({type:'district', id:d.id}); bar.appendChild(c); });
+  if (DATA.scene) {
+    const t0=document.createElement('button'); t0.className='chip'; t0.textContent='Colour areas'; t0.onclick=()=>{t0.classList.toggle('on'); $('#city').classList.toggle('areas');}; bar.appendChild(t0);
+    const t1=document.createElement('button'); t1.className='chip'; t1.textContent='All names'; t1.onclick=()=>{t1.classList.toggle('on'); $('#city').classList.toggle('alllabels');}; bar.appendChild(t1);
     const t2=document.createElement('button'); t2.className='chip'; t2.textContent=`Free lots (${DATA.free_lots.length})`; t2.onclick=()=>{showLots=!showLots; t2.classList.toggle('on',showLots); $('#city').classList.toggle('lots',showLots);}; bar.appendChild(t2); }
-  DATA.districts.forEach(d => { if (d.auto && !DATA.buildings.some(b=>b.district===d.id)) return; const c=document.createElement('button'); c.className='chip'; c.dataset.district=d.id; c.style.borderLeft=`8px solid ${d.color}`; c.textContent=d.name; c.title=d.subtitle; c.onclick=()=>select({type:'district', id:d.id}); bar.appendChild(c); });
-  const way = $('#way'); DATA.journeys.forEach(j => { const b=document.createElement('button'); b.className='chip'; b.dataset.journey=j.id; b.textContent=j.q; b.onclick=()=>select({type:'journey', id:j.id}); way.appendChild(b); });
+  const way = $('#way'); DATA.journeys.forEach(j => { const b=document.createElement('button'); b.className='chip'; b.dataset.journey=j.id; b.innerHTML=`<span class="dot" style="background:${areaColor(j.area)}"></span>${esc(j.q)}`; b.title=j.when; b.onclick=()=>select({type:'journey', id:j.id}); way.appendChild(b); });
+  const fd = DATA.buildings.find(b=>b.picker); if (fd) { const b=document.createElement('button'); b.className='chip tour'; b.textContent='Not sure? Ask the Front Desk'; b.onclick=()=>openB(fd.id); way.appendChild(b); }
 })();
 
 /* ---------- persistent selection: a journey (numbered stops + path + panel) or a district */
@@ -613,21 +694,31 @@ function applySelection(){
   document.querySelectorAll('.chip[data-journey],.chip[data-district]').forEach(c => c.classList.toggle('sel', !!sel && ((sel.type==='journey' && c.dataset.journey===sel.id) || (sel.type==='district' && c.dataset.district===sel.id))));
   const path = $('#path'), badges = $('#badges'); if (path) path.setAttribute('points',''); if (badges) badges.innerHTML='';
   document.querySelectorAll('.bld').forEach(g => { g.classList.remove('focus','cur'); });
-  const guide = $('#guide');
+  document.querySelectorAll('.lm').forEach(g => g.classList.toggle('on', !!sel && sel.type==='journey' && g.dataset.journey===sel.id));
+  const guide = $('#guide'); $('#city').classList.toggle('picked', !!sel);
   if (!sel) { guide.style.display='none'; return; }
+  guide.querySelector('.facts').innerHTML = '';
   if (sel.type==='district') {
-    const d = DATA.districts.find(x=>x.id===sel.id);
+    const d = DATA.districts.find(x=>x.id===sel.id); guide.style.setProperty('--gac', d.color);
+    { const xs = DATA.buildings.filter(b=>b.district===sel.id && b._x!==undefined).map(b=>b._x); const W0 = DATA.scene ? DATA.scene.w : 1440; guide.classList.toggle('left', xs.length>0 && xs.reduce((p,q)=>p+q,0)/xs.length > W0*0.55); }
     document.querySelectorAll('.bld').forEach(g => { const b=DATA.buildings.find(x=>x.id===g.dataset.id); g.classList.toggle('focus', b.district===sel.id); });
     guide.querySelector('.who').textContent = d.name; guide.querySelector('.when').textContent = d.subtitle;
-    guide.querySelector('.stops').innerHTML = DATA.buildings.filter(b=>b.district===sel.id).map(b=>`<li data-b="${b.id}"><b>${esc(b.name)}</b>${esc(b.pitch)}</li>`).join('');
+    const js = DATA.journeys.filter(j=>j.area===sel.id);
+    guide.querySelector('.facts').innerHTML = js.length ? `<b>Routes</b><span>${js.map(j=>`<a href="#${j.id}" data-j="${j.id}">${esc(j.q)}</a>`).join(' · ')}</span>` : '';
+    guide.querySelectorAll('.facts a').forEach(a => a.onclick = e => { e.preventDefault(); select({type:'journey', id:a.dataset.j}); });
+    guide.querySelector('.stops').innerHTML = DATA.buildings.filter(b=>b.district===sel.id).map(b=>`<li data-b="${b.id}"><b>${esc(b.name)}</b>${esc(b.sub||b.pitch)}</li>`).join('');
     guide.querySelector('.nav').style.display='none';
   } else {
     const j = DATA.journeys.find(x=>x.id===sel.id); const k = DATA.scene ? DATA.scene.w/1440 : 1;
+    guide.style.setProperty('--gac', areaColor(j.area));
+    guide.querySelector('.facts').innerHTML = [['You bring', j.bring], ['You get', j.get], ['Takes', j.time]].filter(r=>r[1]).map(r=>`<b>${r[0]}</b><span>${esc(r[1])}</span>`).join('');
     const pts = [];
     j.stops.forEach((st,i) => { const b = DATA.buildings.find(x=>x.id===st.building); const g = document.querySelector(`.bld[data-id="${st.building}"]`); if (!g || b._x===undefined) return; g.classList.add('focus'); if (i===stop) g.classList.add('cur');
       const y = b._y - 12*k; pts.push(`${b._x},${y}`);
-      badges.innerHTML += `<g class="badge" transform="translate(${b._x},${y})"><circle r="${12*k}"/><text y="${4.5*k}" style="font-size:${13*k}px">${i+1}</text></g>`; });
-    path.setAttribute('points', pts.join(' '));
+      badges.innerHTML += `<g class="badge" transform="translate(${b._x},${y})"><circle r="${12*k}" style="fill:${areaColor(j.area)}"/><text y="${4.5*k}" style="font-size:${13*k}px">${i+1}</text></g>`; });
+    path.setAttribute('points', pts.join(' ')); path.style.stroke = areaColor(j.area);
+    const xs = j.stops.map(st => (DATA.buildings.find(x=>x.id===st.building)||{})._x).filter(x=>x!==undefined); const W0 = DATA.scene ? DATA.scene.w : 1440;
+    guide.classList.toggle('left', xs.length && xs.reduce((a,b)=>a+b,0)/xs.length > W0*0.55);
     guide.querySelector('.who').textContent = j.q; guide.querySelector('.when').innerHTML = `<b>When:</b> ${esc(j.when)}`;
     guide.querySelector('.stops').innerHTML = j.stops.map((st,i)=>{ const b=DATA.buildings.find(x=>x.id===st.building); return `<li class="${i===stop?'cur':''}" data-i="${i}" data-b="${st.building}"><b>${esc(b.name)}</b>${esc(st.say)}</li>`; }).join('');
     guide.querySelector('.nav').style.display=''; $('#gPrev').disabled = stop===0; $('#gNext').disabled = stop===j.stops.length-1;
@@ -645,8 +736,21 @@ function codeBlock(text){ return `<div class="code"><button class="copy" type="b
 function openB(id){
   const b = DATA.buildings.find(x=>x.id===id); if(!b) return;
   const d = DATA.districts.find(x=>x.id===b.district);
-  let h = `<h2>${esc(b.name)}</h2><div class="meta"><span>${esc(d.name)}</span><span class="aud">${esc(DATA.audiences[b.audience]||b.audience)}</span>${b.auto?'<span class="aud" style="background:#fff3c4">not yet placed on the map — add it to city/city.json</span>':''}</div>`;
+  const cj = sel && sel.type==='journey' ? DATA.journeys.find(j=>j.id===sel.id) : null;
+  let h = `<div class="areabar" style="background:${d.color}"></div><h2>${esc(b.name)}</h2>${b.sub?`<div class="sub">${esc(b.sub)}</div>`:''}<div class="meta"><span><span class="dot" style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${d.color};margin-right:5px"></span>${esc(d.name)}</span><span class="aud">${esc(DATA.audiences[b.audience]||b.audience)}</span>${b.mode&&DATA.modes[b.mode]?`<span class="mode ${esc(b.mode)}">${esc(DATA.modes[b.mode])}</span>`:''}${b.auto?'<span class="aud" style="background:#fff3c4">not yet placed on the map — add it to city/city.json</span>':''}</div>`;
   h += `<p class="pitch">${esc(b.pitch)}</p>`;
+  if (cj) { const i = cj.stops.findIndex(s=>s.building===b.id); if (i>=0) h += `<p class="say" style="background:#fff7d6;border-radius:8px;padding:6px 10px;font-size:14px"><b>Step ${i+1} of ${cj.stops.length} — ${esc(cj.q)}:</b> ${esc(cj.stops[i].say)}</p>`; }
+  if (b.picker) {
+    const groups = [['everyone','Anyone'], ...Object.entries(DATA.audiences).filter(([a])=>a!=='everyone')];
+    groups.forEach(([a,label]) => { const js = DATA.journeys.filter(j => (j.audience||'everyone')===a && fits(j.audience||'everyone')); if (!js.length) return;
+      h += `<div class="grp">${esc(a==='everyone'?'Anyone':'If you work in '+label)}</div><div class="cards">` + js.map(j => `<div class="card" style="--ac:${areaColor(j.area)}"><h4>${esc(j.q)}</h4><div class="v">${esc(j.when)}</div><div class="k">You bring</div><div class="v">${esc(j.bring||'')}</div><div class="k">You get</div><div class="v">${esc(j.get||'')}</div><div class="k">Takes</div><div class="v">${esc(j.time||'')}</div><button class="chip" data-go="${j.id}">Show me the route ›</button></div>`).join('') + `</div>`; });
+  }
+  if (b.asks && b.asks.length){
+    h += `<h3>${b.mode==='auto'?'What you get':'Ask it'}</h3><table class="asks"><thead><tr><th>${b.mode==='auto'?'You do':'Say'}</th><th>When</th><th>You get</th></tr></thead><tbody>`;
+    b.asks.forEach(a => { const cls = cj && a.journeys ? (a.journeys.includes(cj.id) ? 'hi' : 'lo') : ''; const auto = a.say.startsWith('(');
+      h += `<tr class="${cls}"><td class="say">${auto?`<i>${esc(a.say.slice(1,-1))}</i>`:codeBlock(a.say)}</td><td>${esc(a.when)}</td><td>${esc(a.get)}</td></tr>`; });
+    h += `</tbody></table>`;
+  }
   if (b.steps.length){ h += `<h3>How to use it</h3>`; b.steps.forEach(s => { h += `<div class="step">${s.say?`<p class="say">${s.say}</p>`:''}${s.copy?codeBlock(s.copy):''}</div>`; }); }
   if (b.prompts.length){ h += `<h3>The prompts behind it</h3>`; b.prompts.forEach(p => { h += `<details><summary><code>/${esc(p.name)}</code></summary><div class="desc">${esc(p.description)}</div><div class="desc">What it tells Copilot (you do not paste this; it runs when you type the command in a workspace that has <code>${esc(p.file)}</code>):</div>${codeBlock(p.body)}</details>`; }); }
   if (b.agents.length){ h += `<h3>Agents</h3>`; b.agents.forEach(a => { h += `<details><summary><code>@${esc(a.name)}</code></summary><div class="desc">${esc(a.description)}</div>${codeBlock(a.body)}</details>`; }); }
@@ -654,6 +758,7 @@ function openB(id){
   if (b.source) h += `<div class="src">Source: <code>${esc(b.source)}</code></div>`;
   $('#mc').innerHTML = h; $('#ov').classList.add('on'); $('#ov').scrollTop = 0;
   $('#mc').querySelectorAll('.copy').forEach(btn => btn.onclick = () => copy(btn));
+  $('#mc').querySelectorAll('[data-go]').forEach(btn => btn.onclick = () => select({type:'journey', id:btn.dataset.go}));
 }
 function closeB(){ $('#ov').classList.remove('on'); }
 $('#mx').onclick = closeB; $('#ov').addEventListener('click', e => { if (e.target.id==='ov') closeB(); });
@@ -663,7 +768,8 @@ function copy(btn){ const text = btn.parentElement.querySelector('pre').textCont
 function fallback(text,done){ const ta=document.createElement('textarea'); ta.value=text; ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta); ta.select(); try{ document.execCommand('copy'); done(); }catch(e){} document.body.removeChild(ta); }
 
 render();
-if (location.hash) { const id = decodeURIComponent(location.hash.slice(1)); if (DATA.buildings.some(b=>b.id===id)) openB(id); else if (DATA.journeys.some(j=>j.id===id)) select({type:'journey', id}); }
+applyFilter();
+if (location.hash) { const id = decodeURIComponent(location.hash.slice(1)); if (DATA.buildings.some(b=>b.id===id)) openB(id); else if (DATA.journeys.some(j=>j.id===id)) select({type:'journey', id}); else if (DATA.districts.some(d=>d.id===id)) select({type:'district', id}); }
 </script>
 </body></html>
 """
@@ -672,7 +778,7 @@ if (location.hash) { const id = decodeURIComponent(location.hash.slice(1)); if (
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--check", action="store_true", help="exit 1 if the repo has features not placed on the map")
-    ap.add_argument("--out", help="output path (default: manifest 'output', i.e. city.html at the repo root)")
+    ap.add_argument("--out", help="output path (default: manifest 'output', i.e. index.html at the repo root)")
     ap.add_argument("--link-image", action="store_true", help="reference city/scene.* instead of embedding it (smaller file, two files to share)")
     a = ap.parse_args()
     m = load_manifest()
@@ -683,10 +789,21 @@ def main():
     for b in m["buildings"]:
         if b["district"] not in dids:
             die(f"building {b['id']} points at unknown district {b['district']}")
+    jids = {j["id"] for j in m["journeys"]}
     for j in m["journeys"]:
+        if j.get("area") and j["area"] not in dids:
+            die(f"journey {j['id']} points at unknown area {j['area']}")
         for st in j["stops"]:
             if st["building"] not in ids:
                 die(f"journey {j['id']} points at unknown building {st['building']}")
+    for lm in m.get("landmarks", []):
+        if lm["journey"] not in jids:
+            die(f"landmark '{lm['name']}' points at unknown journey {lm['journey']}")
+    for b in m["buildings"]:
+        for row in b.get("asks", []):
+            for jid in row.get("journeys", []):
+                if jid not in jids:
+                    die(f"building {b['id']}: an 'asks' row points at unknown journey {jid}")
     data, unmapped = build_data(m, a.link_image)
     page = (PAGE.replace("__TITLE__", html.escape(m["title"])).replace("__TAGLINE__", html.escape(m["tagline"]))
             .replace("__BUILT__", data["built"])
@@ -694,7 +811,7 @@ def main():
     for k in m["redact"]:
         if k in page:
             die(f"redaction failed: '{k}' still present in output")
-    out = Path(a.out) if a.out else ROOT / m.get("output", "city.html")
+    out = Path(a.out) if a.out else ROOT / m.get("output", "index.html")
     out.write_text(page, encoding="utf-8")
     rel_out = out.relative_to(ROOT) if str(out).startswith(str(ROOT)) else out
     if data["scene"]:

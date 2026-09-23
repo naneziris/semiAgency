@@ -1,8 +1,8 @@
 # city/ — the shareable map of SemiAgency
 
-`python scripts/build_city.py` writes `city.html` at the repo root: one self-contained page (no network, no corporate data) that shows every feature as a building. Click a building → what it is, how to use it with copy buttons, and the full prompt or build sheet behind it. The "I want to…" bar holds journeys: each says in plain words when it applies and numbers its stops on the map.
+`python scripts/build_city.py` writes `index.html` at the repo root (so GitHub Pages serves it as the site's home page): one self-contained page (no network, no corporate data) that shows every feature as a building. Click a building → what it is, how to use it with copy buttons, and the full prompt or build sheet behind it. The "I want to…" bar holds journeys: each says in plain words when it applies and numbers its stops on the map.
 
-Two looks, chosen automatically:
+The map has one **area per flow** (colour-coded in the painting and in the page), one **building per step**, and in the harbour four **piers** that open the M365 routes. Two looks, chosen automatically:
 
 | files present | what you get |
 |---|---|
@@ -12,6 +12,7 @@ Two looks, chosen automatically:
 ## Files
 
 - `city.json` — the manifest. Districts, one entry per building (`name`, `district`, `pitch`, `steps` with copy blocks, the `prompts` / `agents` / `docs` it contains, `audience`, and `hotspot` in illustrated mode), the `journeys` (label, a plain-language "when", ordered stops with one line each), the `redact` map and the `never_embed` list.
+- New in v2, all optional per building: `sub` (plain-language subtitle shown under the name), `mode` (`auto`, `click`, `paste`, `prompt`, `run`, `setup`, `read` — how you use it), `asks` (rows of *say / when / you get*, each tagged with the `journeys` it belongs to, so the row is highlighted when you arrive on that route), `picker: true` (the Front Desk cards). Top level: `landmarks` (a hotspot that opens a journey — the piers), journeys carry `area`, `audience`, `bring`, `get`, `time`, and `area_label_at` pins each area's name on the picture.
 - `scene.jpg` or `scene.png` — the illustration (you generate it; prompt below). Landscape, ≥ 2400 px wide, no text in the picture.
 - `hotspots.json` — polygons traced on the scene, one per building *and per empty plaza*. Made with `hotspot-editor.html`.
 - `hotspot-editor.html` — open in any browser, no server needed.
@@ -21,21 +22,43 @@ Two looks, chosen automatically:
 1. Generate the scene from the prompt at the bottom of this page. Pick a variant where you can count the buildings and nothing overlaps. Save it as `city/scene.jpg` (quality 85) or `.png`.
 2. Open `city/hotspot-editor.html`, load the image, and trace the buildings. *Tracing* means: click 4–6 points around the outline of one building (like drawing a rough polygon), press Enter, type its id. The current `hotspots.json` was traced this way for the current `scene.jpg`; if you keep the picture you never need to redo it. If you generate a new picture, trace it again and use these ids so `city.json` keeps working:
 
-| hotspot id | building | hotspot id | building |
-|---|---|---|---|
-| `parthenon` | Town Hall | `lighthouse` | Lighthouse |
-| `archive-temple` | The Archive | `library-temple` | The Library |
-| `tower-hall` | Design Studio | `post-office` | Post Office |
-| `print-house` | Print House | `clock-tower` | Clock Tower |
-| `theatre` | The Theatre | `embassy-houses` | The Embassy |
-| `warehouse` | Task Depot | `observatory` | Observatory |
-| `stone-house` | The Notary | `workshop` | The Workshop |
-| `radio-tower` | Radio Tower | `cartographer-house` | Cartographer |
-| `harbour-office` | Harbour Office | | |
+| hotspot id | building | area |
+|---|---|---|
+| `town-hall` | Town Hall | Central Agora |
+| `kiosk` | Front Desk | Central Agora |
+| `acro-messenger` | Herald's House | Proposal Acropolis |
+| `acro-scribe` | Scribe's House | Proposal Acropolis |
+| `acro-stoa` | Messenger's Stoa | Proposal Acropolis |
+| `acro-temple` | Temple of Options | Proposal Acropolis |
+| `acro-studio` | Design Studio | Proposal Acropolis |
+| `acro-print` | Print House | Proposal Acropolis |
+| `acro-theatre` | The Theatre | Proposal Acropolis |
+| `acro-parthenon` | High Court | Proposal Acropolis |
+| `acro-depot` | Task Depot | Proposal Acropolis |
+| `blue-1` | Little Archive | Deck Street |
+| `blue-2` | Story Studio | Deck Street |
+| `blue-3` | Little Print House | Deck Street |
+| `blue-4` | Open-air Theatre | Deck Street |
+| `notary` | The Notary | Notary Corner |
+| `embassy` | The Embassy | Gate of Envoys |
+| `observatory` | Observatory | Observatory Hill |
+| `radio-tower` | Radio Tower | M365 Harbour |
+| `harbour-office` | Harbour Office | M365 Harbour |
+| `lighthouse` | Lighthouse | M365 Harbour |
+| `library` | The Library | M365 Harbour |
+| `post-office` | Post Office | M365 Harbour |
+| `clock-tower` | Clock Tower | M365 Harbour |
+| `yard-workshop` | The Workshop | Construction Yard |
+| `yard-cranes` | Harbour Works | Construction Yard |
+| `cartographer` | Cartographer | Construction Yard |
+| `pier-morning` | Pier · Your morning | M365 Harbour (opens a route) |
+| `pier-meeting` | Pier · After a meeting | M365 Harbour (opens a route) |
+| `pier-oneone` | Pier · Before a 1-1 | M365 Harbour (opens a route) |
+| `pier-email` | Pier · Writing email | M365 Harbour (opens a route) |
 
-   Then trace every empty plaza, spare building and pavilion as well, with any id you like. Those are the free lots (12 in the current picture). The `hotspot` field in `city.json` is the only link between a building and a polygon.
+   Then trace every empty plaza, spare building and pavilion as well, with any id you like. Those are the free lots (7 in the current picture: five empty plazas, the teal house next to the Embassy and the small house by the Clock Tower). The `hotspot` field in `city.json` is the only link between a building and a polygon.
 3. Export → save as `city/hotspots.json`.
-4. `python scripts/build_city.py` → `city.html`. Open it, pick a journey, click through its stops. `--link-image` keeps the image as a separate file next to the page if the embedded size bothers you.
+4. `python scripts/build_city.py` → `index.html`. Open it, pick a journey, click through its stops. `--link-image` keeps the image as a separate file next to the page if the embedded size bothers you.
 
 ## When a feature is added
 
@@ -45,14 +68,77 @@ Run `python scripts/build_city.py`. A new prompt, agent or M365 sheet that no bu
 
 The page embeds only what `city.json` names, after applying `redact` (replace names, sites, time zones). `never_embed` paths are refused even if named. The build fails if a redacted string survives into the output. Keep `engagements/`, `brand/` and `tracker/` in `never_embed`; they are the corporate data.
 
-## Image prompt (ancient Athens, futuristic touches)
+## Image prompt (v2: one area per flow)
 
-> A detailed illustrated bird's-eye view (three-quarter aerial perspective, slightly isometric) of a fantasy city that is ancient Athens reimagined with subtle futuristic additions. Bright clean daylight, clear pale sky, calm turquoise Aegean sea. Painterly storybook illustration, soft warm colours (marble white, terracotta, olive green, turquoise, gold accents), crisp edges, high detail, no text or lettering anywhere.
->
-> The city is arranged in four clearly separate districts on one island: (1) a high acropolis hill in the upper centre with a grand Parthenon-like temple, a columned archive building, a round domed theatre, a print workshop with tall chimneys, a stately town hall with a small tower, a warehouse and a modest stone house — all with marble columns, red-tile roofs and olive trees; (2) a harbour district along the water on the right with a tall antenna tower with a glowing orb, a striped lighthouse, a clock tower, a columned library, a post-office style house with a red roof, a harbour office building, and an embassy with a blue flag, plus moored sailboats and a curved stone pier; (3) a small hilltop on the left with an observatory dome with a telescope and space for three more buildings among cypress trees; (4) a workshop quarter at the bottom left with an artisan workshop, a small cartographer's studio and one more building, near a stone bridge.
->
-> Futuristic touches kept subtle: a sleek white monorail curving between districts on slender arches, glass domes on a few marble buildings, a floating solar sail or two, gentle glowing lanterns, a modern glass pavilion on the hilltop, a waterfall cascading from the acropolis cliff into the sea. Also leave 6–8 empty marble plazas or foundation platforms with low walls scattered across the districts, clearly unbuilt, for future buildings.
->
-> Composition rules: every building fully visible and separated by paths, gardens or water — no building hidden behind another; roughly 22–28 distinct buildings in total; wide landscape format 16:9; the whole island fits in frame with sea around it; no people in the foreground, no vehicles except the monorail, no frames, borders, or text.
+The current `scene.jpg` came from this prompt. Keep the same wording if you regenerate, so the areas and hotspot ids stay valid.
 
-Avoid (negative prompt): text, letters, watermark, signature, blurry, dark, night, neon, cyberpunk, overlapping buildings, cropped edges, people close-up, photo-realistic.
+> A detailed illustrated bird's-eye view (three-quarter aerial perspective, slightly isometric) of a fantasy island city that is ancient Athens reimagined with subtle futuristic additions. Bright clean daylight, clear pale sky, calm turquoise Aegean sea all around. Painterly storybook illustration, soft warm colours (marble white, terracotta, olive green, turquoise, gold accents), crisp edges, high detail, no text or lettering anywhere.
+>
+> The island is divided into eight clearly separate areas, connected by paved stone roads that all start from one central plaza. Each area has its own colour, carried by its roof tiles, awnings, banners and the tint of its paving stones, so the boundaries between areas are easy to see from above:
+> (1) Central agora (gold) in the exact centre: a large open marble plaza with golden paving inlays, a stately town hall with a small tower and a golden roof, and a small round information kiosk with a glass dome; six wide roads leave the plaza.
+> (2) Acropolis quarter (deep terracotta red), the largest area, on a high hill in the upper centre: seven distinct buildings along one winding road that climbs the hill — a small scribe's house, a columned archive temple, a design studio with tall windows, a print workshop with chimneys, a round domed theatre, a warehouse, and a grand Parthenon-like temple at the summit; red roof tiles and red banners.
+> (3) Blue street (Aegean blue), a shorter straight street on the lower right of the agora: four smaller buildings in a row — a small archive, a small studio, a small print workshop and a small open-air theatre — clearly smaller cousins of the acropolis buildings, with blue Santorini-style domes and blue awnings.
+> (4) Violet corner (lavender violet), just below the agora: one elegant stone notary house with violet awnings and a small walled garden.
+> (5) Gate of envoys (teal) at the bottom centre, where a stone bridge reaches the island from a small islet: a monumental columned gateway and an embassy house with teal flags; a road runs from the gate straight up to the acropolis.
+> (6) Observatory hill (silver and pale lavender), a small hilltop on the upper left: an observatory with a silver dome and a telescope among cypress trees, with one empty platform beside it.
+> (7) Harbour (sea green) along the whole right coast: six buildings with sea-green roofs — a tall antenna tower with a glowing orb, a harbour office, a striped lighthouse on the point, a columned library, a post-office house, and a clock tower — and four clearly separate stone piers jutting into the sea, each with moored sailboats whose sails have one colour per pier: sunflower yellow, coral orange, turquoise, white.
+> (8) Construction yard (sandstone and orange) at the bottom left near a second small bridge: a craftsman's workshop, a cartographer's studio with a large map table visible under an awning, a half-built building with sleek white construction cranes, and stacked marble blocks.
+>
+> Futuristic touches kept subtle: a sleek white monorail curving between the agora, the acropolis and the harbour on slender arches, glass domes on a few marble buildings, gently glowing lanterns along the roads, a waterfall cascading from the acropolis cliff into the sea. Leave 8–10 empty marble plazas or foundation platforms with low walls, clearly unbuilt, spread over the areas.
+>
+> Composition rules: every building fully visible and separated by roads, gardens or water — no building hidden behind another; about 26 distinct buildings; the roads from the central agora to every area clearly visible; wide landscape format 16:9; the whole island fits in frame with sea on all sides; no people in the foreground, no vehicles except the monorail and boats, no frames, borders or text.
+
+Avoid (negative prompt): text, letters, watermark, signature, blurry, dark, night, neon, cyberpunk, overlapping buildings, buildings hidden behind others, cropped edges, people close-up, photo-realistic, fog, heavy shadows.
+
+## Publishing on GitHub Pages
+
+**Simplest:** Settings → Pages → *Deploy from a branch* → `main`, folder `/ (root)`. GitHub serves `index.html` as the home page. It also serves every other file in the repo (prompts, sheets, `tracker/`, `brand/`). That's fine for a public repo, which is readable anyway.
+
+**Only the map (optional):** publish `index.html` alone with a GitHub Action.
+
+1. Settings → Pages → Source: **GitHub Actions**.
+2. Save the workflow below as `.github/workflows/pages.yml` and push.
+3. It runs on every push to `main` that changes `index.html`, and on demand from the Actions tab (*Run workflow*). The site is `https://<user>.github.io/<repo>/`.
+
+It publishes the committed `index.html` as it is: rebuild with `python scripts/build_city.py` and commit before pushing. (Having the Action rebuild it would also work, since the script is stdlib only, but the committed file is what you checked.)
+
+```yaml
+name: Publish map
+
+on:
+  push:
+    branches: [main]
+    paths: [index.html]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Keep only the map
+        run: |
+          mkdir _site
+          cp index.html _site/
+          touch _site/.nojekyll
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deployment
+        uses: actions/deploy-pages@v4
+```
+
+If you built with `--link-image`, also copy the image: add `mkdir _site/city && cp city/scene.jpg _site/city/` to the *Keep only the map* step.
