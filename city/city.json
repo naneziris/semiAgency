@@ -116,6 +116,10 @@
         {
           "say": "Lost at any point? This tells you where you are and what to paste next:",
           "copy": "python scripts/status.py"
+        },
+        {
+          "say": "Or ask the guide in Copilot Chat, which works without any script:",
+          "copy": "/start"
         }
       ],
       "docs": [
@@ -130,14 +134,34 @@
       "id": "front-desk",
       "district": "agora",
       "name": "Front Desk",
-      "sub": "which flow is mine?",
+      "sub": "which flow is mine? · /start",
       "shape": "small",
       "hotspot": "kiosk",
       "mode": "read",
       "audience": "everyone",
       "picker": true,
-      "pitch": "Not sure where to go? Every flow on one card: when to use it, what you bring, what you get, how long it takes. Click one to see its route on the map.",
-      "steps": []
+      "pitch": "Not sure where to go? In VS Code, type /start: the guide looks at what you are working on and tells you the one next step, or asks what you want and points you to the right flow. It never does the work itself; you stay in charge. On this map, every flow is on one card: when to use it, what you bring, what you get, how long it takes. Click one to see its route.",
+      "steps": [
+        {
+          "say": "In VS Code, Copilot Chat (agent mode):",
+          "copy": "/start"
+        },
+        {
+          "say": "Already know what you want? Say it: `/start I just had a meeting`. Run `/start` again after every step."
+        }
+      ],
+      "prompts": [
+        "start"
+      ],
+      "agents": [
+        "guide"
+      ],
+      "docs": [
+        {
+          "title": "The menu the guide reads (generated from this map)",
+          "file": "docs/menu.md"
+        }
+      ]
     },
     {
       "id": "p-prep",
@@ -911,6 +935,10 @@
           "copy": "python scripts/build_city.py"
         },
         {
+          "say": "Rebuild the guide's menu (docs/menu.md) after changing journeys or steps here:",
+          "copy": "python scripts/build_menu.py"
+        },
+        {
           "say": "Fail if something is unmapped (for a pre-commit check):",
           "copy": "python scripts/build_city.py --check"
         }
@@ -921,6 +949,37 @@
           "file": "city/README.md"
         }
       ]
+    },
+    {
+      "id": "architect",
+      "district": "yard",
+      "name": "Architect's Office",
+      "sub": "a new flow from a wish · /new-flow",
+      "shape": "small",
+      "mode": "prompt",
+      "audience": "vscode",
+      "pitch": "Want something this agency can't do yet? When /start can't match a wish, it writes it on the wishlist. The architect turns a wish into a new flow: five questions at most, a one-screen design you approve, then the prompt, the instructions, this map and the guide's menu are updated for you.",
+      "steps": [
+        {
+          "say": "See what has been wished for so far:",
+          "copy": "python scripts/wish.py --list"
+        },
+        {
+          "say": "In VS Code, Copilot Chat (agent mode), with the wish in your words:",
+          "copy": "/new-flow <what you want>"
+        },
+        {
+          "say": "After it's built, the guide knows it:",
+          "copy": "/start"
+        }
+      ],
+      "prompts": [
+        "new-flow"
+      ],
+      "agents": [
+        "builder"
+      ],
+      "hotspot": "plaza-west"
     }
   ],
   "landmarks": [
@@ -1194,6 +1253,22 @@
         {
           "building": "cartographer",
           "say": "Rebuild this map whenever a feature is added."
+        }
+      ]
+    },
+    {
+      "id": "new-flow",
+      "area": "yard",
+      "audience": "vscode",
+      "q": "Add something this agency can't do yet",
+      "when": "You wished for something /start couldn't match, or you keep doing a task by hand that could be a flow.",
+      "bring": "the wish in one sentence, and five minutes for questions",
+      "get": "a new flow on the menu and the map, ready to use",
+      "time": "15–30 minutes",
+      "stops": [
+        {
+          "building": "architect",
+          "say": "Pick the wish, answer up to five questions, approve the design, and it builds the flow."
         }
       ]
     }

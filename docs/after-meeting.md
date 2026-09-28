@@ -2,6 +2,8 @@
 
 You just came out of a meeting. This page is the whole flow; you do not need to know which runbook you are on. Two windows in VS Code: the **terminal** and **Copilot Chat in agent mode**.
 
+Lost at any step? Type `/start` in Copilot Chat. It reads where you are and gives you the one next step.
+
 ## 1. Start (2 minutes, terminal)
 
 ```

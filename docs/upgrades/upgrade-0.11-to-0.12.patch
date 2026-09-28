@@ -1,0 +1,1016 @@
+diff --git a/.github/agents/builder.agent.md b/.github/agents/builder.agent.md
+new file mode 100644
+index 0000000..d83bbd4
+--- /dev/null
++++ b/.github/agents/builder.agent.md
+@@ -0,0 +1,12 @@
++---
++description: Designs and scaffolds a new flow (prompt, agent, instructions, map entry) that follows this repo's conventions. Used by /new-flow.
++tools: ['codebase', 'editFiles', 'runCommands', 'search']
++---
++You are the builder of this workspace: you turn a wish into a new flow that fits in with the existing ones. Follow `.github/copilot-instructions.md`.
++- Design first, build only after the user says yes. A design fits on one screen.
++- Reuse before adding: extend an existing prompt or agent when it covers most of the wish; add a new agent only when the flow needs a different persona or different permissions.
++- Every new prompt: frontmatter `mode: agent` and a `description` that starts with `[<kind>]`; first line names its inputs and `Agent: \`@<name>\``; numbered steps; ends by telling the user the exact next step and where it runs.
++- Every artifact a flow writes gets an instructions file `.github/instructions/<artifact>.instructions.md` with `applyTo` and the schema.
++- Scripts only for mechanics, Python standard library only, with `--selftest`, added to `SHIPPED` in `scripts/selftest_all.py`.
++- Never write the flow's data into the repo if it is personal or confidential; put it under a gitignored folder and add that folder to `.gitignore`.
++- You may run: `python scripts/build_menu.py`, `python scripts/build_city.py`, `python scripts/selftest_all.py`, `python scripts/wish.py`. Nothing else.
+diff --git a/.github/agents/guide.agent.md b/.github/agents/guide.agent.md
+new file mode 100644
+index 0000000..d7cc808
+--- /dev/null
++++ b/.github/agents/guide.agent.md
+@@ -0,0 +1,10 @@
++---
++description: The front door. Tells you where you are and the one next step; never does the work itself. Start with /start.
++tools: ['codebase', 'search', 'runCommands']
++---
++You are the guide of this workspace. You help the user pick and run the right step. You never do the step yourself.
++- The only commands you ever run are `python scripts/where.py` (read-only: where the user is and the next step) and `python scripts/wish.py "<wish>"` (appends an unmet wish to `wishlist.md`). Read only `docs/menu.md`. Open a runbook or other doc only when the user asks you to explain something, and then only the one file the menu names.
++- Never edit, create or delete files. Never run any other command, script or tool. Never write an artifact (notes, discovery, proposal, …) even if asked: name the command that does it.
++- Only name commands that appear in `docs/menu.md`, copied exactly, plus `/new-flow`. If what the user wants is not on the menu, record it with `wish.py` and offer `/new-flow`.
++- Every answer: at most one question, then stop. Say where each command runs ("in the terminal:" or "in Copilot Chat (agent mode):"), in a code block the user can copy.
++- Short. No more than 8 lines unless the user asks for all the steps.
+diff --git a/.github/prompts/new-flow.prompt.md b/.github/prompts/new-flow.prompt.md
+new file mode 100644
+index 0000000..dcb797b
+--- /dev/null
++++ b/.github/prompts/new-flow.prompt.md
+@@ -0,0 +1,17 @@
++---
++mode: agent
++description: "[any] Turn a wish into a new flow: short interview, a one-screen design, then the files, the map entry and the menu"
++---
++The wish: `${input:wish}` (empty, or still a placeholder, means none given). Agent: `@builder`.
++
++1. **Pick the wish.** If none was given, run `python scripts/wish.py --list`, show the open wishes numbered, and ask which one (or a new one). Stop until answered.
++2. **Check it isn't here already.** Read `docs/menu.md`. If an item covers most of it, say which and what is missing, and ask: extend that item, or a new flow? If it needs what `docs/parked.md` says this setup can't do (schedules, reading mail, writing to M365), say so plainly and stop unless the user still wants a manual version.
++3. **Interview, one question per message, five at most**, skipping what the wish already answers:
++   - What do you hold in your hands at the end (a file, a message, a decision)?
++   - What do you bring each time (files, a conversation, nothing)?
++   - How often, and how long may it take?
++   - Where should it run: VS Code, Microsoft 365, or both?
++   - What must never happen (data that must not leave, things it must not decide for you)?
++4. **Design, on one screen, then stop:** name and the command(s) the user will type; each step with its gate (where the user checks before moving on); the files it adds (prompts, agent only if needed, an instructions file per artifact, templates, scripts only for mechanics); where its data lives (gitignored if personal or confidential); the map entry (district, building name, one-line pitch). Ask: "Build it?"
++5. **Build, only after a yes.** Write the files by the rules in `@builder`. Add the building to `city/city.json` (with `steps` whose `copy` is each command, and `prompts`/`agents` naming the new files) and a journey (`id`, `audience`, `q` phrased as the user's wish, `when`, `bring`, `get`, `time`, `stops`). Then run, in the terminal: `python scripts/build_menu.py`, `python scripts/build_city.py`, `python scripts/sync_opencode.py` (if it exists), `python scripts/selftest_all.py`, and fix what they report. In `wishlist.md`, append ` [built → /<command>]` to the wish's line.
++6. **Hand over:** list the files you added, then: "In Copilot Chat: `/start <the wish in your words>`. It now knows the new flow. Then commit: `git add -A && git commit -m \"new flow: <name>\"`."
+diff --git a/.github/prompts/start.prompt.md b/.github/prompts/start.prompt.md
+new file mode 100644
+index 0000000..6edc2c1
+--- /dev/null
++++ b/.github/prompts/start.prompt.md
+@@ -0,0 +1,22 @@
++---
++mode: agent
++description: "[start here] Not sure what to run? Tells you where you are and the one next step"
++---
++What the user wants: `${input:want}` (empty, or still a placeholder, means they said nothing). Agent: `@guide` (read-only: you point, the user runs).
++
++## 1. Where am I
++Run `python scripts/where.py` in the terminal and read its output. Do not work out the state yourself: its `next`, `where` and `command` lines are the next step, copied exactly. If it says no engagement is in progress, nothing is in progress.
++
++## 2. Answer
++- **The user said what they want** (above, or in the chat): match it to one numbered item in `docs/menu.md` and go to step 3. If it continues the current engagement, give its next step from section 1.
++- **An engagement is in progress and they said nothing:** reply in this shape and stop:
++  "You're on **<engagement>** (<kind>). Done: <its done line>. Next: <its next line>." + "In <its where>:" + its command in a code block (or, when `where` says by hand, the instruction as plain text) + any `note` lines + "Do that, or something else?"
++- **Nothing in progress and they said nothing:** read `docs/menu.md` and show its `##` items as a numbered list, one line each (the title only), grouped under "Here in VS Code" and "In Microsoft 365" by their `where`, plus a last line "Explain how this works". Ask "Which one?" and stop.
++
++## 3. For a chosen item
++One message, then stop:
++1. **You get:** … · **Time:** … · **Bring:** … (from the menu, one line each).
++2. **First step:** the item's first step from the menu. If it has a command, say where it runs and put the exact command in a code block. For the VS Code flows this is starting an engagement (`python scripts/new_engagement.py`) unless one of the same kind is already in progress. If it has no command (most Microsoft 365 items), say in plain words what to do, name the file to follow from its `read:` line, and put no code block.
++3. "When that's done, run `/start` again and I'll give you the next step." Offer "all the steps" only as a closing half-sentence; show them only if asked.
++
++"Explain how this works" → five lines at most from the menu, then name the one file to read (`docs/after-meeting.md` for the VS Code flows, the `read:` file of the item otherwise). Something not on the menu → run `python scripts/wish.py "<what they want, in their words>"`, then say in three lines: this workspace doesn't do that yet; it's noted in `wishlist.md`; "Want to design it now? In Copilot Chat: `/new-flow <the wish>`". Name a closest item only if it really covers part of the wish. Stop.
+diff --git a/.gitignore b/.gitignore
+index 54247a9..82738ad 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -9,3 +9,10 @@ brand/components.md
+ __pycache__/
+ *.pyc
+ .DS_Store
++.aider*
++.env
++wishlist.md
++# local (Mac) runs: never part of the repo
++.opencode/
++opencode.json
++local/
+diff --git a/README.md b/README.md
+index 27a1b02..1150284 100644
+--- a/README.md
++++ b/README.md
+@@ -11,6 +11,8 @@ meeting    inputs ─▶ notes.md + tasks.json ─▶ tracker
+                                   ▲ G5
+ ```
+ 
++**Not sure what to run? Type `/start` in Copilot Chat (agent mode).** The guide looks at the engagement you're on and gives you the one next step, or asks what you want and points you to the right flow. It never does the work itself. You don't need to remember anything below.
++
+ ## After a meeting
+ 
+ ```
+@@ -20,7 +22,7 @@ python scripts/status.py              # where you are, the checklist, the next p
+ python scripts/status.py --pass       # records the gate (asks for the option / storyline when needed)
+ ```
+ 
+-Repeat the last three until `status.py` says done. That is the whole flow; **`docs/after-meeting.md`** is the one page to read. Scripts and prompts default to the engagement you started last (`engagements/CURRENT`), so you never type its name unless you run two in parallel (`new_engagement.py --use <name>` switches).
++Repeat the last three until `status.py` says done (or run `/start` at any point: it tells you the same, without the scripts). That is the whole flow; **`docs/after-meeting.md`** is the one page to read. Scripts and prompts default to the engagement you started last (`engagements/CURRENT`), so you never type its name unless you run two in parallel (`new_engagement.py --use <name>` switches).
+ 
+ Three kinds, chosen in the first question: **proposal** (there will be a choice between solution approaches — `docs/runbooks/proposal.md`), **deck** (content already decided, you need slides — `docs/runbooks/deck.md`), **meeting** (a record and your actions, no deck — `docs/runbooks/meeting.md`). The runbooks are the per-kind detail that `status.py` prints step by step.
+ 
+@@ -51,6 +53,8 @@ Everything between gates is regenerable from the file above it. Fix upstream, re
+ 
+ | kind | prompt | writes |
+ |---|---|---|
++| any | `/start` (agent `@guide`) | nothing: tells you where you are and the next step; records unmet wishes in `wishlist.md` |
++| any | `/new-flow` (agent `@builder`) | a new flow from a wish: prompt, instructions, map entry, menu |
+ | proposal | `/discovery-prep` | `brief.md` |
+ | proposal | `/discovery-synthesize` | `discovery.md` → G1 |
+ | deck | `/content` | `content.md` → G1 |
+diff --git a/VERSION b/VERSION
+index d9df1bb..ac454c6 100644
+--- a/VERSION
++++ b/VERSION
+@@ -1 +1 @@
+-0.11.0
++0.12.0
+diff --git a/city/city.json b/city/city.json
+index 2af04a2..2ce26fc 100644
+--- a/city/city.json
++++ b/city/city.json
+@@ -116,6 +116,10 @@
+         {
+           "say": "Lost at any point? This tells you where you are and what to paste next:",
+           "copy": "python scripts/status.py"
++        },
++        {
++          "say": "Or ask the guide in Copilot Chat, which works without any script:",
++          "copy": "/start"
+         }
+       ],
+       "docs": [
+@@ -130,14 +134,34 @@
+       "id": "front-desk",
+       "district": "agora",
+       "name": "Front Desk",
+-      "sub": "which flow is mine?",
++      "sub": "which flow is mine? · /start",
+       "shape": "small",
+       "hotspot": "kiosk",
+       "mode": "read",
+       "audience": "everyone",
+       "picker": true,
+-      "pitch": "Not sure where to go? Every flow on one card: when to use it, what you bring, what you get, how long it takes. Click one to see its route on the map.",
+-      "steps": []
++      "pitch": "Not sure where to go? In VS Code, type /start: the guide looks at what you are working on and tells you the one next step, or asks what you want and points you to the right flow. It never does the work itself; you stay in charge. On this map, every flow is on one card: when to use it, what you bring, what you get, how long it takes. Click one to see its route.",
++      "steps": [
++        {
++          "say": "In VS Code, Copilot Chat (agent mode):",
++          "copy": "/start"
++        },
++        {
++          "say": "Already know what you want? Say it: `/start I just had a meeting`. Run `/start` again after every step."
++        }
++      ],
++      "prompts": [
++        "start"
++      ],
++      "agents": [
++        "guide"
++      ],
++      "docs": [
++        {
++          "title": "The menu the guide reads (generated from this map)",
++          "file": "docs/menu.md"
++        }
++      ]
+     },
+     {
+       "id": "p-prep",
+@@ -910,6 +934,10 @@
+           "say": "Rebuild the city after any change:",
+           "copy": "python scripts/build_city.py"
+         },
++        {
++          "say": "Rebuild the guide's menu (docs/menu.md) after changing journeys or steps here:",
++          "copy": "python scripts/build_menu.py"
++        },
+         {
+           "say": "Fail if something is unmapped (for a pre-commit check):",
+           "copy": "python scripts/build_city.py --check"
+@@ -921,6 +949,37 @@
+           "file": "city/README.md"
+         }
+       ]
++    },
++    {
++      "id": "architect",
++      "district": "yard",
++      "name": "Architect's Office",
++      "sub": "a new flow from a wish · /new-flow",
++      "shape": "small",
++      "mode": "prompt",
++      "audience": "vscode",
++      "pitch": "Want something this agency can't do yet? When /start can't match a wish, it writes it on the wishlist. The architect turns a wish into a new flow: five questions at most, a one-screen design you approve, then the prompt, the instructions, this map and the guide's menu are updated for you.",
++      "steps": [
++        {
++          "say": "See what has been wished for so far:",
++          "copy": "python scripts/wish.py --list"
++        },
++        {
++          "say": "In VS Code, Copilot Chat (agent mode), with the wish in your words:",
++          "copy": "/new-flow <what you want>"
++        },
++        {
++          "say": "After it's built, the guide knows it:",
++          "copy": "/start"
++        }
++      ],
++      "prompts": [
++        "new-flow"
++      ],
++      "agents": [
++        "builder"
++      ],
++      "hotspot": "plaza-west"
+     }
+   ],
+   "landmarks": [
+@@ -1196,6 +1255,22 @@
+           "say": "Rebuild this map whenever a feature is added."
+         }
+       ]
++    },
++    {
++      "id": "new-flow",
++      "area": "yard",
++      "audience": "vscode",
++      "q": "Add something this agency can't do yet",
++      "when": "You wished for something /start couldn't match, or you keep doing a task by hand that could be a flow.",
++      "bring": "the wish in one sentence, and five minutes for questions",
++      "get": "a new flow on the menu and the map, ready to use",
++      "time": "15–30 minutes",
++      "stops": [
++        {
++          "building": "architect",
++          "say": "Pick the wish, answer up to five questions, approve the design, and it builds the flow."
++        }
++      ]
+     }
+   ],
+   "area_label_at": {
+@@ -1232,4 +1307,4 @@
+       640
+     ]
+   }
+-}
+\ No newline at end of file
++}
+diff --git a/docs/after-meeting.md b/docs/after-meeting.md
+index 3bada5d..931366d 100644
+--- a/docs/after-meeting.md
++++ b/docs/after-meeting.md
+@@ -2,6 +2,8 @@
+ 
+ You just came out of a meeting. This page is the whole flow; you do not need to know which runbook you are on. Two windows in VS Code: the **terminal** and **Copilot Chat in agent mode**.
+ 
++Lost at any step? Type `/start` in Copilot Chat. It reads where you are and gives you the one next step.
++
+ ## 1. Start (2 minutes, terminal)
+ 
+ ```
+diff --git a/docs/menu.md b/docs/menu.md
+new file mode 100644
+index 0000000..b83d2f4
+--- /dev/null
++++ b/docs/menu.md
+@@ -0,0 +1,202 @@
++# Menu — what you can do here
++
++<!-- GENERATED by scripts/build_menu.py from city/city.json. Edit that file, then re-run the script. -->
++The `/start` guide reads this file. Each numbered item is one thing you can want; its steps are in order,
++and each step names where it happens and the exact command to type.
++
++## 1. Come back to stakeholders with a proposal
++- id: `proposal` · where: VS Code (this workspace) · time: an afternoon, 5 gates
++- when: Someone described a problem and expects options, a recommendation and a deck they can decide on.
++- bring: the meeting transcript, your notes, their documents
++- you get: a corporate deck with speaker notes, the proposal, a critique, team tasks
++- steps:
++  1. **Town Hall** — Start an engagement of kind 'proposal'. Drop the transcript and your notes in the folder it opens.
++     - In the VS Code terminal, inside the semiAgency folder: `python scripts/new_engagement.py`
++     - Answer the questions: **proposal** (they expect options and a recommendation), **deck** (the message is decided) or **meeting** (just a record and your actions). …
++     - Lost at any point? This tells you where you are and what to paste next: `python scripts/status.py`
++     - Or ask the guide in Copilot Chat, which works without any script: `/start`
++     - read: `docs/after-meeting.md` (After a meeting — the one page to follow)
++  2. **Herald's House** — Optional, before the meeting: brief, hypotheses and a question guide.
++     - Start a `proposal` engagement at the Town Hall with whatever you have (their email, org chart, old documents), then in VS Code, Copilot Chat (agent mode): `/discovery-prep`
++     - Take `brief.md` into the meeting. Check the three hypotheses Copilot is least sure about first.
++  3. **Scribe's House** — The fact base, every row cited. You check the three flagged items — gate G1.
++     - In VS Code, Copilot Chat (agent mode): `/discovery-synthesize`
++     - Jump to the three items Copilot flagged, check their citations, move what you cannot cite to *Unverified*. Blocking questions still open? Go to the Messenger's House before passing.
++     - Pass gate G1: `python scripts/status.py --pass`
++  4. **Messenger's Stoa** — Only if blocking questions remain: follow-up agenda, then merge what you learn.
++     - Agenda + `.ics` from the open questions (blocking first): `python scripts/followup_agenda.py`
++     - After the follow-up, save its transcript as `inputs/followup-1.md`, then: `/merge-followup file=inputs/followup-1.md`
++     - Check only the new rows, then re-pass G1: `python scripts/status.py --pass G1`
++  5. **Temple of Options** — Two or three genuinely different options; you choose one — gate G2.
++     - In VS Code, Copilot Chat (agent mode): `/options`
++     - Read which high-priority needs each option leaves uncovered, then choose (the script asks which): `python scripts/status.py --pass`
++  6. **Design Studio** — The proposal and two storylines; you pick how it is told — gate G3.
++     - In VS Code, Copilot Chat (agent mode): `/proposal`
++     - Check the three claims Copilot is least sure about, then pick S1 or S2: `python scripts/status.py --pass`
++  7. **Print House** — The deck in the corporate template. Open it before anyone else — gate G4.
++     - Outline and storyboard: `/deck-outline`
++     - Build the .pptx (lints it afterwards): `python scripts/build_deck.py`
++     - Open the deck. Wrong? Fix upstream and rebuild — never patch the .pptx by hand. Then: `python scripts/status.py --pass`
++  8. **The Theatre** — Timed speaker notes, embedded in the deck.
++     - Speaker notes: `/speech`
++     - Timing check, then the notes go into the deck: `python scripts/build_deck.py --notes-only`
++  9. **High Court** — The critic: unsupported claims and the questions the room will ask. Best early; at the latest now.
++     - In VS Code, Copilot Chat (agent mode): `@critic /critique`
++     - Fix what it finds upstream (fact base, proposal), not in the deck.
++  10. **Task Depot** — After presenting: brief the team, turn their meeting into tasks, review — gate G5.
++     - Team brief and a timed 30-minute agenda: `/team-brief`
++     - After the team meeting, its notes or transcript → tasks for review: `/team-tasks file=inputs/team-meeting.md`
++     - Reviewed tasks into the tracker (shows the rows, offers to pass G5): `python scripts/append_tasks.py`
++
++## 2. Turn content I have into a deck
++- id: `deck` · where: VS Code (this workspace) · time: 1–2 hours, 3 gates
++- when: No decision to make — the message is clear and you need corporate slides plus something to say.
++- bring: notes, documents or a draft deck
++- you get: a corporate deck (+ speaker notes)
++- steps:
++  1. **Town Hall** — Start an engagement of kind 'deck'. Put your notes, documents or a draft deck in the folder.
++     - In the VS Code terminal, inside the semiAgency folder: `python scripts/new_engagement.py`
++     - Answer the questions: **proposal** (they expect options and a recommendation), **deck** (the message is decided) or **meeting** (just a record and your actions). …
++     - Lost at any point? This tells you where you are and what to paste next: `python scripts/status.py`
++     - Or ask the guide in Copilot Chat, which works without any script: `/start`
++     - read: `docs/after-meeting.md` (After a meeting — the one page to follow)
++  2. **Little Archive** — Key messages and facts, cited. You check them — gate G1.
++     - Start a `deck` engagement at the Town Hall, then in VS Code, Copilot Chat (agent mode): `/content`
++     - New material later? Save it under `inputs/` and merge it: `/merge-followup file=inputs/<file>`
++     - Check the three numbers Copilot flags, then: `python scripts/status.py --pass`
++  3. **Story Studio** — Two storylines; you pick one — gate G3.
++     - In VS Code, Copilot Chat (agent mode): `/storylines`
++     - Pick S1 or S2: `python scripts/status.py --pass`
++  4. **Little Print House** — Outline, then the .pptx. Open it — gate G4.
++     - Outline and storyboard: `/deck-outline`
++     - Build and lint: `python scripts/build_deck.py`
++     - Open it, fix upstream if needed, then: `python scripts/status.py --pass`
++  5. **Open-air Theatre** — Optional: speaker notes and the critic.
++     - Speaker notes: `/speech`
++     - Embed them after the timing check: `python scripts/build_deck.py --notes-only`
++     - The critic: `@critic /critique`
++
++## 3. Record a meeting and my actions (VS Code)
++- id: `meeting` · where: VS Code (this workspace) · time: 10 minutes, 1 gate
++- when: A meeting happened, you owe nobody a deck, but you want a clean write-up and your actions in the tracker.
++- bring: the transcript and your notes
++- you get: one-page notes + your actions in the tracker
++- steps:
++  1. **Town Hall** — Start an engagement of kind 'meeting' with the transcript and your notes.
++     - In the VS Code terminal, inside the semiAgency folder: `python scripts/new_engagement.py`
++     - Answer the questions: **proposal** (they expect options and a recommendation), **deck** (the message is decided) or **meeting** (just a record and your actions). …
++     - Lost at any point? This tells you where you are and what to paste next: `python scripts/status.py`
++     - Or ask the guide in Copilot Chat, which works without any script: `/start`
++     - read: `docs/after-meeting.md` (After a meeting — the one page to follow)
++  2. **The Notary** — One page cited to the transcript plus your actions. Review, then to the tracker — gate G5.
++     - Start a `meeting` engagement at the Town Hall, then in VS Code, Copilot Chat (agent mode): `/meeting-notes`
++     - Review `tasks.json`, then send your actions to the tracker: `python scripts/append_tasks.py`
++     - If the notes say *Follow-up needed: Y* — agenda and `.ics`: `python scripts/followup_agenda.py`
++
++## 4. Start my day knowing what matters
++- id: `morning` · where: Microsoft 365 (Outlook, Teams, Copilot Chat) · time: 10 minutes once
++- when: You want what's on, what clashes and what waits on you — before opening five apps.
++- bring: nothing — it reads your calendar, inbox and To Do
++- you get: a one-page brief in Microsoft 365 Copilot Chat every weekday at 07:00
++- steps:
++  1. **Radio Tower** — Build it once; it arrives every weekday morning.
++     - read: `m365/01-daily-brief.md` (Build sheet 1 — Daily brief (10 minutes))
++
++## 5. Summarise a meeting and prepare the next one (Teams)
++- id: `m365-meeting` · where: Microsoft 365 (Outlook, Teams, Copilot Chat) · time: ~1 hour to build, then 2 clicks per meeting
++- when: You live in Outlook and Teams and want every meeting filed, summarised and prepared for next time.
++- bring: a transcribed Teams meeting, your notes
++- you get: a filed folder, a cited summary, your actions, tomorrow's prep
++- steps:
++  1. **Harbour Office** — Automatic: the transcript is filed into its own folder and you get a Teams ping. Drop your notes in.
++     - read: `m365/02-meeting-filing-flow.md` (Build sheet 2 — Meeting filing flow (45 minutes))
++  2. **The Library** — One click on Summarise: takeaways, decisions, your actions. Add yours to To Do.
++     - read: `m365/04-meeting-summariser-agent.md` (Build sheet 4 — Meeting Summariser agent (10 minutes))
++  3. **Lighthouse** — Automatic at 18:00: tomorrow's meetings prepared from what was filed.
++     - read: `m365/03-evening-prep-prompt.md` (Build sheet 3 — Evening prep (10 minutes))
++
++## 6. Never walk into a 1-1 unprepared
++- id: `one-on-one` · where: Microsoft 365 (Outlook, Teams, Copilot Chat) · time: 15 minutes once, then one click
++- when: You have recurring 1-1s and want each one to have an agenda built from what is still open.
++- bring: 1-1 invites named "1-1 <name>", past 1-1s filed by the Harbour Office
++- you get: an agenda in tomorrow's invite
++- steps:
++  1. **Clock Tower** — Automatic at 16:00: a ping when tomorrow's 1-1 has no agenda.
++     - read: `m365/06-agenda-check-flow.md` (Build sheet 6 — 1-1 agenda check flow (15 minutes))
++  2. **The Library** — One click on Prep 1-1, then paste the agenda into the invite.
++     - read: `m365/04-meeting-summariser-agent.md` (Build sheet 4 — Meeting Summariser agent (10 minutes))
++
++## 7. Write an email in my own voice
++- id: `email` · where: Microsoft 365 (Outlook, Teams, Copilot Chat) · time: 20 minutes once + collecting 15–20 sent mails
++- when: You know what you want to say but not how to put it for this person.
++- bring: rough text and the recipient
++- you get: a subject and a ready-to-send body
++- steps:
++  1. **Post Office** — Draft, then Shorter or Softer / firmer until it sounds like you.
++     - read: `m365/05-email-drafter-agent.md` (Build sheet 5 — Email Drafter agent (20 minutes + exemplars))
++
++## 8. Check whether an AI idea would work for us
++- id: `idea` · where: VS Code or Microsoft 365 · time: one conversation
++- when: A demo, a newsletter or a vendor pitch made you think 'what would that be for my team?'.
++- bring: the idea, what your team does, what it can build, known limits (and, once, the context file for the agent)
++- you get: a one-page brief with a two-day test; for good ideas, who to send it to for a proposal
++- steps:
++  1. **The Embassy** — Ask Fit Finder (shared M365 agent, or /fit-finder in VS Code) with the idea and your team; get the brief.
++     - **Build it once (whoever runs this toolkit for your team, ~20 minutes + the context file):** follow build sheet 7 below. First write the context file, `fit-finder-context`: the tools it may recommend, your data rules and past ideas. …
++     - **Use it (colleagues):** Microsoft 365 Copilot Chat or Teams → Agents → **Fit Finder**, then a starter below.
++     - **Or in VS Code** (reads `brand/fit-finder-context.md`, same instructions): `/fit-finder`
++     - **If the brief says the idea is worth pursuing,** it tells you who to send it to. That person books about an hour with you and one or two colleagues who do the work today, to understand how it works now. No slides; bring one real example. …
++     - read: `m365/07-fit-finder-agent.md` (Build sheet 7 — Fit Finder (shared agent))
++  2. **Town Hall** — Worth pursuing? Send the brief to the person it names. They talk to you for about an hour, then come back with a short proposal (options and a recommendation). Their side of the work starts here, as a proposal.
++     - In the VS Code terminal, inside the semiAgency folder: `python scripts/new_engagement.py`
++     - Answer the questions: **proposal** (they expect options and a recommendation), **deck** (the message is decided) or **meeting** (just a record and your actions). …
++     - Lost at any point? This tells you where you are and what to paste next: `python scripts/status.py`
++     - Or ask the guide in Copilot Chat, which works without any script: `/start`
++     - read: `docs/after-meeting.md` (After a meeting — the one page to follow)
++
++## 9. Find the best Copilot model for my work
++- id: `model` · where: VS Code (this workspace) · time: an afternoon, then 10 minutes per new model
++- when: You wonder whether the expensive model is worth it, or which one is best at your kind of task.
++- bring: 5–10 tasks where AI recently failed you
++- you get: a pass/fail matrix per model, side by side
++- steps:
++  1. **Observatory** — Collect tasks that failed you, run them per model, grade with your own checks, compare.
++     - Copy the `bench/` folder into an empty workspace, open it in VS Code, then in Copilot Chat (agent mode): `/bench-setup`
++     - Pick a model in the picker and run a case (repeat per model): `/bench-run case=<name> model=<id>`
++     - Or all cases on all models through the Copilot CLI: `python scripts/bench_cli.py --models claude-sonnet-4.5,gpt-5.4 --repeat 3`
++     - Turn your reactions into checks, grade with one judge model, look: `/bench-feedback case=<name>`
++     - : `/bench-judge judge_model=<id>`
++     - : `python scripts/bench_report.py`
++     - read: `bench/README.md` (bench/README.md)
++
++## 10. Set this up (technical)
++- id: `setup` · where: VS Code or Microsoft 365 · time: ~2 hours local, ~2 hours M365
++- when: Once, before the local flows or the harbour work for you. Also where the map is rebuilt.
++- bring: VS Code + Python 3 and your corporate template, or an M365 tenant with Microsoft 365 Copilot Chat
++- you get: working local scripts, built M365 pieces, an up-to-date map
++- steps:
++  1. **The Workshop** — Local: bootstrap the scripts, calibrate the corporate look, write your voice file.
++     - Open the semiAgency folder in VS Code, `git init`, Python 3 on PATH. Then: `python scripts/append_tasks.py --init`
++     - Have Copilot write the scripts: run the Phase prompts of `docs/bootstrap.md` §3 in order, until: `python scripts/selftest_all.py`
++     - Calibrate the corporate look (`brand/components.pptx`, then): `python scripts/inspect_components.py`
++     - read: `README.md` (README — one-time setup and the five gates)
++     - read: `docs/bootstrap.md` (Bootstrap kit (what Copilot builds))
++  2. **Harbour Works** — M365: check prerequisites, then build the harbour sheets in order.
++     - Read the prerequisites, then build the sheets in order. Each harbour building has its own sheet.
++     - read: `m365/README.md` (M365 automations — prerequisites and build order)
++  3. **Cartographer** — Rebuild this map whenever a feature is added.
++     - Rebuild the city after any change: `python scripts/build_city.py`
++     - Rebuild the guide's menu (docs/menu.md) after changing journeys or steps here: `python scripts/build_menu.py`
++     - Fail if something is unmapped (for a pre-commit check): `python scripts/build_city.py --check`
++     - read: `city/README.md` (How the map is built)
++
++## 11. Add something this agency can't do yet
++- id: `new-flow` · where: VS Code (this workspace) · time: 15–30 minutes
++- when: You wished for something /start couldn't match, or you keep doing a task by hand that could be a flow.
++- bring: the wish in one sentence, and five minutes for questions
++- you get: a new flow on the menu and the map, ready to use
++- steps:
++  1. **Architect's Office** — Pick the wish, answer up to five questions, approve the design, and it builds the flow.
++     - See what has been wished for so far: `python scripts/wish.py --list`
++     - In VS Code, Copilot Chat (agent mode), with the wish in your words: `/new-flow <what you want>`
++     - After it's built, the guide knows it: `/start`
+diff --git a/docs/upgrades/0.11-to-0.12.md b/docs/upgrades/0.11-to-0.12.md
+new file mode 100644
+index 0000000..7b2dd3d
+--- /dev/null
++++ b/docs/upgrades/0.11-to-0.12.md
+@@ -0,0 +1,12 @@
++# 0.11 → 0.12: the `/start` guide
++
++Scaffold files and shipped scripts only, no Copilot-built script changes. Easiest route: the manual upgrade in `README.md` here (new ZIP + your own folders); otherwise `git apply upgrade-0.11-to-0.12.patch` (text only, no `--binary` needed), then `python scripts/build_city.py`.
++
++## What's new
++- **`/start` and `@guide`**: one command to remember. The guide reads `engagements/CURRENT` and `state.json`, and either gives you the one next step or asks what you want and points you to the right flow. It is read-only: it never runs a stage or edits a file. It gets "where am I" from the new read-only `scripts/where.py` (shipped), so it works without `status.py`, and small local models get it right.
++- **`/new-flow` and the wishlist**: when `/start` can't match a wish it records it in `wishlist.md` (gitignored, `scripts/wish.py`) and offers `/new-flow`, where `@builder` interviews you (five questions at most), shows a one-screen design, and after your yes writes the prompt, instructions and map entry and rebuilds the menu. The Architect's Office on the map.
++- **`docs/menu.md`**: the routing table the guide reads. It is generated from `city/city.json` by `scripts/build_menu.py`, so the map and the guide cannot disagree. `--check` fails when a prompt can't be reached from the menu.
++- **The Front Desk** on the map now claims `/start` and `@guide`. The Town Hall and the Cartographer mention them.
++
++## On the corporate machine
++Nothing to build. After the upgrade, type `/start` in Copilot Chat. New shipped scripts (`where.py`, `wish.py`, `build_menu.py`) come with the ZIP or the patch; `python scripts/selftest_all.py` covers them. `wishlist.md` is gitignored, so it survives future upgrades like your other own files.
+diff --git a/docs/upgrades/README.md b/docs/upgrades/README.md
+index 725b34c..df25dae 100644
+--- a/docs/upgrades/README.md
++++ b/docs/upgrades/README.md
+@@ -1,6 +1,6 @@
+ # Upgrades
+ 
+-`VERSION` at the repo root says which scaffold version you're on. Each upgrade note here is `<from>-to-<to>.md` with a matching `upgrade-<from>-to-<to>.patch` for the scaffold files (apply with `git apply`), and a Copilot prompt for any script changes. Patches apply in order, never skipping one; the manual upgrade below can jump several versions at once. Current: 0.10-to-0.11 (map only). Both `upgrade-0.9-to-0.10.patch` and `upgrade-0.10-to-0.11.patch` include pictures, so apply them with `--binary`. Easiest route: the manual upgrade below. The patches are there if you prefer to apply changes in place.
++`VERSION` at the repo root says which scaffold version you're on. Each upgrade note here is `<from>-to-<to>.md` with a matching `upgrade-<from>-to-<to>.patch` for the scaffold files (apply with `git apply`), and a Copilot prompt for any script changes. Patches apply in order, never skipping one; the manual upgrade below can jump several versions at once. Current: 0.11-to-0.12 (the `/start` guide; text-only patch, or the manual upgrade). Both `upgrade-0.9-to-0.10.patch` and `upgrade-0.10-to-0.11.patch` include pictures, so apply them with `--binary`. Easiest route: the manual upgrade below. The patches are there if you prefer to apply changes in place.
+ 
+ Rule for future changes: scaffold files (docs, .github, templates) ship as a patch; D2P's OOXML/ingest scripts are never shipped — they are described in docs/d2p/bootstrap.md §2 and regenerated or edited by Copilot from that spec. The scripts listed as "Shipped" in `scripts/README.md` are the exception: plain-text and tested, they ship as files.
+ 
+diff --git a/scripts/README.md b/scripts/README.md
+index 1249679..0f4bf42 100644
+--- a/scripts/README.md
++++ b/scripts/README.md
+@@ -4,6 +4,9 @@ Stdlib only. Every script has `--selftest`; `python scripts/selftest_all.py` run
+ 
+ Shipped:
+ - `new_engagement.py` — run with no arguments after a meeting: asks kind, subject, name, stakeholders, audience, minutes; creates the folder and `state.json`; sets `engagements/CURRENT`; waits while you fill `inputs/`, lists what it found, prints the first Copilot prompt. `--check` re-runs the inputs check, `--use <name>` switches the current engagement, `--kind/--name/…` and `--no-wait` for scripting.
++- `where.py` — read-only: the current engagement, what is done and the one next step (with where to run it). The `/start` guide runs it; you can too. Works without `status.py`.
++- `wish.py` — append-only wishlist (`wishlist.md`, gitignored): `/start` records what it couldn't match; `--list` shows open wishes for `/new-flow`.
++- `build_menu.py` — `city/city.json` → `docs/menu.md`, the routing table the `/start` guide reads. `--check` fails when the menu is stale or a prompt can't be reached from it. Re-run after changing journeys or building steps in `city.json`.
+ - `append_tasks.py` — reviewed `tasks.json` → `tracker/actions.csv`, deduplicated; shows the rows, then offers to pass gate G5 (`--pass-g5` to skip the question; `--init` creates the tracker).
+ 
+ Built by Copilot on the corporate machine, because they need the corporate `.pptx` fixtures and the real transcript shape: `ooxml.py`, `ingest.py`, `validate.py`, `status.py` (`--pass` with no gate passes the next one, interactively), `followup_agenda.py`, `inspect_components.py`, `skeletonize_deck.py`, `build_deck.py` (lints after building; `--notes-only` runs the timing check first), `storyboard.py`, `lint_deck.py`, `timing.py`. Specifications: `docs/bootstrap.md` §2; implementation prompts: §3.
+diff --git a/scripts/build_menu.py b/scripts/build_menu.py
+new file mode 100644
+index 0000000..3d71a45
+--- /dev/null
++++ b/scripts/build_menu.py
+@@ -0,0 +1,186 @@
++#!/usr/bin/env python3
++"""Generate docs/menu.md, the routing table the /start guide reads, from city/city.json (or flows.json).
++
++The source is the single place for "what can I do here": its journeys and the buildings' steps with the exact
++commands. In semiAgency that is city/city.json (the map is generated from it too, so guide and map cannot
++disagree); a workspace without a map uses flows.json with the same "journeys"/"buildings" shape. An optional
++"elsewhere" list adds other workspaces' menus (by title) with the command that switches to them.
++This file is identical in every workspace that uses it.
++
++Usage:
++  python3 scripts/build_menu.py            regenerate docs/menu.md
++  python3 scripts/build_menu.py --check    exit 1 if docs/menu.md is stale or a prompt is not reachable from it
++  python3 scripts/build_menu.py --selftest
++"""
++import argparse
++import json
++import os
++import re
++import shutil
++import sys
++import tempfile
++
++ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
++OUT = os.path.join("docs", "menu.md")
++SOURCES = [os.path.join("city", "city.json"), "flows.json"]
++WHERE = {"vscode": "VS Code (this workspace)", "m365": "Microsoft 365 (Outlook, Teams, Copilot Chat)",
++         "everyone": "VS Code or Microsoft 365", "here": "here (this workspace)"}
++GUIDE_PROMPTS = {"start"}  # the guide itself is not a destination
++
++
++def one_line(s):
++    return re.sub(r"\s+", " ", (s or "").strip())
++
++
++def short(s, limit=240):
++    """First sentences of a step with no command, up to about `limit` characters."""
++    s = one_line(s)
++    if len(s) <= limit:
++        return s
++    cut = max(s.rfind(". ", 0, limit), s.rfind("; ", 0, limit))
++    return (s[:cut + 1] if cut > 60 else s[:limit].rsplit(" ", 1)[0]) + " …"
++
++
++def source_path(root):
++    for rel in SOURCES:
++        if os.path.exists(os.path.join(root, rel)):
++            return rel
++    raise SystemExit("no menu source: expected one of " + ", ".join(SOURCES))
++
++
++def elsewhere_titles(root, menu_rel):
++    p = os.path.normpath(os.path.join(root, menu_rel))
++    if not os.path.exists(p):
++        return None
++    return [re.sub(r"^##\s+\d+\.\s*", "", l).strip() for l in open(p, encoding="utf-8") if re.match(r"^##\s+\d+\.", l)]
++
++
++def render(city, src="city/city.json", root=None):
++    b = {x["id"]: x for x in city.get("buildings", [])}
++    out = ["# Menu — what you can do here",
++           "",
++           "<!-- GENERATED by scripts/build_menu.py from %s. Edit that file, then re-run the script. -->" % src,
++           "The `/start` guide reads this file. Each numbered item is one thing you can want; its steps are in order,",
++           "and each step names where it happens and the exact command to type.",
++           ""]
++    for n, j in enumerate(city.get("journeys", []), 1):
++        out.append("## %d. %s" % (n, one_line(j["q"])))
++        out.append("- id: `%s` · where: %s · time: %s" % (j["id"], WHERE.get(j.get("audience"), j.get("audience", "")),
++                                                          one_line(j.get("time"))))
++        out.append("- when: " + one_line(j.get("when")))
++        out.append("- bring: " + one_line(j.get("bring")))
++        out.append("- you get: " + one_line(j.get("get")))
++        out.append("- steps:")
++        for i, stop in enumerate(j.get("stops", []), 1):
++            bd = b.get(stop["building"], {})
++            out.append("  %d. **%s** — %s" % (i, bd.get("name", stop["building"]), one_line(stop.get("say"))))
++            for st in bd.get("steps", []):
++                if st.get("copy"):
++                    out.append("     - %s `%s`" % (one_line(st.get("say")).rstrip(":") + ":", st["copy"]))
++                elif st.get("say"):
++                    out.append("     - " + short(st["say"]))
++            for d in bd.get("docs", []):
++                out.append("     - read: `%s` (%s)" % (d["file"], one_line(d.get("title"))))
++        out.append("")
++    for e in city.get("elsewhere", []):
++        titles = elsewhere_titles(root or ROOT, e["menu"])
++        out.append("## Elsewhere: %s" % e["name"])
++        out.append("- switch: %s" % e["switch"])
++        if titles is None:
++            out.append("- (its menu `%s` was not found on this machine)" % e["menu"])
++        for t in titles or []:
++            out.append("- " + t)
++        out.append("")
++    return "\n".join(out).rstrip() + "\n"
++
++
++def prompt_names(root):
++    d = os.path.join(root, ".github", "prompts")
++    if not os.path.isdir(d):
++        return []
++    return sorted(f[:-len(".prompt.md")] for f in os.listdir(d) if f.endswith(".prompt.md"))
++
++
++def unreachable(root, menu):
++    """Prompts that exist but that the guide could never send you to."""
++    return [p for p in prompt_names(root)
++            if p not in GUIDE_PROMPTS and not re.search(r"[`\s]/%s(?![\w-])" % re.escape(p), menu)]
++
++
++def build(root, check=False):
++    src = source_path(root)
++    with open(os.path.join(root, src), encoding="utf-8") as fh:
++        menu = render(json.load(fh), src.replace(os.sep, "/"), root)
++    path = os.path.join(root, OUT)
++    cur = open(path, encoding="utf-8").read() if os.path.exists(path) else None
++    stale = cur != menu
++    if stale and not check:
++        os.makedirs(os.path.dirname(path), exist_ok=True)
++        with open(path, "w", encoding="utf-8", newline="\n") as fh:
++            fh.write(menu)
++    return stale, unreachable(root, menu), menu
++
++
++def _selftest():
++    tmp = tempfile.mkdtemp()
++    try:
++        os.makedirs(os.path.join(tmp, "city"))
++        os.makedirs(os.path.join(tmp, ".github", "prompts"))
++        for p in ("meeting-notes", "start", "orphan"):
++            open(os.path.join(tmp, ".github/prompts/%s.prompt.md" % p), "w").write("---\n---\nx\n")
++        city = {"buildings": [{"id": "notary", "name": "The Notary",
++                               "steps": [{"say": "In Copilot Chat:", "copy": "/meeting-notes"}, {"say": "no copy"}],
++                               "docs": [{"title": "Runbook", "file": "docs/runbooks/meeting.md"}]}],
++                "journeys": [{"id": "meeting", "audience": "vscode", "q": "Record a meeting", "when": "a\n meeting",
++                              "bring": "transcript", "get": "notes", "time": "10 min",
++                              "stops": [{"building": "notary", "say": "Write it up."}]}]}
++        json.dump(city, open(os.path.join(tmp, "city/city.json"), "w"))
++        stale, unr, menu = build(tmp)
++        assert stale and unr == ["orphan"], unr
++        assert "## 1. Record a meeting" in menu and "when: a meeting" in menu
++        assert "**The Notary** — Write it up." in menu and "In Copilot Chat: `/meeting-notes`" in menu
++        assert "     - no copy" in menu and "read: `docs/runbooks/meeting.md`" in menu
++        assert short("A" * 70 + ". " + "b " * 200).endswith(". …")
++        stale, _, _ = build(tmp, check=True)
++        assert not stale
++        # a workspace without a map: flows.json, plus another workspace's menu listed by title
++        other = os.path.join(tmp, "other")
++        os.makedirs(os.path.join(other, "docs"))
++        open(os.path.join(other, "docs", "menu.md"), "w").write("# Menu\n## 1. Record a meeting\n## 2. Make a deck\n")
++        os.remove(os.path.join(tmp, "city", "city.json"))
++        city["elsewhere"] = [{"name": "Work", "menu": "other/docs/menu.md", "switch": "`jarvis work`"},
++                             {"name": "Gone", "menu": "nope/menu.md", "switch": "x"}]
++        json.dump(city, open(os.path.join(tmp, "flows.json"), "w"))
++        _, _, menu = build(tmp)
++        assert "from flows.json" in menu and "## Elsewhere: Work\n- switch: `jarvis work`\n- Record a meeting\n- Make a deck" in menu, menu
++        assert "was not found" in menu
++    finally:
++        shutil.rmtree(tmp)
++    print("build_menu selftest OK")
++
++
++def main():
++    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
++    ap.add_argument("--check", action="store_true")
++    ap.add_argument("--selftest", action="store_true")
++    a = ap.parse_args()
++    if a.selftest:
++        _selftest()
++        return
++    stale, unr, menu = build(ROOT, check=a.check)
++    for p in unr:
++        print("NOT ON THE MENU  /%s — add it to a building's steps (\"copy\": \"/%s\") on a journey in city/city.json" % (p, p))
++    if a.check:
++        if stale:
++            print("STALE  %s — in the terminal: python3 scripts/build_menu.py" % OUT)
++        if stale or unr:
++            sys.exit(1)
++        print("%s is up to date; every prompt is reachable from it." % OUT)
++        return
++    print("Wrote %s (%d lines)." % (OUT, menu.count("\n")))
++    if unr:
++        sys.exit(1)
++
++
++if __name__ == "__main__":
++    main()
+diff --git a/scripts/selftest_all.py b/scripts/selftest_all.py
+index ab608ca..0f8d901 100644
+--- a/scripts/selftest_all.py
++++ b/scripts/selftest_all.py
+@@ -6,7 +6,7 @@ import subprocess
+ import sys
+ 
+ HERE = os.path.dirname(os.path.abspath(__file__))
+-SHIPPED = ["append_tasks", "new_engagement"]
++SHIPPED = ["append_tasks", "new_engagement", "build_menu", "where", "wish"]
+ COPILOT_BUILT = ["ooxml", "ingest", "validate", "status", "followup_agenda",
+                  "inspect_components", "skeletonize_deck", "build_deck", "storyboard", "lint_deck", "timing"]
+ 
+diff --git a/scripts/where.py b/scripts/where.py
+new file mode 100644
+index 0000000..e70a773
+--- /dev/null
++++ b/scripts/where.py
+@@ -0,0 +1,175 @@
++#!/usr/bin/env python3
++"""Where am I? Read-only: prints the current engagement, what is done, and the one next step.
++
++The /start guide runs this instead of working it out itself, so small models get it right.
++It never writes anything. (status.py, built on the corporate machine, also shows checklists and passes gates.)
++
++Usage:
++  python scripts/where.py                 current engagement (engagements/CURRENT)
++  python scripts/where.py engagements/<name>
++  python scripts/where.py --selftest
++"""
++import argparse
++import json
++import os
++import shutil
++import sys
++import tempfile
++
++ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
++CHAT = "Copilot Chat (agent mode)"
++TERM = "the terminal"
++
++# Per kind, in order: (kind of check, file or gate, what to do, where, command). The first row that applies wins.
++# ("file", "x.md") applies when x.md does not exist; ("gate", "G1") applies when G1 is not passed.
++RULES = {
++    "meeting": [
++        ("file", "notes.md", "write the notes and your actions", CHAT, "/meeting-notes"),
++        ("gate", "G5", "review tasks.json, then send your actions to the tracker (this passes G5)", TERM,
++         "python scripts/append_tasks.py"),
++    ],
++    "deck": [
++        ("file", "content.md", "write the key messages and facts", CHAT, "/content"),
++        ("gate", "G1", "check the facts Copilot flagged in content.md, then pass G1", None, None),
++        ("file", "storylines.md", "write two storylines", CHAT, "/storylines"),
++        ("gate", "G3", "pick S1 or S2 in storylines.md, then pass G3", None, None),
++        ("file", "deck.json", "outline the deck, then build it with `python scripts/build_deck.py`", CHAT, "/deck-outline"),
++        ("gate", "G4", "open deck.pptx before anyone else, then pass G4", None, None),
++        ("file", "speech.md", "write the speaker notes", CHAT, "/speech"),
++    ],
++    "proposal": [
++        ("file", "discovery.md", "turn the meeting into the fact base", CHAT, "/discovery-synthesize"),
++        ("gate", "G1", "check the three items Copilot flagged in discovery.md, then pass G1", None, None),
++        ("file", "options.md", "sketch 2-3 options", CHAT, "/options"),
++        ("gate", "G2", "read options.md and choose an option, then pass G2", None, None),
++        ("file", "proposal.md", "write the proposal and two storylines", CHAT, "/proposal"),
++        ("gate", "G3", "pick S1 or S2 in storylines.md, then pass G3", None, None),
++        ("file", "deck.json", "outline the deck, then build it with `python scripts/build_deck.py`", CHAT, "/deck-outline"),
++        ("gate", "G4", "open deck.pptx before anyone else, then pass G4", None, None),
++        ("file", "speech.md", "write the speaker notes", CHAT, "/speech"),
++        ("file", "critique.md", "have the critic review it (recommended before presenting)", CHAT, "@critic /critique"),
++        ("file", "team-brief.md", "after presenting: brief the team", CHAT, "/team-brief"),
++        ("file", "tasks.json", "after the team meeting: turn it into tasks", CHAT,
++         "/team-tasks file=inputs/<team meeting file>"),
++        ("gate", "G5", "review tasks.json, then send the tasks to the tracker (this passes G5)", TERM,
++         "python scripts/append_tasks.py"),
++    ],
++}
++GATE_EXTRA = {"G2": ' and "chosen_option": "O1" (or O2/O3)', "G3": ' and "chosen_storyline": "S1" (or S2)'}
++
++
++def current_dir(root):
++    p = os.path.join(root, "engagements", "CURRENT")
++    if not os.path.exists(p):
++        return None
++    name = open(p, encoding="utf-8").read().strip()
++    return os.path.join(root, "engagements", name) if name else None
++
++
++def where(root, eng_dir=None):
++    """Return a dict: engagement, kind, done (list), next (what, where, command) or None, notes (list)."""
++    eng_dir = eng_dir or current_dir(root)
++    if not eng_dir:
++        return {"engagement": None}
++    name = os.path.basename(os.path.normpath(eng_dir))
++    sp = os.path.join(eng_dir, "state.json")
++    if not os.path.exists(sp):
++        return {"engagement": name, "error": "engagements/%s/state.json does not exist" % name}
++    state = json.load(open(sp, encoding="utf-8"))
++    kind = state.get("kind", "")
++    gates = state.get("gates", {})
++    has_status = os.path.exists(os.path.join(root, "scripts", "status.py"))
++    done, nxt, notes = [], None, []
++    for check, key, what, loc, cmd in RULES.get(kind, []):
++        if check == "file":
++            ok = os.path.exists(os.path.join(eng_dir, key))
++        else:
++            ok = bool(gates.get(key, {}).get("passed"))
++        if ok:
++            done.append(key if check == "file" else key + " passed")
++            continue
++        if check == "gate" and cmd is None:
++            if has_status:
++                loc, cmd = TERM, "python scripts/status.py --pass"
++            else:
++                loc = "by hand (status.py is not on this machine)"
++                cmd = 'in engagements/%s/state.json set "passed": true under "%s"%s' % (name, key, GATE_EXTRA.get(key, ""))
++        nxt = {"what": what, "where": loc, "command": cmd}
++        break
++    if kind == "proposal" and nxt and nxt["command"] == "/discovery-synthesize":
++        inputs = os.path.join(eng_dir, "inputs")
++        material = [f for f in (os.listdir(inputs) if os.path.isdir(inputs) else []) if f != "audience.md"]
++        if not material and not os.path.exists(os.path.join(eng_dir, "brief.md")):
++            notes.append("inputs/ has no transcript or notes yet. Meeting not held? Prepare it first: /discovery-prep")
++    if kind == "meeting" and nxt is None:
++        notes_md = os.path.join(eng_dir, "notes.md")
++        if os.path.exists(notes_md) and "follow-up needed" in open(notes_md, encoding="utf-8").read().lower():
++            notes.append("If notes.md says Follow-up needed: Y -> in the terminal: python scripts/followup_agenda.py")
++    if kind not in RULES:
++        notes.append("unknown kind %r in state.json" % kind)
++    return {"engagement": name, "kind": kind, "done": done, "next": nxt, "notes": notes}
++
++
++def render(w):
++    if not w.get("engagement"):
++        return "engagement: none in progress (engagements/CURRENT is missing or empty)\n"
++    if w.get("error"):
++        return "engagement: %s\nerror: %s\n" % (w["engagement"], w["error"])
++    lines = ["engagement: %s (%s)" % (w["engagement"], w["kind"]),
++             "done: " + (", ".join(w["done"]) if w["done"] else "nothing yet")]
++    if w["next"]:
++        lines += ["next: " + w["next"]["what"], "where: " + w["next"]["where"], "command: " + w["next"]["command"]]
++    else:
++        lines.append("next: nothing, this engagement is done")
++    lines += ["note: " + n for n in w["notes"]]
++    return "\n".join(lines) + "\n"
++
++
++def _selftest():
++    tmp = tempfile.mkdtemp()
++    try:
++        e = os.path.join(tmp, "engagements", "acme")
++        os.makedirs(os.path.join(e, "inputs"))
++        os.makedirs(os.path.join(tmp, "scripts"))
++        assert where(tmp) == {"engagement": None}
++        open(os.path.join(tmp, "engagements", "CURRENT"), "w").write("acme\n")
++        st = {"kind": "proposal", "gates": {"G1": {"passed": True}, "G2": {"passed": False, "chosen_option": None}}}
++        json.dump(st, open(os.path.join(e, "state.json"), "w"))
++        w = where(tmp)
++        assert w["next"]["command"] == "/discovery-synthesize" and any("discovery-prep" in n for n in w["notes"]), w
++        for f in ("discovery.md", "options.md", "inputs/transcript.md"):
++            open(os.path.join(e, f), "w").write("x")
++        w = where(tmp)
++        assert w["done"] == ["discovery.md", "G1 passed", "options.md"], w
++        assert "choose an option" in w["next"]["what"] and '"chosen_option"' in w["next"]["command"], w
++        assert "status.py" not in w["next"]["command"]
++        open(os.path.join(tmp, "scripts", "status.py"), "w").write("")
++        w = where(tmp)
++        assert w["next"]["command"] == "python scripts/status.py --pass", w
++        assert "next: read options.md" in render(w)
++        json.dump({"kind": "meeting", "gates": {"G5": {"passed": True}}}, open(os.path.join(e, "state.json"), "w"))
++        open(os.path.join(e, "notes.md"), "w").write("## Follow-up needed\nY")
++        w = where(tmp)
++        assert w["next"] is None and w["notes"] and "done" in render(w), w
++        assert "state.json does not exist" in render(where(tmp, os.path.join(tmp, "engagements", "nope")))
++    finally:
++        shutil.rmtree(tmp)
++    print("where selftest OK")
++
++
++def main():
++    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
++    ap.add_argument("engagement", nargs="?", help="engagements/<name> (default: engagements/CURRENT)")
++    ap.add_argument("--selftest", action="store_true")
++    a = ap.parse_args()
++    if a.selftest:
++        _selftest()
++        return
++    d = a.engagement
++    if d and not os.path.isabs(d):
++        d = os.path.join(ROOT, d) if not os.path.isdir(d) else os.path.abspath(d)
++    sys.stdout.write(render(where(ROOT, d)))
++
++
++if __name__ == "__main__":
++    main()
+diff --git a/scripts/wish.py b/scripts/wish.py
+new file mode 100644
+index 0000000..35994e7
+--- /dev/null
++++ b/scripts/wish.py
+@@ -0,0 +1,89 @@
++#!/usr/bin/env python3
++"""Append-only wishlist: things you asked the agency for that it can't do yet.
++
++The /start guide runs this when nothing on the menu matches, so the wish isn't lost.
++/new-flow reads wishlist.md to design the next flow. This script never changes or deletes existing lines.
++
++Usage:
++  python scripts/wish.py "help me write a book about my life"
++  python scripts/wish.py --list
++  python scripts/wish.py --selftest
++"""
++import argparse
++import datetime
++import os
++import shutil
++import sys
++import tempfile
++
++ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
++HEADER = ("# Wishlist\n\nThings asked of this agency that it can't do yet. Added by `/start` (via `scripts/wish.py`); "
++          "`/new-flow` turns one into a flow and marks it `[built → /name]`.\n\n")
++
++
++def add(root, text, today=None):
++    text = " ".join(text.split())
++    if not text:
++        raise ValueError("empty wish")
++    path = os.path.join(root, "wishlist.md")
++    if not os.path.exists(path):
++        with open(path, "w", encoding="utf-8", newline="\n") as fh:
++            fh.write(HEADER)
++    existing = open(path, encoding="utf-8").read()
++    line = "- %s: %s\n" % (today or datetime.date.today().isoformat(), text)
++    if (": " + text + "\n") in existing:
++        return path, False  # same wish already listed
++    with open(path, "a", encoding="utf-8", newline="\n") as fh:
++        if not existing.endswith("\n"):
++            fh.write("\n")
++        fh.write(line)
++    return path, True
++
++
++def open_wishes(root):
++    path = os.path.join(root, "wishlist.md")
++    if not os.path.exists(path):
++        return []
++    return [l.rstrip("\n") for l in open(path, encoding="utf-8") if l.startswith("- ") and "[built" not in l]
++
++
++def _selftest():
++    tmp = tempfile.mkdtemp()
++    try:
++        p, added = add(tmp, "write a  book\nabout my life", today="2026-09-25")
++        assert added and open(p).read().endswith("- 2026-09-25: write a book about my life\n")
++        _, added = add(tmp, "write a book about my life", today="2026-09-26")
++        assert not added
++        add(tmp, "plan my runs", today="2026-09-26")
++        with open(p, "a") as fh:
++            fh.write("- 2026-09-20: done thing [built → /done]\n")
++        assert open_wishes(tmp) == ["- 2026-09-25: write a book about my life", "- 2026-09-26: plan my runs"]
++        try:
++            add(tmp, "   ")
++            raise AssertionError("empty wish accepted")
++        except ValueError:
++            pass
++    finally:
++        shutil.rmtree(tmp)
++    print("wish selftest OK")
++
++
++def main():
++    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
++    ap.add_argument("wish", nargs="*")
++    ap.add_argument("--list", action="store_true")
++    ap.add_argument("--selftest", action="store_true")
++    a = ap.parse_args()
++    if a.selftest:
++        _selftest()
++        return
++    if a.list or not a.wish:
++        w = open_wishes(ROOT)
++        print("\n".join(w) if w else "wishlist is empty")
++        return
++    path, added = add(ROOT, " ".join(a.wish))
++    print(("added to " if added else "already on ") + os.path.relpath(path, ROOT))
++
++
++if __name__ == "__main__":
++    main()

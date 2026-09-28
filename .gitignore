@@ -9,3 +9,10 @@ brand/components.md
 __pycache__/
 *.pyc
 .DS_Store
+.aider*
+.env
+wishlist.md
+# local (Mac) runs: never part of the repo
+.opencode/
+opencode.json
+local/

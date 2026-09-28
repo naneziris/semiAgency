@@ -11,6 +11,8 @@ meeting    inputs ─▶ notes.md + tasks.json ─▶ tracker
                                   ▲ G5
 ```
 
+**Not sure what to run? Type `/start` in Copilot Chat (agent mode).** The guide looks at the engagement you're on and gives you the one next step, or asks what you want and points you to the right flow. It never does the work itself. You don't need to remember anything below.
+
 ## After a meeting
 
 ```
@@ -20,7 +22,7 @@ python scripts/status.py              # where you are, the checklist, the next p
 python scripts/status.py --pass       # records the gate (asks for the option / storyline when needed)
 ```
 
-Repeat the last three until `status.py` says done. That is the whole flow; **`docs/after-meeting.md`** is the one page to read. Scripts and prompts default to the engagement you started last (`engagements/CURRENT`), so you never type its name unless you run two in parallel (`new_engagement.py --use <name>` switches).
+Repeat the last three until `status.py` says done (or run `/start` at any point: it tells you the same, without the scripts). That is the whole flow; **`docs/after-meeting.md`** is the one page to read. Scripts and prompts default to the engagement you started last (`engagements/CURRENT`), so you never type its name unless you run two in parallel (`new_engagement.py --use <name>` switches).
 
 Three kinds, chosen in the first question: **proposal** (there will be a choice between solution approaches — `docs/runbooks/proposal.md`), **deck** (content already decided, you need slides — `docs/runbooks/deck.md`), **meeting** (a record and your actions, no deck — `docs/runbooks/meeting.md`). The runbooks are the per-kind detail that `status.py` prints step by step.
 
@@ -51,6 +53,8 @@ Everything between gates is regenerable from the file above it. Fix upstream, re
 
 | kind | prompt | writes |
 |---|---|---|
+| any | `/start` (agent `@guide`) | nothing: tells you where you are and the next step; records unmet wishes in `wishlist.md` |
+| any | `/new-flow` (agent `@builder`) | a new flow from a wish: prompt, instructions, map entry, menu |
 | proposal | `/discovery-prep` | `brief.md` |
 | proposal | `/discovery-synthesize` | `discovery.md` → G1 |
 | deck | `/content` | `content.md` → G1 |
