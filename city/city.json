@@ -923,15 +923,19 @@
       "id": "cartographer",
       "district": "yard",
       "name": "Cartographer",
-      "sub": "this map",
+      "sub": "this map · new_prompt.py",
       "shape": "small",
       "hotspot": "cartographer",
       "mode": "run",
       "audience": "vscode",
-      "pitch": "This map. It is generated from the repo; when a new prompt, agent or build sheet appears, the script places it in New Arrivals until someone gives it a building.",
+      "pitch": "This 3D island. It is generated from the repo: every prompt, agent and build sheet is a building, every \"I want to…\" is a route. Add a prompt with one command and it gets its building, its stop on a route and its place in the guide's menu; anything added by hand that nobody has placed lands in New Arrivals until it is given a building.",
       "steps": [
         {
-          "say": "Rebuild the city after any change:",
+          "say": "Add a prompt — the file, its building, its stop on a route, then the map and the menu are rebuilt:",
+          "copy": "python scripts/new_prompt.py"
+        },
+        {
+          "say": "Rebuild the city after any other change (new building in `city/city.json`, edited prompt text):",
           "copy": "python scripts/build_city.py"
         },
         {
@@ -1032,7 +1036,8 @@
         },
         {
           "building": "p-prep",
-          "say": "Optional, before the meeting: brief, hypotheses and a question guide."
+          "say": "Optional, before the meeting: brief, hypotheses and a question guide.",
+          "optional": true
         },
         {
           "building": "p-facts",
@@ -1040,7 +1045,8 @@
         },
         {
           "building": "p-followup",
-          "say": "Only if blocking questions remain: follow-up agenda, then merge what you learn."
+          "say": "Only if blocking questions remain: follow-up agenda, then merge what you learn.",
+          "optional": true
         },
         {
           "building": "p-options",
@@ -1096,7 +1102,8 @@
         },
         {
           "building": "d-rehearsal",
-          "say": "Optional: speaker notes and the critic."
+          "say": "Optional: speaker notes and the critic.",
+          "optional": true
         }
       ]
     },

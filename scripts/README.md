@@ -6,6 +6,8 @@ Shipped:
 - `new_engagement.py` — run with no arguments after a meeting: asks kind, subject, name, stakeholders, audience, minutes; creates the folder and `state.json`; sets `engagements/CURRENT`; waits while you fill `inputs/`, lists what it found, prints the first Copilot prompt. `--check` re-runs the inputs check, `--use <name>` switches the current engagement, `--kind/--name/…` and `--no-wait` for scripting.
 - `where.py` — read-only: the current engagement, what is done and the one next step (with where to run it). The `/start` guide runs it; you can too. Works without `status.py`.
 - `wish.py` — append-only wishlist (`wishlist.md`, gitignored): `/start` records what it couldn't match; `--list` shows open wishes for `/new-flow`.
+- `new_prompt.py` — add a prompt in one go: asks name, description, area, building, pitch, shape and route; writes `.github/prompts/<name>.prompt.md` (skeleton body), adds the building and its stop to `city/city.json`, then runs `build_city.py` and `build_menu.py`. `--flags` for every question; `--no-build`.
+- `build_city.py` — `city/city.json` + `city/scene.jpg` + `city/hotspots.json` + `city/template.html` + the repo → `index.html`, the walkable map. `--check` fails when a prompt, agent or sheet has no building.
 - `build_menu.py` — `city/city.json` → `docs/menu.md`, the routing table the `/start` guide reads. `--check` fails when the menu is stale or a prompt can't be reached from it. Re-run after changing journeys or building steps in `city.json`.
 - `append_tasks.py` — reviewed `tasks.json` → `tracker/actions.csv`, deduplicated; shows the rows, then offers to pass gate G5 (`--pass-g5` to skip the question; `--init` creates the tracker).
 

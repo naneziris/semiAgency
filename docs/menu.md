@@ -185,7 +185,8 @@ and each step names where it happens and the exact command to type.
      - Read the prerequisites, then build the sheets in order. Each harbour building has its own sheet.
      - read: `m365/README.md` (M365 automations — prerequisites and build order)
   3. **Cartographer** — Rebuild this map whenever a feature is added.
-     - Rebuild the city after any change: `python scripts/build_city.py`
+     - Add a prompt — the file, its building, its stop on a route, then the map and the menu are rebuilt: `python scripts/new_prompt.py`
+     - Rebuild the city after any other change (new building in `city/city.json`, edited prompt text): `python scripts/build_city.py`
      - Rebuild the guide's menu (docs/menu.md) after changing journeys or steps here: `python scripts/build_menu.py`
      - Fail if something is unmapped (for a pre-commit check): `python scripts/build_city.py --check`
      - read: `city/README.md` (How the map is built)

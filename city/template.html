@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>__TITLE__</title>
+<style>
+:root{--ink:#1d2733;--mut:#5b6773;--line:#d6dee6;--card:#fff;--acc:#1f6fd0;--acc2:#e9f1fb;--ok:#2a8a3a;--panel:360px;--gold:#e3b341}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;overflow:hidden;font:14px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:var(--ink);background:#7ec8e3}
+#stage{position:fixed;left:var(--panel);right:0;top:0;bottom:0;background:radial-gradient(ellipse at 50% 40%,#9fdcef,#5fb3d0);transition:left .25s;overflow:hidden}
+body.nopanel #stage{left:0}
+#world{position:absolute;display:block;touch-action:none;outline:none;image-rendering:auto;box-shadow:0 10px 40px rgba(0,0,0,.25)}
+#labels{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.lbl{position:absolute;transform:translate(-50%,0);pointer-events:auto;cursor:pointer;white-space:nowrap;font-size:11.5px;font-weight:600;color:var(--ink);background:rgba(255,255,255,.92);border:1px solid rgba(0,0,0,.12);border-left:4px solid var(--ac,#ffb400);border-radius:7px;padding:1px 7px;box-shadow:0 2px 6px rgba(0,0,0,.14);transition:opacity .15s;line-height:1.4}
+.lbl.hot{background:#fff3c4;border-color:#e6c76b;border-left-color:var(--ac)}
+.lbl.near{background:#fff;box-shadow:0 0 0 3px color-mix(in srgb,var(--ac) 50%,transparent)}
+.lbl{z-index:2}
+.lbl.area{z-index:1;transform:translate(-50%,-50%);font-size:12.5px;font-weight:700;color:#fff;background:var(--ac);border:1.5px solid #fff;border-radius:999px;padding:2px 11px;box-shadow:0 3px 10px rgba(0,0,0,.2);opacity:.95}
+.lbl.pier{background:rgba(58,154,110,.95);color:#fff;border-color:#fff;border-left-color:#fff;font-weight:600}
+.lbl.hidden{opacity:0;pointer-events:none}
+/* HUD */
+#top{position:absolute;left:0;right:0;top:0;padding:10px 14px;display:flex;align-items:center;gap:8px;pointer-events:none;z-index:4}
+#top h1{margin:0;font-size:17px;letter-spacing:.2px;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.45);pointer-events:auto}
+#top .sp{flex:1}
+.hbtn{pointer-events:auto;font:inherit;font-size:13px;border:1px solid rgba(255,255,255,.6);background:rgba(255,255,255,.9);border-radius:999px;padding:4px 12px;cursor:pointer;color:var(--ink);box-shadow:0 2px 8px rgba(0,0,0,.15)}
+.hbtn.on{background:var(--acc);color:#fff;border-color:var(--acc)}
+#prompt{position:absolute;left:50%;bottom:44px;transform:translateX(-50%);background:rgba(29,39,51,.92);color:#fff;border-radius:999px;padding:7px 16px;font-size:14px;display:none;z-index:4;pointer-events:auto;cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,.3)}
+#prompt kbd{background:#fff;color:var(--ink);border-radius:4px;padding:0 6px;font-weight:700;margin-right:6px}
+#prompt.on{display:block}
+#hint{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.6);font-size:12px;z-index:3;text-align:center;pointer-events:none;opacity:.95;white-space:nowrap}
+#hint kbd{border:1px solid rgba(255,255,255,.7);border-radius:4px;padding:0 5px;background:rgba(0,0,0,.25)}
+#tip{position:fixed;pointer-events:none;background:#fff;border:1px solid var(--line);border-radius:8px;padding:8px 10px;max-width:280px;font-size:13px;box-shadow:0 6px 20px rgba(0,0,0,.12);display:none;z-index:9}
+#tip b{display:block;margin-bottom:2px}
+#tip .m{color:var(--mut);font-size:12px;margin-top:3px}
+footer{position:absolute;right:12px;bottom:10px;color:#fff;font-size:11px;text-shadow:0 1px 2px rgba(0,0,0,.6);z-index:3;pointer-events:none}
+/* panel */
+#panel{position:fixed;left:0;top:0;bottom:0;width:var(--panel);background:var(--card);box-shadow:4px 0 24px rgba(0,0,0,.18);z-index:5;display:flex;flex-direction:column;transition:transform .25s}
+body.nopanel #panel{transform:translateX(-100%)}
+#ptoggle{position:fixed;left:var(--panel);top:50%;transform:translateY(-50%);z-index:6;border:0;background:var(--card);border-radius:0 10px 10px 0;width:22px;height:56px;cursor:pointer;box-shadow:4px 0 12px rgba(0,0,0,.15);font-size:16px;color:var(--mut);transition:left .25s;padding:0}
+body.nopanel #ptoggle{left:0}
+#phead{padding:14px 16px 8px;border-bottom:1px solid var(--line)}
+#phead .t{font-weight:700;font-size:16px}
+#phead .tag{color:var(--mut);font-size:12.5px;margin-top:2px}
+#search{width:100%;margin-top:10px;font:inherit;padding:7px 10px;border:1px solid var(--line);border-radius:8px;background:#f7f9fb}
+#tabs{display:flex;gap:4px;padding:8px 12px 0}
+#tabs button{font:inherit;font-size:13px;border:0;background:transparent;padding:6px 10px;cursor:pointer;border-radius:8px 8px 0 0;color:var(--mut);border-bottom:2px solid transparent}
+#tabs button.on{color:var(--ink);font-weight:600;border-bottom-color:var(--acc)}
+#pbody{flex:1;overflow:auto;padding:10px 16px 24px;scroll-behavior:smooth}
+.sec{font-size:11.5px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.06em;margin:16px 0 6px}
+.sec:first-child{margin-top:4px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+button.chip,a.chip{font:inherit;font-size:12.5px;border:1px solid var(--line);background:#fff;border-radius:999px;padding:3px 10px;cursor:pointer;color:var(--ink);text-decoration:none}
+button.chip.on{background:var(--acc);color:#fff;border-color:var(--acc)}
+button.chip .dot,.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;vertical-align:0}
+.jcard{border:1px solid var(--line);border-left:5px solid var(--ac);border-radius:10px;padding:8px 10px;margin:6px 0;cursor:pointer;background:#fff}
+.jcard:hover{background:#f7f9fb}.jcard.sel{background:#fff7d6;border-color:#e6c76b;border-left-color:var(--ac)}
+.jcard h4{margin:0;font-size:14px}
+.jcard .w{font-size:12.5px;color:var(--mut);margin-top:2px}
+.place{display:flex;gap:8px;align-items:flex-start;padding:6px 8px;border-radius:8px;cursor:pointer}
+.place:hover{background:#f4f7fa}.place.near{background:#fff7d6}
+.place .ic{width:10px;height:10px;border-radius:3px;background:var(--ac);margin-top:6px;flex:none}
+.place b{display:block;font-size:13.5px}
+.place span{font-size:12.5px;color:var(--mut)}
+.place .n{margin-left:auto;font-size:11px;color:var(--mut);flex:none;background:#eef2f6;border-radius:999px;padding:0 7px;align-self:center}
+/* guide (selected route) */
+#guide{border:1px solid #e6c76b;border-left:6px solid var(--gac,#e6c76b);background:#fffcf0;border-radius:10px;padding:10px 12px;margin:4px 0 10px}
+#guide .who{font-weight:700;font-size:14.5px;margin-right:24px}
+#guide .when{font-size:12.5px;color:#4a4436;margin:2px 0 6px}
+#guide .facts{font-size:12px;display:grid;grid-template-columns:auto 1fr;gap:1px 8px;margin-bottom:6px}
+#guide .facts b{color:var(--mut);font-weight:600}
+#guide ol{margin:0;padding-left:20px;font-size:12.5px}
+#guide li{margin:2px 0;cursor:pointer;padding:2px 6px;border-radius:6px}
+#guide li.cur{background:#ffe9a8}
+#guide li b{display:block}
+#guide .nav{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+#guide .legend{font-size:11.5px;color:var(--mut);margin:0 0 6px}
+#guide .legend .req,#guide .flag.req{background:#e3f4ea;border:1px solid #9fd1b3;color:#1d5a32;border-radius:999px;padding:0 7px;font-size:11px;font-weight:600}
+#guide .legend .opt,#guide .flag.opt{background:#f1f3f6;border:1px solid var(--line);color:var(--mut);border-radius:999px;padding:0 7px;font-size:11px;font-weight:600}
+#guide li{margin:4px 0;padding:5px 7px}
+#guide li .line{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+#guide li .line b{display:inline}
+#guide li .say{font-size:12.5px;margin-top:1px}
+#guide li.optional .say{color:var(--mut)}
+#guide li .where{font-size:10.5px;color:var(--mut);border:1px solid var(--line);border-radius:4px;padding:0 4px}
+#guide .cps{margin-top:4px}
+#guide .chip.cp{font-size:11.5px;padding:1px 8px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:#fff}
+#guide .x{float:right;border:0;background:transparent;font-size:18px;cursor:pointer;color:var(--mut);line-height:1}
+/* detail */
+.detail h2{margin:0 0 2px;font-size:19px}
+.detail .sub{font-size:13px;color:var(--mut);margin:0 0 6px}
+.detail .meta{color:var(--mut);font-size:12px;margin-bottom:10px;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.detail .aud{border:1px solid var(--line);border-radius:999px;padding:1px 8px;font-size:11.5px;background:var(--acc2)}
+.detail .pitch{font-size:14px;margin:0 0 12px}
+.detail h3{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--mut);margin:18px 0 6px}
+.detail .areabar{height:5px;border-radius:5px;margin:0 0 10px}
+.backrow{display:flex;gap:6px;margin-bottom:10px;align-items:center}
+.backrow .sp{flex:1}
+.step{margin:6px 0}.step .say{margin:0 0 3px}
+.code{position:relative;margin:4px 0 8px}
+.code pre{margin:0;background:#f4f7fa;border:1px solid var(--line);border-radius:8px;padding:8px 76px 8px 10px;overflow:auto;font:12.5px/1.45 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;white-space:pre-wrap;word-break:break-word;max-height:360px}
+.code .copy,.mini-btn{position:absolute;right:6px;top:6px;font:12px system-ui;border:1px solid var(--line);background:#fff;border-radius:6px;padding:2px 8px;cursor:pointer}
+.code .copy.done{background:var(--ok);color:#fff;border-color:var(--ok)}
+details{border:1px solid var(--line);border-radius:8px;padding:6px 10px;margin:6px 0;background:#fbfcfd}
+details summary{cursor:pointer;font-weight:600;font-size:13px}
+details .desc{color:var(--mut);font-size:12.5px;margin:2px 0 6px}
+.doc{font-size:13px}.doc h3,.doc h4,.doc h5,.doc h6{text-transform:none;letter-spacing:0;color:var(--ink);margin:14px 0 4px}
+.doc h3{font-size:15px}.doc h4{font-size:14px}
+.doc table{border-collapse:collapse;margin:8px 0;font-size:12px;display:block;overflow:auto}
+.doc th,.doc td{border:1px solid var(--line);padding:3px 6px;text-align:left;vertical-align:top}
+.doc code,.step code,.pitch code,.place code{background:#f0f3f6;border-radius:4px;padding:0 4px;font-size:.92em}
+.doc blockquote{border-left:3px solid var(--line);margin:8px 0;padding:2px 12px;color:var(--mut)}
+.mode{border-radius:999px;padding:1px 8px;font-size:11.5px;font-weight:600;background:#eef2f6;border:1px solid var(--line)}
+.mode.auto{background:#e3f4ea;border-color:#9fd1b3}.mode.click{background:#e9f1fb;border-color:#a9c6ea}.mode.setup{background:#fdf0dd;border-color:#e8c48e}
+table.asks{border-collapse:collapse;width:100%;font-size:12.5px;margin:4px 0 8px}
+table.asks th{font-size:11.5px;text-align:left;color:var(--mut);font-weight:600;padding:3px 6px;border-bottom:1px solid var(--line)}
+table.asks td{padding:5px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+table.asks tr.hi td{background:#fff7d6}table.asks tr.lo td{opacity:.5}
+table.asks .code{margin:0}table.asks .code pre{padding:5px 56px 5px 8px}
+.cards{display:grid;grid-template-columns:1fr;gap:8px;margin:6px 0 4px}
+.card{border:1px solid var(--line);border-left:6px solid var(--ac);border-radius:10px;padding:8px 10px;background:#fff;display:flex;flex-direction:column;gap:3px}
+.card h4{margin:0;font-size:14px}.card .k{font-size:11.5px;color:var(--mut)}.card .v{font-size:12.5px}
+.card button{align-self:flex-start;margin-top:4px}
+.src{color:var(--mut);font-size:11.5px;margin-top:14px}
+.stepin{background:#fff7d6;border-radius:8px;padding:6px 10px;font-size:13px;margin:0 0 10px}
+.btnrow{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 8px}
+/* library */
+.lib{border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin:6px 0;background:#fff}
+.lib .h{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.lib code.n{font-weight:700;font-size:13px;background:#f0f3f6;border-radius:5px;padding:0 6px}
+.lib .d{font-size:12.5px;color:var(--mut);margin:2px 0 6px}
+.lib .where{font-size:11.5px;color:var(--mut);margin-left:auto;cursor:pointer;text-decoration:underline dotted}
+.lib .b{display:flex;gap:6px;flex-wrap:wrap}
+.libtop{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:4px 0 10px}
+.libtop .c{font-size:12px;color:var(--mut);flex-basis:100%}
+button.chip.pri{background:var(--acc);color:#fff;border-color:var(--acc)}
+button.chip.done{background:var(--ok);color:#fff;border-color:var(--ok)}
+/* help */
+#help{position:fixed;inset:0;background:rgba(20,30,40,.55);display:none;z-index:20;align-items:center;justify-content:center;padding:16px}
+#help.on{display:flex}
+#help .box{background:#fff;border-radius:14px;max-width:520px;padding:22px 26px;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+#help h2{margin:0 0 6px;font-size:20px}
+#help table{border-collapse:collapse;font-size:13.5px;margin:10px 0}
+#help td{padding:3px 10px 3px 0;vertical-align:top}
+#help kbd{border:1px solid var(--line);border-radius:4px;padding:0 6px;background:#f4f7fa;font-size:12.5px;margin-right:2px}
+@media(max-width:860px){
+  :root{--panel:0px}
+  #stage{bottom:46vh}
+  #panel{top:auto;height:46vh;width:100%;transform:translateY(0);box-shadow:0 -4px 24px rgba(0,0,0,.18);border-radius:14px 14px 0 0}
+  body.nopanel #panel{transform:translateY(calc(100% - 38px))}
+  body.nopanel #stage{bottom:38px}
+  #ptoggle{left:50%;top:auto;bottom:calc(46vh - 2px);transform:translateX(-50%) rotate(90deg);border-radius:10px 10px 0 0;width:56px;height:22px;transition:bottom .25s}
+  body.nopanel #ptoggle{bottom:36px;left:50%}
+  #top{padding:6px 8px}
+  #top h1{display:none}
+  .hbtn{font-size:12px;padding:3px 9px}
+  #hint{display:none}
+  footer{display:none}
+  .lbl{font-size:10px;padding:0 5px}
+  .lbl.area{font-size:10.5px;padding:1px 8px}
+}
+</style></head><body>
+<div id="stage">
+  <canvas id="world" tabindex="0"></canvas>
+  <div id="labels"></div>
+  <div id="top"><h1>__TITLE__</h1><span class="sp"></span><button class="hbtn" id="bNames">All names</button><button class="hbtn" id="bHelp">?</button></div>
+  <div id="prompt"></div>
+  <div id="hint"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> or arrows to walk · click a street to go there · click a building to visit it · <kbd>E</kbd> enter</div>
+  <footer>v__VERSION__ · built __BUILT__</footer>
+</div>
+<div id="tip"></div>
+<aside id="panel">
+  <div id="phead"><div class="t">__TITLE__</div><div class="tag">__TAGLINE__</div><input id="search" type="search" placeholder="Search places, routes, prompts…" autocomplete="off"></div>
+  <div id="tabs"><button data-tab="go" class="on">Go</button><button data-tab="lib">Prompt library</button></div>
+  <div id="pbody"></div>
+</aside>
+<button id="ptoggle" aria-label="Show or hide the panel" title="H">‹</button>
+<div id="help"><div class="box"><h2>How to explore</h2>
+<table>
+<tr><td><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> / arrows</td><td>walk the streets (hold <kbd>Shift</kbd> to run)</td></tr>
+<tr><td>click a street</td><td>walk there</td></tr>
+<tr><td>click a building or its name</td><td>walk there and open it</td></tr>
+<tr><td><kbd>E</kbd> / <kbd>Enter</kbd></td><td>enter the building you are standing at</td></tr>
+<tr><td><kbd>H</kbd></td><td>hide / show the panel</td></tr>
+<tr><td><kbd>Esc</kbd></td><td>back</td></tr>
+</table>
+<p style="font-size:13px;color:var(--mut);margin:6px 0 12px">Pick a route in the panel to see it numbered on the map; <b>Next stop</b> walks you there. The library tab has every prompt with copy and download buttons.</p>
+<button class="chip pri" id="helpClose">Let's go</button></div></div>
+<script>
+const DATA = __DATA__;
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const B = Object.fromEntries(DATA.buildings.map(b => [b.id, b]));
+const DISTR = Object.fromEntries(DATA.districts.map(d => [d.id, d]));
+const J = Object.fromEntries(DATA.journeys.map(j => [j.id, j]));
+const dcolor = id => (DISTR[id] || {}).color || '#e6c76b';
+const HS = Object.fromEntries(DATA.scene.hotspots.map(h => [h.id, h]));
+const W = DATA.scene.w, H = DATA.scene.h;
+let store = { get(k){ try { return localStorage.getItem(k); } catch(e){ return null; } }, set(k,v){ try { localStorage.setItem(k,v); } catch(e){} } };
+
+/* ================================================================ geometry */
+function inPoly(p, poly){ let c=false; for(let i=0,j=poly.length-1;i<poly.length;j=i++){ const xi=poly[i][0],yi=poly[i][1],xj=poly[j][0],yj=poly[j][1]; if(((yi>p[1])!==(yj>p[1])) && (p[0] < (xj-xi)*(p[1]-yi)/(yj-yi)+xi)) c=!c; } return c; }
+function distToPoly(p, poly){ if (inPoly(p, poly)) return 0; let best = 1e9; for (let i=0,j=poly.length-1;i<poly.length;j=i++){ const ax=poly[j][0],ay=poly[j][1],bx=poly[i][0],by=poly[i][1]; const dx=bx-ax,dy=by-ay; const t=Math.max(0,Math.min(1,((p[0]-ax)*dx+(p[1]-ay)*dy)/(dx*dx+dy*dy||1))); best=Math.min(best, Math.hypot(p[0]-ax-dx*t, p[1]-ay-dy*t)); } return best; }
+const cen = pts => [pts.reduce((a,p)=>a+p[0],0)/pts.length, pts.reduce((a,p)=>a+p[1],0)/pts.length];
+const bot = pts => Math.max(...pts.map(p=>p[1])), topY = pts => Math.min(...pts.map(p=>p[1]));
+DATA.buildings.forEach(b => { const h = HS[b.hotspot]; if (!h) return; b._poly = h.points; b._c = cen(h.points); b._color = dcolor(b.district); });
+DATA.landmarks.forEach(lm => { const h = HS[lm.hotspot]; if (!h) return; lm._poly = h.points; lm._c = cen(h.points); });
+
+/* ================================================================ stage & canvas */
+const stage = $('#stage'), canvas = $('#world'), ctx = canvas.getContext('2d'), labels = $('#labels');
+let S = 1, OX = 0, OY = 0;   // painting → stage: stage = O + painting*S
+const img = new Image(); img.src = DATA.scene.src;
+function resize(){ const sw = stage.clientWidth, sh = stage.clientHeight; S = Math.min(sw / W, sh / H); const cw = Math.round(W*S), ch = Math.round(H*S); OX = Math.round((sw-cw)/2); OY = Math.round((sh-ch)/2); const dpr = Math.min(devicePixelRatio||1, 2); canvas.width = Math.round(cw*dpr); canvas.height = Math.round(ch*dpr); canvas.style.width = cw+'px'; canvas.style.height = ch+'px'; canvas.style.left = OX+'px'; canvas.style.top = OY+'px'; ctx.setTransform(S*dpr, 0, 0, S*dpr, 0, 0); }
+addEventListener('resize', resize); resize();
+const toPaint = (cx, cy) => { const r = canvas.getBoundingClientRect(); return [(cx - r.left) / S, (cy - r.top) / S]; };
+
+/* ================================================================ walkable mask (from the painting's colours + the traced buildings) */
+const C = 4, GW = Math.ceil(W / C), GH = Math.ceil(H / C); const mask = new Uint8Array(GW * GH);   // 1 = walkable
+function buildMask(){ const oc = document.createElement('canvas'); oc.width = GW; oc.height = GH; const g = oc.getContext('2d', {willReadFrequently:true}); g.drawImage(img, 0, 0, GW, GH); const d = g.getImageData(0, 0, GW, GH).data;
+  for (let i = 0; i < GW*GH; i++) { const r = d[i*4]/255, gg = d[i*4+1]/255, b = d[i*4+2]/255; const mx = Math.max(r,gg,b), mn = Math.min(r,gg,b); const v = mx, s = mx ? (mx-mn)/mx : 0; let h = 0; if (mx !== mn) { if (mx === r) h = ((gg-b)/(mx-mn)) % 6; else if (mx === gg) h = (b-r)/(mx-mn) + 2; else h = (r-gg)/(mx-mn) + 4; h /= 6; if (h < 0) h += 1; } const water = h >= .44 && h <= .60 && s > .30 && v > .40; mask[i] = water ? 0 : 1; }
+  const m2 = mask.slice(); for (let y=0;y<GH;y++) for (let x=0;x<GW;x++) if (!m2[y*GW+x]) for (let dy=-1;dy<=1;dy++) for (let dx=-1;dx<=1;dx++) { const yy=y+dy, xx=x+dx; if (yy>=0&&yy<GH&&xx>=0&&xx<GW) mask[yy*GW+xx] = 0; }   // keep off the water's edge
+  const stamp = (poly, val) => { const xs = poly.map(p=>p[0]), ys = poly.map(p=>p[1]); for (let y = Math.floor(Math.min(...ys)/C); y <= Math.ceil(Math.max(...ys)/C); y++) for (let x = Math.floor(Math.min(...xs)/C); x <= Math.ceil(Math.max(...xs)/C); x++) if (x>=0&&x<GW&&y>=0&&y<GH && inPoly([(x+.5)*C,(y+.5)*C], poly)) mask[y*GW+x] = val; };
+  DATA.landmarks.forEach(lm => lm._poly && stamp(lm._poly, 1));                // the piers are stone: walkable
+  DATA.buildings.forEach(b => b._poly && stamp(b._poly, 0)); }
+const walkable = (x, y) => { const gx = Math.floor(x/C), gy = Math.floor(y/C); return gx>=0 && gy>=0 && gx<GW && gy<GH && mask[gy*GW+gx] === 1; };
+function nearestWalkable(x, y, maxR=40){ if (walkable(x,y)) return [x,y]; for (let r = C; r <= maxR; r += C) for (let a = 0; a < 16; a++) { const t = a/16*Math.PI*2; const px = x + Math.cos(t)*r, py = y + Math.sin(t)*r; if (walkable(px,py)) return [px,py]; } return null; }
+const doorOf = b => { if (b._door) return b._door; const [cx] = b._c; const y0 = bot(b._poly); for (let dy = 4; dy < 60; dy += 4) { const p = nearestWalkable(cx, y0 + dy, 12); if (p) return b._door = p; } return b._door = nearestWalkable(cx, y0, 80) || [cx, y0]; };
+
+/* ---------- A* on the grid, then string-pulling so the hero walks in straight lines */
+function astar(from, to){ const sx = Math.floor(from[0]/C), sy = Math.floor(from[1]/C), tx = Math.floor(to[0]/C), ty = Math.floor(to[1]/C); if (!walkable(to[0],to[1]) || !walkable(from[0],from[1])) return null; const N = GW*GH; const g = new Float32Array(N).fill(Infinity), came = new Int32Array(N).fill(-1), closed = new Uint8Array(N); const heap = []; const push = (f, i) => { heap.push([f,i]); let k = heap.length-1; while (k > 0) { const p = (k-1)>>1; if (heap[p][0] <= heap[k][0]) break; [heap[p],heap[k]] = [heap[k],heap[p]]; k = p; } }; const pop = () => { const r = heap[0], l = heap.pop(); if (heap.length) { heap[0] = l; let k = 0; for(;;){ let a = 2*k+1, b = a+1, m = k; if (a < heap.length && heap[a][0] < heap[m][0]) m = a; if (b < heap.length && heap[b][0] < heap[m][0]) m = b; if (m === k) break; [heap[m],heap[k]] = [heap[k],heap[m]]; k = m; } } return r; };
+  const hfn = (x,y) => { const dx = Math.abs(x-tx), dy = Math.abs(y-ty); return Math.max(dx,dy) + .414*Math.min(dx,dy); }; const s0 = sy*GW+sx; g[s0] = 0; push(hfn(sx,sy), s0); let found = false, steps = 0;
+  while (heap.length && steps++ < 200000) { const [, i] = pop(); if (closed[i]) continue; closed[i] = 1; const x = i % GW, y = (i - x) / GW; if (x === tx && y === ty) { found = true; break; }
+    for (let dy=-1;dy<=1;dy++) for (let dx=-1;dx<=1;dx++) { if (!dx && !dy) continue; const nx = x+dx, ny = y+dy; if (nx<0||ny<0||nx>=GW||ny>=GH) continue; const ni = ny*GW+nx; if (!mask[ni] || closed[ni]) continue; if (dx && dy && (!mask[y*GW+nx] || !mask[ny*GW+x])) continue; const ng = g[i] + (dx && dy ? 1.414 : 1); if (ng < g[ni]) { g[ni] = ng; came[ni] = i; push(ng + hfn(nx,ny), ni); } } }
+  if (!found) return null; const cells = []; let i = ty*GW+tx; while (i !== -1) { cells.push([(i%GW+.5)*C, (Math.floor(i/GW)+.5)*C]); i = came[i]; } cells.reverse(); cells[0] = from.slice(); cells[cells.length-1] = to.slice(); return pull(cells); }
+function clear(a, b){ const n = Math.ceil(Math.hypot(b[0]-a[0], b[1]-a[1]) / (C/2)) + 1; for (let k=0;k<=n;k++){ const t=k/n; if (!walkable(a[0]+(b[0]-a[0])*t, a[1]+(b[1]-a[1])*t)) return false; } return true; }
+function pull(pts){ const out = [pts[0]]; let i = 0; while (i < pts.length-1) { let j = pts.length-1; while (j > i+1 && !clear(pts[i], pts[j])) j--; out.push(pts[j]); i = j; } return out; }
+
+/* ================================================================ hero (pixel sprite) */
+const SPR = {}; const PX = 2.8;   // one sprite pixel = 2.8 painting pixels → the hero is ~50 px tall
+function sprite(dir, frame){ const k = dir+frame; if (SPR[k]) return SPR[k]; const c = document.createElement('canvas'); c.width = 12; c.height = 16; const g = c.getContext('2d'); const P = (x,y,col,w=1,h=1) => { g.fillStyle = col; g.fillRect(x,y,w,h); };
+  const skin='#e8b58d', hair='#4b2e1e', tunic='#fbf8f0', belt='#e3b341', cape='#c8553d', leaf='#3f8f4f', sandal='#8a6a44';
+  P(4,0,leaf,4,1); P(3,1,hair,6,1); P(3,2,skin,6,3); if (dir!=='up') { P(4,3,'#2b2b2b',1,1); P(7,3,'#2b2b2b',1,1); } else P(3,2,hair,6,3);
+  if (dir==='left') { P(3,2,skin,5,3); P(4,3,'#2b2b2b',1,1); } if (dir==='right') { P(4,2,skin,5,3); P(7,3,'#2b2b2b',1,1); }
+  if (dir==='up') P(2,5,cape,8,6); P(3,5,tunic,6,6); P(3,8,belt,6,1); if (dir!=='up') { P(2,5,skin,1,4); P(9,5,skin,1,4); }
+  const f = frame ? 1 : 0; P(3+f,11,skin,2,3); P(7-f,11,skin,2,3); P(3+f,14,sandal,2,1); P(7-f,14,sandal,2,1);
+  if (dir==='down' && !frame) { P(3,11,skin,2,3); P(7,11,skin,2,3); P(3,14,sandal,2,1); P(7,14,sandal,2,1); }
+  // 1-px dark outline so the hero reads against any background
+  const o = document.createElement('canvas'); o.width = 14; o.height = 18; const og = o.getContext('2d'); const d = g.getImageData(0,0,12,16).data; og.fillStyle = '#2a1d14';
+  for (let y=0;y<16;y++) for (let x=0;x<12;x++) if (d[(y*12+x)*4+3]) for (let dy=-1;dy<=1;dy++) for (let dx=-1;dx<=1;dx++) og.fillRect(x+1+dx, y+1+dy, 1, 1);
+  og.drawImage(c, 1, 1); return SPR[k] = o; }
+const start = (() => { const fd = DATA.buildings.find(b => b.picker) || DATA.buildings.find(b => b._poly); return fd && fd._poly ? doorOf(fd) : [W/2, H/2]; })();
+const hero = { x: W/2, y: H/2, dir: 'down', frame: 0, t: 0, moving: false };
+let path = null, autoOpen = null; const keys = {};
+function stepHero(dt){ let dx = 0, dy = 0; if (keys['w']||keys['arrowup']) dy -= 1; if (keys['s']||keys['arrowdown']) dy += 1; if (keys['a']||keys['arrowleft']) dx -= 1; if (keys['d']||keys['arrowright']) dx += 1;
+  const sp = (keys['shift'] ? 170 : 95) * dt; hero.moving = false;
+  if (dx || dy) { path = null; autoOpen = null; const L = Math.hypot(dx,dy); dx = dx/L*sp; dy = dy/L*sp; move(dx, dy); }
+  else if (path && path.length) { const tgt = path[0]; const vx = tgt[0]-hero.x, vy = tgt[1]-hero.y; const L = Math.hypot(vx,vy); if (L <= sp*1.6) { hero.x = tgt[0]; hero.y = tgt[1]; path.shift(); if (!path.length) { path = null; const id = autoOpen; autoOpen = null; if (id) { const b = B[id]; hero.dir = b._c[1] < hero.y ? 'up' : 'down'; openB(id); } } else face(vx, vy); hero.moving = true; } else { move(vx/L*sp*1.6, vy/L*sp*1.6); } }
+  if (hero.moving) { hero.t += dt*9; if (hero.t > 1) { hero.t = 0; hero.frame = hero.frame ? 0 : 1; } } else hero.frame = 0; }
+function face(dx, dy){ hero.dir = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up'); }
+function move(dx, dy){ face(dx, dy); if (walkable(hero.x+dx, hero.y+dy)) { hero.x += dx; hero.y += dy; hero.moving = true; } else if (walkable(hero.x+dx, hero.y)) { hero.x += dx; hero.moving = true; } else if (walkable(hero.x, hero.y+dy)) { hero.y += dy; hero.moving = true; } }
+function walkTo(p, open){ const t = nearestWalkable(p[0], p[1]); if (!t) return; const pth = astar([hero.x, hero.y], t); if (!pth) { if (open) openB(open); return; } path = pth; autoOpen = open || null; }
+
+/* ================================================================ drawing */
+let hoverId = null, sel = null, stop = 0; const routeIds = new Set(); let routePath = null;
+function draw(){ ctx.clearRect(0,0,W,H); ctx.drawImage(img, 0, 0, W, H);
+  // hover / route / near highlights on the buildings
+  const hi = (b, fill, stroke, lw) => { ctx.beginPath(); b._poly.forEach((p,i) => i ? ctx.lineTo(p[0],p[1]) : ctx.moveTo(p[0],p[1])); ctx.closePath(); ctx.fillStyle = fill; ctx.fill(); ctx.strokeStyle = stroke; ctx.lineWidth = lw; ctx.lineJoin = 'round'; ctx.stroke(); };
+  DATA.buildings.forEach(b => { if (!b._poly) return; const r = routeIds.has(b.id), h = hoverId === b.id, n = nearB && nearB.id === b.id; if (r) hi(b, hexa(b._color, .16), b._color, 2.5); if (h || n) hi(b, hexa(b._color, h ? .28 : .14), '#fff', 3); });
+  DATA.landmarks.forEach(lm => { if (!lm._poly) return; if (sel === lm.journey || hoverId === 'lm:'+lm.journey) { ctx.beginPath(); lm._poly.forEach((p,i) => i ? ctx.lineTo(p[0],p[1]) : ctx.moveTo(p[0],p[1])); ctx.closePath(); ctx.fillStyle = 'rgba(58,154,110,.22)'; ctx.fill(); ctx.strokeStyle = '#3a9a6e'; ctx.lineWidth = 2.5; ctx.stroke(); } });
+  if (routePath && routePath.length > 1) { const col = dcolor(J[sel].area); ctx.save(); ctx.setLineDash([10, 7]); ctx.lineDashOffset = -performance.now()/40 % 17; ctx.strokeStyle = '#fff'; ctx.lineWidth = 6; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.beginPath(); routePath.forEach((p,i) => i ? ctx.lineTo(p[0],p[1]) : ctx.moveTo(p[0],p[1])); ctx.stroke(); ctx.strokeStyle = col; ctx.lineWidth = 3.5; ctx.stroke(); ctx.restore(); }
+  if (sel) { const j = J[sel]; const col = dcolor(j.area); j.stops.forEach((st, i) => { const b = B[st.building]; if (!b || !b._poly) return; const x = b._c[0], y = topY(b._poly) - 10; const r = i === stop ? 14 : 11; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2); ctx.fillStyle = col; ctx.fill(); ctx.lineWidth = 2.5; ctx.strokeStyle = '#fff'; ctx.stroke(); ctx.fillStyle = '#fff'; ctx.font = `bold ${i===stop?15:12}px system-ui,sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(String(i+1), x, y+1); }); }
+  // hero: shadow + sprite, feet at (x,y)
+  const sp = sprite(hero.dir, hero.frame); const sw = sp.width*PX, sh = sp.height*PX; ctx.fillStyle = 'rgba(0,0,0,.28)'; ctx.beginPath(); ctx.ellipse(hero.x, hero.y, sw*.42, sw*.16, 0, 0, Math.PI*2); ctx.fill();
+  ctx.imageSmoothingEnabled = false; ctx.drawImage(sp, Math.round(hero.x - sw/2), Math.round(hero.y - sh + 2), sw, sh); ctx.imageSmoothingEnabled = true; }
+function hexa(hex, a){ const n = parseInt(hex.slice(1), 16); return `rgba(${n>>16},${(n>>8)&255},${n&255},${a})`; }
+
+/* ---------- labels (HTML) */
+let allNames = false; const LBL = [];
+function addLabel(cls, text, x, y, data){ const el = document.createElement('div'); el.className = 'lbl ' + cls; el.textContent = text; el.style.setProperty('--ac', data.color); labels.appendChild(el); const L = {el, x, y, data}; LBL.push(L); return L; }
+DATA.buildings.forEach(b => { if (!b._poly) return; b._lbl = addLabel('', b.name, b._c[0], bot(b._poly) + 10, {bid:b.id, color:b._color}); b._lbl.el.onclick = () => visit(b.id); b._lbl.el.onmousemove = e => tip(e, b.id); b._lbl.el.onmouseleave = () => $('#tip').style.display='none'; });
+DATA.landmarks.forEach(lm => { if (!lm._poly) return; const L = addLabel('pier', lm.name.replace('Pier · ',''), lm._c[0], bot(lm._poly) - 4, {lm:lm.journey, color:'#3a9a6e'}); L.el.onclick = () => selectJourney(lm.journey); });
+DATA.districts.forEach(d => { const bs = DATA.buildings.filter(b => b.district === d.id && b._c && !b.auto); if (!bs.length) return; let at = DATA.area_label_at[d.id]; if (!at) { at = [bs.reduce((a,b)=>a+b._c[0],0)/bs.length, Math.min(...bs.map(b=>topY(b._poly))) - 24]; } addLabel('area', d.name, at[0], at[1], {color:d.color, district:d.id}); });
+function updateLabels(){ LBL.forEach(L => { const el = L.el; let show = true; if (L.data.bid) { const b = B[L.data.bid]; const near = nearB && nearB.id === b.id; el.classList.toggle('near', near); el.classList.toggle('hot', hoverId === b.id || routeIds.has(b.id)); show = allNames || near || hoverId === b.id || routeIds.has(b.id) || (view.detail === b.id); } else if (L.data.district) { const busy = sel || nearB || hoverId; el.style.opacity = busy ? .3 : .95; el.style.pointerEvents = busy ? 'none' : 'auto'; } el.classList.toggle('hidden', !show); el.style.left = (OX + L.x*S) + 'px'; el.style.top = (OY + L.y*S) + 'px'; }); }
+
+/* ================================================================ input */
+let pdown = null;
+canvas.addEventListener('pointerdown', e => { canvas.focus(); pdown = [e.clientX, e.clientY]; });
+canvas.addEventListener('pointerup', e => { if (!pdown) return; const moved = Math.hypot(e.clientX-pdown[0], e.clientY-pdown[1]) > 6; pdown = null; if (moved) return; const p = toPaint(e.clientX, e.clientY); const b = hitBuilding(p); if (b) { visit(b.id); return; } const lm = DATA.landmarks.find(l => l._poly && inPoly(p, l._poly)); if (lm) { selectJourney(lm.journey); return; } walkTo(p); });
+canvas.addEventListener('pointermove', e => { const p = toPaint(e.clientX, e.clientY); const b = hitBuilding(p); const lm = !b && DATA.landmarks.find(l => l._poly && inPoly(p, l._poly)); const id = b ? b.id : lm ? 'lm:'+lm.journey : null; if (id !== hoverId) { hoverId = id; canvas.style.cursor = id ? 'pointer' : (walkable(p[0],p[1]) ? 'crosshair' : 'default'); } if (b) tip(e, b.id); else $('#tip').style.display = 'none'; });
+canvas.addEventListener('pointerleave', () => { hoverId = null; $('#tip').style.display = 'none'; });
+function hitBuilding(p){ let best = null; DATA.buildings.forEach(b => { if (b._poly && inPoly(p, b._poly)) best = b; }); return best; }
+addEventListener('keydown', e => { if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') { if (e.key === 'Escape') e.target.blur(); return; } keys[e.key.toLowerCase()] = true; if (['arrowup','arrowdown','arrowleft','arrowright',' '].includes(e.key.toLowerCase())) e.preventDefault();
+  if (e.key === 'e' || e.key === 'Enter') { if (nearB) openB(nearB.id); } if (e.key === 'h' || e.key === 'H') togglePanel(); if (e.key === '?') $('#help').classList.add('on');
+  if (e.key === 'Escape') { if ($('#help').classList.contains('on')) $('#help').classList.remove('on'); else if (view.detail) back(); else if (sel) selectJourney(null); } });
+addEventListener('keyup', e => { keys[e.key.toLowerCase()] = false; });
+addEventListener('blur', () => { for (const k in keys) keys[k] = false; });
+$('#bNames').onclick = () => { allNames = !allNames; $('#bNames').classList.toggle('on', allNames); }; $('#bHelp').onclick = () => $('#help').classList.add('on'); $('#helpClose').onclick = () => { $('#help').classList.remove('on'); store.set('city.help', '1'); canvas.focus(); };
+$('#help').addEventListener('click', e => { if (e.target.id === 'help') $('#help').classList.remove('on'); });
+function togglePanel(){ document.body.classList.toggle('nopanel'); $('#ptoggle').textContent = document.body.classList.contains('nopanel') ? '›' : '‹'; setTimeout(resize, 260); setTimeout(resize, 400); }
+$('#ptoggle').onclick = togglePanel;
+$('#prompt').onclick = () => { if (nearB) openB(nearB.id); };
+
+/* ---------- tooltip */
+function tip(e, id){ const b = B[id]; const t = $('#tip'); const d = DISTR[b.district] || {}; t.innerHTML = `<b>${esc(b.name)}</b>${b.sub?`<div style="color:${d.color||'#555'};font-weight:600;margin-bottom:3px">${esc(b.sub)}</div>`:''}${esc(b.pitch)}${b.mode&&DATA.modes[b.mode]?`<div class="m">${esc(DATA.modes[b.mode])} · ${esc(d.name||'')}</div>`:''}`; t.style.display='block'; let x = e.clientX + 14, y = e.clientY + 14; if (x + 290 > innerWidth) x -= 300; if (y + 160 > innerHeight) y -= 170; t.style.left = x+'px'; t.style.top = y+'px'; }
+
+/* ---------- visiting & proximity */
+let nearB = null;
+function visit(id){ const b = B[id]; if (!b || !b._poly) { openB(id); return; } if (distToPoly([hero.x, hero.y], b._poly) < 18) { path = null; hero.dir = b._c[1] < hero.y ? 'up' : 'down'; openB(id); return; } walkTo(doorOf(b), id); }
+function updateNear(){ let best = null, bd = 1e9; for (const b of DATA.buildings) { if (!b._poly) continue; const d = distToPoly([hero.x, hero.y], b._poly) - (view.detail === b.id ? 6 : 0); if (d < 18 && d < bd) { bd = d; best = b; } } if (best !== nearB) { nearB = best; const p = $('#prompt'); if (best) { p.innerHTML = `<kbd>E</kbd> Enter ${esc(best.name)}`; p.classList.add('on'); } else p.classList.remove('on'); document.querySelectorAll('.place').forEach(el => el.classList.toggle('near', !!best && el.dataset.b === best.id)); } }
+
+/* ---------- routes */
+function drawRoute(){ routeIds.clear(); routePath = null; if (!sel) return; const j = J[sel]; const doors = []; j.stops.forEach(st => { const b = B[st.building]; if (b && b._poly) { routeIds.add(b.id); doors.push(doorOf(b)); } }); if (doors.length > 1) { routePath = [doors[0]]; for (let i = 1; i < doors.length; i++) { const seg = astar(doors[i-1], doors[i]); routePath = routePath.concat(seg ? seg.slice(1) : [doors[i]]); } } }
+function selectJourney(id){ sel = (sel === id) ? null : id; stop = 0; view.detail = null; drawRoute(); renderPanel(); if (sel) { const first = B[J[sel].stops[0].building]; if (first && first._poly) walkTo(doorOf(first)); } }
+function gotoStop(i){ const j = J[sel]; stop = Math.max(0, Math.min(j.stops.length-1, i)); renderPanel(); visit(j.stops[stop].building); }
+
+/* ---------- panel */
+const view = { tab: 'go', detail: null, q: '', aud: store.get('city.aud') || 'all' };
+if (view.aud !== 'all' && !DATA.audiences[view.aud]) view.aud = 'all';
+const fits = a => view.aud === 'all' || a === view.aud || a === 'everyone' || !a;
+const matches = (...xs) => !view.q || xs.join(' ').toLowerCase().includes(view.q);
+$('#search').oninput = e => { view.q = e.target.value.trim().toLowerCase(); if (view.detail) view.detail = null; renderPanel(); };
+document.querySelectorAll('#tabs button').forEach(b => b.onclick = () => { view.tab = b.dataset.tab; view.detail = null; document.querySelectorAll('#tabs button').forEach(x => x.classList.toggle('on', x === b)); renderPanel(); });
+function codeBlock(text){ return `<div class="code"><button class="copy" type="button">Copy</button><pre>${esc(text)}</pre></div>`; }
+function renderPanel(){ const body = $('#pbody'); if (view.detail) { body.innerHTML = detailHTML(B[view.detail]); wire(body); body.scrollTop = 0; return; } body.innerHTML = view.tab === 'go' ? goHTML() : libHTML(); wire(body); }
+function isOptional(st){ return !!st.optional || /^(optional|only if)\b/i.test(st.say||''); }
+function stepLine(j, st, i){ const b = B[st.building]; const opt = isOptional(st); const chips = [];
+  (b.steps||[]).forEach(s => { if (s.copy) chips.push(`<button class="chip cp" data-copy="${esc(s.copy)}" title="Copy to clipboard">⧉ ${esc(s.copy.length > 34 ? s.copy.slice(0,32)+'…' : s.copy)}</button>`); });
+  (b.asks||[]).forEach(a => { if (a.say.startsWith('(')) return; if (a.journeys && !a.journeys.includes(j.id)) return; chips.push(`<button class="chip cp" data-copy="${esc(a.say)}" title="${esc(a.say)}">⧉ prompt: ${esc(a.say.length > 30 ? a.say.slice(0,28)+'…' : a.say)}</button>`); });
+  const where = b.audience === 'm365' ? 'M365' : b.audience === 'vscode' ? 'VS Code' : '';
+  return `<li class="${i===stop?'cur':''} ${opt?'optional':''}" data-stop="${i}"><div class="line"><b>${esc(b.name)}</b><span class="flag ${opt?'opt':'req'}">${opt?'optional':'required'}</span>${where?`<span class="where">${where}</span>`:''}</div><div class="say">${esc(st.say)}</div>${chips.length?`<div class="chips cps">${chips.join('')}</div>`:''}</li>`; }
+function goHTML(){ let h = '';
+  if (sel) { const j = J[sel]; h += `<div id="guide" style="--gac:${dcolor(j.area)}"><button class="x" data-act="unsel" aria-label="Clear scenario">×</button><div class="who">${esc(j.q)}</div><div class="when"><b>When:</b> ${esc(j.when)}</div><div class="facts">${[['You bring',j.bring],['You get',j.get],['Takes',j.time]].filter(r=>r[1]).map(r=>`<b>${r[0]}</b><span>${esc(r[1])}</span>`).join('')}</div><div class="legend"><span class="req">required</span> <span class="opt">optional</span> — one line per step; click a step to walk there</div><ol>${j.stops.map((st,i)=>stepLine(j, st, i)).join('')}</ol><div class="nav"><button class="chip" data-act="prev" ${stop===0?'disabled':''}>‹ Previous</button><button class="chip" data-act="next" ${stop===j.stops.length-1?'disabled':''}>Next step ›</button><button class="chip" data-act="open">Open this building</button></div></div>`; }
+  h += `<div class="sec">I work in</div><div class="chips"><button class="chip ${view.aud==='all'?'on':''}" data-aud="all">Show me everything</button>${Object.entries(DATA.audiences).filter(([a])=>a!=='everyone').map(([a,l])=>`<button class="chip ${view.aud===a?'on':''}" data-aud="${a}">${esc(l)}</button>`).join('')}</div>`;
+  const js = DATA.journeys.filter(j => fits(j.audience) && matches(j.q, j.when, j.bring, j.get));
+  h += `<div class="sec">Scenarios — I want to…</div>` + js.map(j => `<div class="jcard ${sel===j.id?'sel':''}" style="--ac:${dcolor(j.area)}" data-j="${j.id}"><h4>${esc(j.q)}</h4><div class="w">${esc(j.when)}</div></div>`).join('');
+  const fd = DATA.buildings.find(b => b.picker); if (fd && !view.q) h += `<div class="chips" style="margin-top:8px"><button class="chip" data-b="${fd.id}" style="background:#fff8e1;border-color:#e6c76b">Not sure? Ask the Front Desk</button></div>`;
+  DATA.districts.forEach(d => { const bs = DATA.buildings.filter(b => b.district === d.id && fits(b.audience) && matches(b.name, b.sub, b.pitch, (b.prompts||[]).map(p=>'/'+p.name).join(' '), (b.agents||[]).map(a=>'@'+a.name).join(' '))); if (!bs.length) return;
+    h += `<div class="sec"><span class="dot" style="background:${d.color}"></span>${esc(d.name)}</div>` + bs.map(b => `<div class="place ${nearB&&nearB.id===b.id?'near':''}" data-b="${b.id}" style="--ac:${d.color}"><span class="ic"></span><div><b>${esc(b.name)}</b><span>${esc(b.sub||b.pitch.slice(0,90))}</span></div>${b.prompts.length?`<span class="n">${b.prompts.map(p=>'/'+esc(p.name)).join(' ')}</span>`:''}</div>`).join(''); });
+  if (!js.length && !h.includes('class="place')) h += `<p style="color:var(--mut)">Nothing matches “${esc(view.q)}”.</p>`;
+  return h; }
+function libItems(){ const seen = new Set(); const items = []; DATA.buildings.forEach(b => { b.prompts.forEach(p => { if (!seen.has(p.file)) { seen.add(p.file); items.push({kind:'prompt', name:'/'+p.name, file:p.file, dl:p.name+'.prompt.md', desc:p.description, raw:p.raw, b}); } }); b.agents.forEach(a => { if (!seen.has(a.file)) { seen.add(a.file); items.push({kind:'agent', name:'@'+a.name, file:a.file, dl:a.name+'.agent.md', desc:a.description, raw:a.raw, b}); } }); b.docs.forEach(d => { if (/^(m365|agents)\//.test(d.file) && !seen.has(d.file)) { seen.add(d.file); items.push({kind:'sheet', name:d.title, file:d.file, dl:d.file.split('/').pop(), desc:'', raw:d.raw, b}); } }); }); return items; }
+function libHTML(){ const items = libItems().filter(it => matches(it.name, it.desc, it.file, it.b.name)); const groups = [['prompt','Prompts — drop into <code>.github/prompts/</code>'],['agent','Agents — drop into <code>.github/agents/</code>'],['sheet','M365 build sheets']];
+  let h = `<div class="libtop"><button class="chip pri" data-act="zip">Download all prompts &amp; agents (.zip)</button><button class="chip" data-act="copyall">Copy all as one text</button><span class="c">Copy a prompt to paste it into Copilot Chat, or download the file into your own workspace's <code>.github/prompts/</code> — then <code>/name</code> works there too.</span></div>`;
+  groups.forEach(([k, title]) => { const its = items.filter(i => i.kind === k); if (!its.length) return; h += `<div class="sec">${title}</div>` + its.map(it => `<div class="lib" data-file="${esc(it.file)}"><div class="h"><code class="n">${esc(it.name)}</code><span class="where" data-b="${it.b.id}" title="Walk there">${esc(it.b.name)} ›</span></div>${it.desc?`<div class="d">${esc(it.desc)}</div>`:''}<div class="b"><button class="chip" data-act="copy">Copy</button><button class="chip" data-act="dl">Download ${esc(it.dl)}</button><button class="chip" data-act="show">Show</button></div><div class="code" hidden><button class="copy" type="button">Copy</button><pre>${esc(it.raw)}</pre></div></div>`).join(''); });
+  if (!items.length) h += `<p style="color:var(--mut)">Nothing matches “${esc(view.q)}”.</p>`; return h; }
+function detailHTML(b){ const d = DISTR[b.district] || {}; const cj = sel ? J[sel] : null;
+  let h = `<div class="detail"><div class="backrow"><button class="chip" data-act="back">‹ Back</button><span class="sp"></span><button class="chip" data-act="share" data-b="${b.id}">Copy link</button></div><div class="areabar" style="background:${d.color}"></div><h2>${esc(b.name)}</h2>${b.sub?`<div class="sub">${esc(b.sub)}</div>`:''}<div class="meta"><span><span class="dot" style="background:${d.color}"></span>${esc(d.name||'')}</span><span class="aud">${esc(DATA.audiences[b.audience]||b.audience)}</span>${b.mode&&DATA.modes[b.mode]?`<span class="mode ${esc(b.mode)}">${esc(DATA.modes[b.mode])}</span>`:''}${b.auto?'<span class="aud" style="background:#fff3c4">new — on a free lot until it gets a building in city/city.json (or use scripts/new_prompt.py)</span>':''}</div><p class="pitch">${esc(b.pitch)}</p>`;
+  if (cj) { const i = cj.stops.findIndex(s => s.building === b.id); if (i >= 0) h += `<p class="stepin"><b>Step ${i+1} of ${cj.stops.length} — ${esc(cj.q)}:</b> ${esc(cj.stops[i].say)}</p>`; }
+  if (b.picker) { const groups = [['everyone','Anyone'], ...Object.entries(DATA.audiences).filter(([a])=>a!=='everyone')]; groups.forEach(([a,label]) => { const js = DATA.journeys.filter(j => (j.audience||'everyone')===a && fits(j.audience||'everyone')); if (!js.length) return; h += `<h3>${esc(a==='everyone'?'Anyone':'If you work in '+label)}</h3><div class="cards">` + js.map(j => `<div class="card" style="--ac:${dcolor(j.area)}"><h4>${esc(j.q)}</h4><div class="v">${esc(j.when)}</div><div class="k">You bring</div><div class="v">${esc(j.bring||'')}</div><div class="k">You get</div><div class="v">${esc(j.get||'')}</div><div class="k">Takes</div><div class="v">${esc(j.time||'')}</div><button class="chip" data-j="${j.id}">Show me the route ›</button></div>`).join('') + `</div>`; }); }
+  if (b.asks && b.asks.length) { h += `<h3>${b.mode==='auto'?'What you get':'Ask it'}</h3><table class="asks"><thead><tr><th>${b.mode==='auto'?'You do':'Say'}</th><th>When</th><th>You get</th></tr></thead><tbody>`; b.asks.forEach(a => { const cls = cj && a.journeys ? (a.journeys.includes(cj.id) ? 'hi' : 'lo') : ''; const auto = a.say.startsWith('('); h += `<tr class="${cls}"><td class="say">${auto?`<i>${esc(a.say.slice(1,-1))}</i>`:codeBlock(a.say)}</td><td>${esc(a.when)}</td><td>${esc(a.get)}</td></tr>`; }); h += `</tbody></table>`; }
+  if (b.steps.length) { h += `<h3>How to use it</h3>`; b.steps.forEach(s => { h += `<div class="step">${s.say?`<p class="say">${s.say}</p>`:''}${s.copy?codeBlock(s.copy):''}</div>`; }); }
+  if (b.prompts.length) { h += `<h3>The prompts behind it</h3>`; b.prompts.forEach(p => { h += `<details><summary><code>/${esc(p.name)}</code></summary><div class="desc">${esc(p.description)}</div><div class="btnrow"><button class="chip" data-act="dlfile" data-file="${esc(p.file)}">Download ${esc(p.name)}.prompt.md</button></div><div class="desc">What it tells Copilot (you do not paste this; it runs when you type the command in a workspace that has <code>${esc(p.file)}</code>):</div>${codeBlock(p.body)}</details>`; }); }
+  if (b.agents.length) { h += `<h3>Agents</h3>`; b.agents.forEach(a => { h += `<details><summary><code>@${esc(a.name)}</code></summary><div class="desc">${esc(a.description)}</div><div class="btnrow"><button class="chip" data-act="dlfile" data-file="${esc(a.file)}">Download ${esc(a.name)}.agent.md</button></div>${codeBlock(a.body)}</details>`; }); }
+  if (b.docs.length) { h += `<h3>Full instructions</h3>`; b.docs.forEach(doc => { h += `<details ${b.steps.length?'':'open'}><summary>${esc(doc.title)}</summary><div class="btnrow"><button class="chip" data-act="dlfile" data-file="${esc(doc.file)}">Download ${esc(doc.file.split('/').pop())}</button></div><div class="doc">${doc.html}</div></details>`; }); }
+  if (b.source) h += `<div class="src">Source: <code>${esc(b.source)}</code></div>`;
+  return h + `</div>`; }
+function wire(root){ root.querySelectorAll('.copy').forEach(btn => btn.onclick = () => copyBtn(btn, btn.parentElement.querySelector('pre').textContent));
+  root.querySelectorAll('[data-aud]').forEach(c => c.onclick = () => { view.aud = c.dataset.aud; store.set('city.aud', view.aud); renderPanel(); });
+  root.querySelectorAll('[data-j]').forEach(c => c.onclick = () => selectJourney(c.dataset.j));
+  root.querySelectorAll('[data-b]:not([data-act])').forEach(c => c.onclick = () => visit(c.dataset.b));
+  root.querySelectorAll('[data-copy]').forEach(c => c.onclick = e => { e.stopPropagation(); copyBtn(c, c.dataset.copy); });
+  root.querySelectorAll('[data-stop]').forEach(li => li.onclick = () => gotoStop(+li.dataset.stop));
+  root.querySelectorAll('[data-act]').forEach(el => el.onclick = () => act(el)); }
+function act(el){ const a = el.dataset.act; const j = sel ? J[sel] : null;
+  if (a === 'back') back(); else if (a === 'unsel') selectJourney(null); else if (a === 'prev') gotoStop(stop-1); else if (a === 'next') gotoStop(stop+1); else if (a === 'open' && j) visit(j.stops[stop].building);
+  else if (a === 'share') { const u = location.href.split('#')[0] + '#' + el.dataset.b; copyBtn(el, u, 'Link copied'); }
+  else if (a === 'dlfile') { const f = fileByPath(el.dataset.file); if (f) download(f.dl, f.raw); }
+  else if (a === 'copy') { const it = el.closest('.lib'); copyBtn(el, it.querySelector('pre').textContent); }
+  else if (a === 'dl') { const f = fileByPath(el.closest('.lib').dataset.file); if (f) download(f.dl, f.raw); }
+  else if (a === 'show') { const c = el.closest('.lib').querySelector('.code'); c.hidden = !c.hidden; el.textContent = c.hidden ? 'Show' : 'Hide'; }
+  else if (a === 'zip') { const its = libItems().filter(i => i.kind !== 'sheet'); const files = its.map(i => [i.file, i.raw]); files.push(['README-semiAgency-prompts.txt', `Prompts and agents from ${DATA.title} (v${DATA.version}, ${DATA.built}).\nUnzip at the root of your own VS Code workspace: the files land in .github/prompts/ and .github/agents/.\nThen in Copilot Chat (agent mode) type /name or @name.\n\n` + its.map(i => `${i.name}  ${i.desc}`).join('\n') + '\n']); download('semiagency-prompts.zip', zip(files), true); copyBtn(el, null, 'Downloading'); }
+  else if (a === 'copyall') { const its = libItems().filter(i => i.kind !== 'sheet'); copyBtn(el, its.map(i => `===== ${i.file} =====\n${i.raw.trim()}\n`).join('\n')); } }
+function fileByPath(p){ for (const b of DATA.buildings) { for (const x of b.prompts) if (x.file === p) return {dl: x.name+'.prompt.md', raw: x.raw}; for (const x of b.agents) if (x.file === p) return {dl: x.name+'.agent.md', raw: x.raw}; for (const x of b.docs) if (x.file === p) return {dl: x.file.split('/').pop(), raw: x.raw}; } return null; }
+function openB(id){ if (!B[id]) return; view.detail = id; document.body.classList.remove('nopanel'); $('#ptoggle').textContent = '‹'; renderPanel(); history.replaceState(null, '', '#' + id); }
+function back(){ view.detail = null; renderPanel(); history.replaceState(null, '', location.pathname + location.search); }
+function copyBtn(btn, text, label){ const old = btn.textContent; const done = () => { btn.textContent = label || 'Copied'; btn.classList.add('done'); setTimeout(() => { btn.textContent = old; btn.classList.remove('done'); }, 1400); }; if (text == null) { done(); return; }
+  if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(text).then(done, () => fallbackCopy(text, done)); else fallbackCopy(text, done); }
+function fallbackCopy(text, done){ const ta = document.createElement('textarea'); ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); done(); } catch(e) {} document.body.removeChild(ta); }
+function download(name, content, binary){ const blob = binary ? new Blob([content], {type:'application/zip'}) : new Blob([content], {type:'text/markdown;charset=utf-8'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000); }
+/* store-only zip writer (no compression; enough for a few text files) */
+const CRC = (() => { const t = new Uint32Array(256); for (let n=0;n<256;n++){ let c=n; for(let k=0;k<8;k++) c = c&1 ? 0xEDB88320 ^ (c>>>1) : c>>>1; t[n]=c>>>0; } return t; })();
+function crc32(u8){ let c = 0xFFFFFFFF; for (let i=0;i<u8.length;i++) c = CRC[(c ^ u8[i]) & 255] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }
+function zip(files){ const enc = new TextEncoder(); const parts = [], central = []; let off = 0; const now = new Date(); const dt = ((now.getHours()<<11)|(now.getMinutes()<<5)|(now.getSeconds()>>1)) & 0xFFFF, dd = (((now.getFullYear()-1980)<<9)|((now.getMonth()+1)<<5)|now.getDate()) & 0xFFFF;
+  const le = (n, b) => { const a = new Uint8Array(b); for (let i=0;i<b;i++) a[i] = (n >>> (8*i)) & 255; return a; };
+  files.forEach(([name, text]) => { const nm = enc.encode(name), data = enc.encode(text), crc = crc32(data); const head = [le(0x04034b50,4), le(20,2), le(0x0800,2), le(0,2), le(dt,2), le(dd,2), le(crc,4), le(data.length,4), le(data.length,4), le(nm.length,2), le(0,2), nm];
+    central.push([le(0x02014b50,4), le(20,2), le(20,2), le(0x0800,2), le(0,2), le(dt,2), le(dd,2), le(crc,4), le(data.length,4), le(data.length,4), le(nm.length,2), le(0,2), le(0,2), le(0,2), le(0,2), le(0,4), le(off,4), nm]);
+    head.forEach(p => parts.push(p)); parts.push(data); off += head.reduce((s,p)=>s+p.length,0) + data.length; });
+  const cstart = off; let csize = 0; central.forEach(c => c.forEach(p => { parts.push(p); csize += p.length; }));
+  [le(0x06054b50,4), le(0,2), le(0,2), le(files.length,2), le(files.length,2), le(csize,4), le(cstart,4), le(0,2)].forEach(p => parts.push(p));
+  const total = parts.reduce((s,p)=>s+p.length,0); const out = new Uint8Array(total); let o = 0; parts.forEach(p => { out.set(p, o); o += p.length; }); return out; }
+
+/* ================================================================ main loop & start */
+let last = performance.now(), ready = false;
+function frame(now){ const dt = Math.min(.1, (now - last)/1000); last = now; if (ready) { stepHero(dt); updateNear(); draw(); updateLabels(); } requestAnimationFrame(frame); }
+function begin(){ buildMask(); const s0 = nearestWalkable(start[0], start[1], 120) || start; hero.x = s0[0]; hero.y = s0[1]; ready = true; renderPanel();
+  if (!store.get('city.help')) $('#help').classList.add('on');
+  if (location.hash) { const id = decodeURIComponent(location.hash.slice(1)); if (B[id]) { if (B[id]._poly) { const d = doorOf(B[id]); hero.x = d[0]; hero.y = d[1]; } openB(id); } else if (J[id]) selectJourney(id); } }
+if (img.complete && img.naturalWidth) begin(); else img.onload = begin;
+requestAnimationFrame(frame);
+</script>
+</body></html>
