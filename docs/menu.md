@@ -149,7 +149,19 @@ and each step names where it happens and the exact command to type.
      - Set up once: write `voice-profile.docx` and collect 15–20 sent mails (see the sheet below). Then **Agents → Create agent → Configure**: name *Email Drafter*, Knowledge: the SharePoint *Voice* folder. Paste this into **Instructions** → copy the Instructions block from `m365/05-email-drafter-agent.md`
      - read: `m365/05-email-drafter-agent.md` (Build sheet 5 — Email Drafter agent (20 minutes + exemplars))
 
-## 8. Check whether an AI idea would work for us
+## 8. Book a Teams meeting with someone — any duration, any time frame
+- id: `plan-meeting` · where: Microsoft 365 (Outlook, Teams, Copilot Chat) · time: one message (10 min to build the agent once)
+- when: You need half an hour with someone and don't want to compare calendars yourself.
+- bring: who, how long, when (e.g. "Maria Keller, 45 min, next 2 weeks")
+- you get: a Teams invite in the earliest slot free for everyone, 09:00–16:30, never over lunch
+- steps:
+  1. **Meeting Assistant** — @MeetingAssistant with who, how long and when; read the confirmation.
+     - In Microsoft 365 Copilot Chat or Teams, type `@MeetingAssistant`, then who, how long and when (examples above). Read the one-line confirmation, especially *read as*.
+     - Set up once: **Agents → Create agent → Configure**. Name *MeetingAssistant*; personal work information on; web off. Paste this into **Instructions**, add the starter prompts from the sheet, then send one test request to check it can send invites → copy the Instructions block from `m365/09-plan-meeting-prompt.md`
+     - Fallback if the agent can't send invites in your tenant — paste into plain Copilot Chat and fill the first lines → copy the prompt (grey block) from `m365/09-plan-meeting-prompt.md`
+     - read: `m365/09-plan-meeting-prompt.md` (Sheet 9 — MeetingAssistant agent (+ fallback prompt))
+
+## 9. Check whether an AI idea would work for us
 - id: `idea` · where: VS Code or Microsoft 365 · time: one conversation
 - when: A demo, a newsletter or a vendor pitch made you think 'what would that be for my team?'.
 - bring: the idea, what your team does, what it can build, known limits (and, once, the context file for the agent)
@@ -169,7 +181,7 @@ and each step names where it happens and the exact command to type.
      - Or ask the guide in Copilot Chat, which works without any script: `/start`
      - read: `docs/after-meeting.md` (After a meeting — the one page to follow)
 
-## 9. Find the best Copilot model for my work
+## 10. Find the best Copilot model for my work
 - id: `model` · where: VS Code (this workspace) · time: an afternoon, then 10 minutes per new model
 - when: You wonder whether the expensive model is worth it, or which one is best at your kind of task.
 - bring: 5–10 tasks where AI recently failed you
@@ -184,7 +196,7 @@ and each step names where it happens and the exact command to type.
      - : `python scripts/bench_report.py`
      - read: `bench/README.md` (bench/README.md)
 
-## 10. Set this up (technical)
+## 11. Set this up (technical)
 - id: `setup` · where: VS Code or Microsoft 365 · time: ~2 hours local, ~2 hours M365
 - when: Once, before the VS Code flows or the Microsoft 365 pieces work for you. Also where the map is rebuilt.
 - bring: VS Code + Python 3 and your corporate template, or an M365 tenant with Microsoft 365 Copilot Chat
@@ -206,7 +218,7 @@ and each step names where it happens and the exact command to type.
      - Fail if something is unmapped (for a pre-commit check): `python scripts/build_city.py --check`
      - read: `city/README.md` (How the map is built)
 
-## 11. Add something this agency can't do yet
+## 12. Add something this agency can't do yet
 - id: `new-flow` · where: VS Code (this workspace) · time: 15–30 minutes
 - when: You wished for something /start couldn't match, or you keep doing a task by hand that could be a flow.
 - bring: the wish in one sentence, and five minutes for questions

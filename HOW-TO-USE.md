@@ -26,6 +26,7 @@ Rule of thumb: daily life (brief, meetings, 1-1s, emails) → **M365**. Proposal
 | Be prepared for tomorrow's meetings | M365 | 0 (arrives at 18:00) | 2.3 |
 | Prepare a 1-1 | M365 | 1 message | 2.4 |
 | Write an email in my voice | M365 | 1 message | 2.5 |
+| Book a Teams meeting with someone (any duration, any time frame) | M365 | 1 message | 2.8 |
 | Judge an AI idea for a team | M365 (or VS Code) | 1 conversation | 2.6 / 3.5 |
 | **Keep one record per topic across its meetings** | **M365 → VS Code** | ~10 min per meeting | **3.3** |
 | Turn a stakeholder meeting into options + proposal + deck | VS Code | an afternoon | 3.1 |
@@ -99,6 +100,16 @@ Before building sheets 2, 3, 4, 6: create a SharePoint library **Meetings** with
 ### 2.7 End-of-meeting summary (feeds the Topic record)
 - **Set up once:** nothing.
 - **Use:** at the end of the meeting, paste the grey block from `m365/08-end-of-meeting-summary.md` into **Copilot in the Teams meeting**. Copy the answer → it goes into the topic's folder (3.3, step 2).
+
+### 2.8 Meeting Assistant — book a Teams meeting
+- **Set up once (10 min):** agent **MeetingAssistant** from `m365/09-plan-meeting-prompt.md`. Then send one test request: Agent Builder agents may find the slot but not be allowed to send the invite. If yours can't, use the plain-chat fallback prompt at the end of the same sheet.
+- **Use:** in Copilot Chat or Teams:
+  ```
+  @MeetingAssistant Maria Keller, 45 min, next 2 weeks
+  @MeetingAssistant Jan and Priya, 1h, in 2 weeks, topic: Q1 budget
+  @MeetingAssistant Maria Keller, 30 min, on 4 Nov
+  ```
+  It books the earliest slot free for everyone, 09:00–16:30, never 12:00–13:00, and replies with one line including how it read your time frame. Nothing fits → it books nothing and lists the next three options.
 
 ---
 
@@ -193,5 +204,6 @@ Copy `bench/` into an empty folder, open it in VS Code, follow `bench/README.md`
 | Post Office | Email Drafter |
 | Clock Tower | 1-1 agenda reminder |
 | *(new)* | End-of-meeting summary |
+| *(new)* | Meeting Assistant |
 | The Workshop / Harbour Works | Local setup / M365 setup |
 | Cartographer / Architect's Office | Map maintenance / Add a new flow |

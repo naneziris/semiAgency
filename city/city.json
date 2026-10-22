@@ -943,6 +943,64 @@
       ]
     },
     {
+      "id": "plan-meeting",
+      "district": "harbour",
+      "name": "Meeting Assistant",
+      "sub": "M365 agent: earliest free Teams slot, any duration and time frame",
+      "shape": "house",
+      "hotspot": "plaza-harbour",
+      "mode": "click",
+      "audience": "m365",
+      "pitch": "An Agent Builder agent. Send it who, how long and when in your own words — \"Maria Keller, 45 min, next 2 weeks\" — and it books the earliest Teams meeting free for everyone, 09:00–16:30, never over lunch. Nothing fits? It books nothing and shows the next options. Test once that it can send invites in your tenant; a plain-chat fallback prompt is on the sheet.",
+      "steps": [
+        {
+          "say": "In Microsoft 365 Copilot Chat or Teams, type `@MeetingAssistant`, then who, how long and when (examples above). Read the one-line confirmation, especially *read as*."
+        },
+        {
+          "setup": true,
+          "say": "Set up once: **Agents → Create agent → Configure**. Name *MeetingAssistant*; personal work information on; web off. Paste this into **Instructions**, add the starter prompts from the sheet, then send one test request to check it can send invites:",
+          "copy_from": "m365/09-plan-meeting-prompt.md#instructions"
+        },
+        {
+          "setup": true,
+          "say": "Fallback if the agent can't send invites in your tenant — paste into plain Copilot Chat and fill the first lines:",
+          "copy_from": "m365/09-plan-meeting-prompt.md#block2"
+        }
+      ],
+      "docs": [
+        {
+          "title": "Sheet 9 — MeetingAssistant agent (+ fallback prompt)",
+          "file": "m365/09-plan-meeting-prompt.md"
+        }
+      ],
+      "asks": [
+        {
+          "say": "Maria Keller, 30 min, this week",
+          "when": "you need a slot soon",
+          "get": "a booked Teams meeting + one line saying how it read the time frame",
+          "journeys": [
+            "plan-meeting"
+          ]
+        },
+        {
+          "say": "Jan and Priya, 1h, in 2 weeks, topic: Q1 budget",
+          "when": "several people, a later week",
+          "get": "the earliest slot free for all three",
+          "journeys": [
+            "plan-meeting"
+          ]
+        },
+        {
+          "say": "Maria Keller, 30 min, on 4 Nov",
+          "when": "a specific day",
+          "get": "a slot that day, or the next options if it's full",
+          "journeys": [
+            "plan-meeting"
+          ]
+        }
+      ]
+    },
+    {
       "id": "workshop",
       "district": "yard",
       "name": "Local setup",
@@ -1285,6 +1343,22 @@
         {
           "building": "post-office",
           "say": "Draft, then Shorter or Softer / firmer until it sounds like you."
+        }
+      ]
+    },
+    {
+      "id": "plan-meeting",
+      "area": "harbour",
+      "audience": "m365",
+      "q": "Book a Teams meeting with someone — any duration, any time frame",
+      "when": "You need half an hour with someone and don't want to compare calendars yourself.",
+      "bring": "who, how long, when (e.g. \"Maria Keller, 45 min, next 2 weeks\")",
+      "get": "a Teams invite in the earliest slot free for everyone, 09:00–16:30, never over lunch",
+      "time": "one message (10 min to build the agent once)",
+      "stops": [
+        {
+          "building": "plan-meeting",
+          "say": "@MeetingAssistant with who, how long and when; read the confirmation."
         }
       ]
     },
