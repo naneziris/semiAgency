@@ -1,4 +1,4 @@
-# 6 · 1-1 agenda check — Power Automate flow (standard connectors only) (on the map: Clock Tower)
+# 6 · 1-1 agenda check — Power Automate flow (standard connectors only) (on the map: 1-1 agenda reminder)
 
 Every working day at 16:00: for each recurring 1-1 tomorrow, read the invite body; if there is no `Agenda` section with content, post you a Teams message "Agenda for tomorrow's 1-1 with <name> is empty — in Microsoft 365 Copilot Chat → Agents → Meeting Summariser, send “Prepare my next 1-1 with <name>”, then paste the agenda into the invite, or cancel." Nothing else. It doesn't write the agenda (no model step without premium) and it doesn't cancel anything (that's your call for a wellbeing-adjacent meeting).
 

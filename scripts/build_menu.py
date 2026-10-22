@@ -75,7 +75,11 @@ def render(city, src="city/city.json", root=None):
             bd = b.get(stop["building"], {})
             out.append("  %d. **%s** — %s" % (i, bd.get("name", stop["building"]), one_line(stop.get("say"))))
             for st in bd.get("steps", []):
-                if st.get("copy"):
+                if st.get("copy_from"):
+                    rel, _, sel = st["copy_from"].partition("#")
+                    what = "the Instructions block" if sel == "instructions" else "the prompt (grey block)"
+                    out.append("     - %s → copy %s from `%s`" % (one_line(st.get("say")).rstrip(":. "), what, rel))
+                elif st.get("copy"):
                     out.append("     - %s `%s`" % (one_line(st.get("say")).rstrip(":") + ":", st["copy"]))
                 elif st.get("say"):
                     out.append("     - " + short(st["say"]))

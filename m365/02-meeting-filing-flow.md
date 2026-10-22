@@ -1,4 +1,4 @@
-# 2 · Meeting filing — Power Automate flow (standard connectors only) (on the map: Harbour Office)
+# 2 · Meeting filing — Power Automate flow (standard connectors only) (on the map: Auto-file meetings)
 
 What it does, by itself, every time a transcript lands: finds the meeting in your calendar, creates a folder `Meetings/<yyyy-MM-dd> <subject>/` (or `Meetings/1-1/<person>/<yyyy-MM-dd>/` for a recurring meeting with one other attendee), copies the transcript in, creates a OneNote page with the meeting facts and a link to the folder, and posts you a Teams message with the link. That folder is where you then drop your manual notes and attachments — no naming, the flow named it. The summary is generated later by the evening prompt (sheet 3) or on demand by the agent (sheet 4).
 

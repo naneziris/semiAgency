@@ -18,7 +18,7 @@ This repo turns stakeholder discovery into a proposal, a corporate-styled .pptx,
 ## Engagement kinds (state.json `kind`) and their prompts
 - `proposal` — `/discovery-prep` → `/discovery-synthesize` → G1 → (`/merge-followup`) → `/options` → G2 → `/proposal` → G3 → `/deck-outline` → G4 → `/speech` → `/team-brief` → `/team-tasks` → G5.
 - `deck` — `/content` → G1 → `/storylines` → G3 → `/deck-outline` → G4 → `/speech`.
-- `meeting` — `/meeting-notes` → G5.
+- `meeting` — the topic record: `/meeting-notes` → G5, repeated after every meeting on the topic (inputs named `<yyyy-mm-dd>-summary|transcript|notes.*`).
 - `@critic /critique` works for proposal and deck at any point after G1.
 - `/fit-finder` needs no engagement and writes no files: it is a conversation that ends in a brief, using the instructions in `m365/07-fit-finder-agent.md` and the context in `brand/fit-finder-context.md`.
 Every prompt checks `kind` first. On a mismatch, don't just name another prompt. Say: "This engagement was started as a <kind>, so its step here is `<prompt>`. If you meant a <kind this prompt is for>, start a new engagement in the terminal: `python scripts/new_engagement.py`."
@@ -38,7 +38,7 @@ Every prompt checks `kind` first. On a mismatch, don't just name another prompt.
 - Tasks in tasks.json carry `"source"`: the meeting file + timestamp they came from
 
 ## Citations
-Every extracted fact cites its source: `[T1 00:12:34]` for transcript file T1 at that timestamp, `[doc:<filename> p<page>]` for documents (`[doc:draft.pptx slide 4]` for a draft deck), `[notes]` for the user's own notes. Source ids come from `normalized/manifest.json`.
+Every extracted fact cites its source: `[T1 00:12:34]` for transcript file T1 at that timestamp, `[doc:<filename> p<page>]` for documents (`[doc:draft.pptx slide 4]` for a draft deck), `[notes]` for the user's own notes, `[S1]` for an end-of-meeting summary from Microsoft 365 Copilot (ranks below notes and transcripts; a fact found only there is marked `(summary only)`). Source ids come from `normalized/manifest.json`.
 
 ## Style
 - Concise, concrete, no filler. Bullets in artifacts; prose in proposal.md.

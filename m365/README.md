@@ -11,6 +11,7 @@ Three cases, entirely inside Microsoft 365, with no premium Power Automate, no C
 | 5 | `05-email-drafter-agent.md` | Agent Builder agent with your voice profile + exemplar mails: rough text in, subject + body out | one paste | 20 min + collecting exemplars |
 | 6 | `06-agenda-check-flow.md` | Power Automate: the day before a recurring 1-1, ping you if the invite's agenda is empty | yes | 15 min |
 | 7 | `07-fit-finder-agent.md` | Agent Builder agent **shared with colleagues**: an AI idea someone saw → a brief for their own team (what it is here, new value vs saved effort, build-with inside the tenant, two-day test), ending in a handoff to Discovery2Presentation | on demand, by anyone it's shared with | 20 min + writing the context file |
+| 8 | `08-end-of-meeting-summary.md` | a prompt you paste into Copilot in the Teams meeting at its end; the answer is saved into the topic's folder for the local Topic record (`/meeting-notes`) | no — one paste per meeting | nothing to build |
 
 Build in this order: 1 (validates scheduled prompts in your tenant) → 2 (validates the trigger on your transcript folder) → 3 → 4 → 5 → 6.
 

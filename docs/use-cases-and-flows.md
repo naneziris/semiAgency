@@ -1,5 +1,7 @@
 # SemiAgency — flows, agent use cases, and how the map should guide a newcomer
 
+> Historical design input (2026-09-23). Building names here are the old map names (old → new table: `HOW-TO-USE.md` §5), and F3 is now the Topic record (`docs/runbooks/meeting.md`). Ideas A (front door), D (list view), E (plain names), F (set up once vs use) and I (`#for=` links) are implemented.
+
 Written 2026-09-23 as input for the map (`index.html`, formerly `city.html`) UX rework. Source of truth: `README.md`, `city/city.json`, `.github/prompts`, `.github/agents`, `m365/*.md`, `bench/`.
 
 Two terms, used strictly:

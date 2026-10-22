@@ -189,6 +189,26 @@ def read(rel, m):
     return redact(safe_path(rel, m["never_embed"]).read_text(encoding="utf-8"), m["redact"])
 
 
+def copy_from(ref, m):
+    """'m365/01-daily-brief.md#block1' -> the first ``` block of that file; '#instructions' -> the text between
+    === INSTRUCTIONS === and === END ===. Lets a step copy the exact prompt from its build sheet (one source)."""
+    rel, _, sel = ref.partition("#")
+    text = read(rel, m)
+    if sel == "instructions":
+        mt = re.search(r"^=== INSTRUCTIONS ===\n(.*?)\n=== END ===", text, re.S | re.M)
+        if not mt:
+            die(f"copy_from {ref}: no === INSTRUCTIONS === ... === END === block")
+        return mt.group(1).strip()
+    mt = re.fullmatch(r"block(\d+)", sel or "block1")
+    if not mt:
+        die(f"copy_from {ref}: use #blockN or #instructions")
+    blocks = re.findall(r"^```[^\n]*\n(.*?)^```", text, re.S | re.M)
+    n = int(mt.group(1))
+    if n > len(blocks):
+        die(f"copy_from {ref}: the file has only {len(blocks)} code blocks")
+    return blocks[n - 1].strip()
+
+
 def prompt_info(name, m):
     rel = f".github/prompts/{name}.prompt.md"
     raw = read(rel, m)
@@ -344,7 +364,9 @@ def build_data(m):
         d["prompts"] = [prompt_info(p, m) for p in b.get("prompts", [])]
         d["agents"] = [agent_info(a, m) for a in b.get("agents", [])]
         d["docs"] = [doc_info(x, m) for x in b.get("docs", [])]
-        d["steps"] = [{"say": inline(s.get("say", "")), "copy": s.get("copy", "")} for s in b.get("steps", [])]
+        d["steps"] = [{"say": inline(s.get("say", "")),
+                       "copy": s.get("copy") or (copy_from(s["copy_from"], m) if s.get("copy_from") else ""),
+                       "long": bool(s.get("copy_from")), "setup": bool(s.get("setup"))} for s in b.get("steps", [])]
         buildings.append(d)
     for kind, key, rel, desc in unmapped:
         bid = "new-" + re.sub(r"[^a-z0-9]+", "-", key.lower()).strip("-")

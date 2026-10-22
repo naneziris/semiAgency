@@ -24,8 +24,8 @@ TERM = "the terminal"
 # ("file", "x.md") applies when x.md does not exist; ("gate", "G1") applies when G1 is not passed.
 RULES = {
     "meeting": [
-        ("file", "notes.md", "write the notes and your actions", CHAT, "/meeting-notes"),
-        ("gate", "G5", "review tasks.json, then send your actions to the tracker (this passes G5)", TERM,
+        ("file", "notes.md", "write the topic record and your actions", CHAT, "/meeting-notes"),
+        ("gate", "G5", "review tasks.json, then send your new actions to the tracker (this passes G5)", TERM,
          "python scripts/append_tasks.py"),
     ],
     "deck": [
@@ -66,6 +66,26 @@ def current_dir(root):
     return os.path.join(root, "engagements", name) if name else None
 
 
+def _newer_inputs(eng_dir):
+    """Topic record: files in inputs/ modified after notes.md was written (a meeting was added)."""
+    notes = os.path.join(eng_dir, "notes.md")
+    inputs = os.path.join(eng_dir, "inputs")
+    if not os.path.isdir(inputs):
+        return []
+    t = os.path.getmtime(notes)
+    return [f for f in sorted(os.listdir(inputs))
+            if not f.startswith(".") and os.path.isfile(os.path.join(inputs, f)) and os.path.getmtime(os.path.join(inputs, f)) > t]
+
+
+def _g5_fresh(eng_dir, g5):
+    """Topic record: G5 counts only if it was passed after the latest tasks.json (each meeting reopens the review)."""
+    tasks = os.path.join(eng_dir, "tasks.json")
+    at = g5.get("passed_at")
+    if not os.path.exists(tasks) or at is None:
+        return True  # nothing newer to review, or passed before passed_at existed
+    return float(at) >= os.path.getmtime(tasks)
+
+
 def where(root, eng_dir=None):
     """Return a dict: engagement, kind, done (list), next (what, where, command) or None, notes (list)."""
     eng_dir = eng_dir or current_dir(root)
@@ -83,8 +103,12 @@ def where(root, eng_dir=None):
     for check, key, what, loc, cmd in RULES.get(kind, []):
         if check == "file":
             ok = os.path.exists(os.path.join(eng_dir, key))
+            if ok and kind == "meeting" and key == "notes.md" and _newer_inputs(eng_dir):
+                ok, what = False, "a new meeting was added to inputs/: update the topic record"
         else:
             ok = bool(gates.get(key, {}).get("passed"))
+            if ok and kind == "meeting" and key == "G5":
+                ok = _g5_fresh(eng_dir, gates.get("G5", {}))
         if ok:
             done.append(key if check == "file" else key + " passed")
             continue
@@ -151,6 +175,21 @@ def _selftest():
         open(os.path.join(e, "notes.md"), "w").write("## Follow-up needed\nY")
         w = where(tmp)
         assert w["next"] is None and w["notes"] and "done" in render(w), w
+        # topic record: a new meeting's file after notes.md reopens /meeting-notes
+        nm = os.path.join(e, "notes.md"); os.utime(nm, (1000, 1000))
+        open(os.path.join(e, "inputs", "2026-10-22-summary.md"), "w").write("x")
+        w = where(tmp)
+        assert w["next"]["command"] == "/meeting-notes" and "new meeting" in w["next"]["what"], w
+        os.utime(nm, None)
+        for f in os.listdir(os.path.join(e, "inputs")):
+            os.utime(os.path.join(e, "inputs", f), (1000, 1000))
+        # ...and a tasks.json newer than the G5 pass reopens G5
+        open(os.path.join(e, "tasks.json"), "w").write("{}")
+        json.dump({"kind": "meeting", "gates": {"G5": {"passed": True, "passed_at": 1000}}}, open(os.path.join(e, "state.json"), "w"))
+        w = where(tmp)
+        assert w["next"]["command"] == "python scripts/append_tasks.py", w
+        json.dump({"kind": "meeting", "gates": {"G5": {"passed": True, "passed_at": 4e9}}}, open(os.path.join(e, "state.json"), "w"))
+        assert where(tmp)["next"] is None
         assert "state.json does not exist" in render(where(tmp, os.path.join(tmp, "engagements", "nope")))
     finally:
         shutil.rmtree(tmp)

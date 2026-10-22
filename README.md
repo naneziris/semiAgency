@@ -1,13 +1,15 @@
 # Discovery2Presentation
 
-From a stakeholder conversation to a corporate-styled proposal deck and team tasks — or a deck from material you already have, or a one-page meeting write-up with your actions. GitHub Copilot does the thinking, stdlib Python scripts do the mechanics, you approve at the gates. Nothing leaves your machine.
+> **New here, or lost? Read [`HOW-TO-USE.md`](HOW-TO-USE.md) first** — what runs in Microsoft 365 Copilot vs GitHub Copilot, every use case, exact steps. The map (`index.html`) shows the same thing visually.
+
+From a stakeholder conversation to a corporate-styled proposal deck and team tasks — or a deck from material you already have, or one living record per topic, built from all its meetings, with your actions. GitHub Copilot does the thinking, stdlib Python scripts do the mechanics, you approve at the gates. Nothing leaves your machine.
 
 ```
 proposal   inputs ─▶ discovery.md ─▶ options.md ─▶ proposal.md + storylines.md ─▶ deck.json ─▶ deck.pptx ─▶ tasks
                        ▲ G1 facts      ▲ G2 option    ▲ G3 storyline                ▲ G4 visual       ▲ G5 tasks
 deck       inputs ─▶ content.md ──────────────────▶ storylines.md ─▶ deck.json ─▶ deck.pptx
                        ▲ G1                             ▲ G3               ▲ G4
-meeting    inputs ─▶ notes.md + tasks.json ─▶ tracker
+meeting    M365 summary + transcript + notes, per meeting ─▶ notes.md (topic record) + tasks.json ─▶ tracker
                                   ▲ G5
 ```
 
@@ -24,7 +26,7 @@ python scripts/status.py --pass       # records the gate (asks for the option / 
 
 Repeat the last three until `status.py` says done (or run `/start` at any point: it tells you the same, without the scripts). That is the whole flow; **`docs/after-meeting.md`** is the one page to read. Scripts and prompts default to the engagement you started last (`engagements/CURRENT`), so you never type its name unless you run two in parallel (`new_engagement.py --use <name>` switches).
 
-Three kinds, chosen in the first question: **proposal** (there will be a choice between solution approaches — `docs/runbooks/proposal.md`), **deck** (content already decided, you need slides — `docs/runbooks/deck.md`), **meeting** (a record and your actions, no deck — `docs/runbooks/meeting.md`). The runbooks are the per-kind detail that `status.py` prints step by step.
+Three kinds, chosen in the first question: **proposal** (there will be a choice between solution approaches — `docs/runbooks/proposal.md`), **deck** (content already decided, you need slides — `docs/runbooks/deck.md`), **meeting** (a topic record: every meeting on a topic + your notes in one document, your actions in the tracker, no deck — `docs/runbooks/meeting.md`). The runbooks are the per-kind detail that `status.py` prints step by step.
 
 ## One-time setup (~2 hours, on the corporate machine)
 
@@ -67,7 +69,7 @@ Everything between gates is regenerable from the file above it. Fix upstream, re
 | proposal, deck | `@critic /critique` | `critique.md` |
 | none | `/fit-finder` | a brief in chat (the M365 Fit Finder agent run locally; needs `brand/fit-finder-context.md`) |
 | proposal | `/team-brief`, `/team-tasks file=…` | `team-brief.md`, `tasks.json` → G5 |
-| meeting | `/meeting-notes` | `notes.md` + `tasks.json` → G5 |
+| meeting | `/meeting-notes` | `notes.md` (topic record, rewritten after every meeting) + `tasks.json` (new actions only) → G5 |
 
 Each prompt checks the engagement `kind` and tells you the right one if you picked wrong.
 

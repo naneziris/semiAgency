@@ -1,5 +1,7 @@
 # After a meeting — do this
 
+> **Topic record (kind `meeting`)?** Follow `docs/runbooks/meeting.md` instead — it starts in Microsoft 365 with the end-of-meeting summary and reuses the same folder for every meeting on the topic.
+
 You just came out of a meeting. This page is the whole flow; you do not need to know which runbook you are on. Two windows in VS Code: the **terminal** and **Copilot Chat in agent mode**.
 
 Lost at any step? Type `/start` in Copilot Chat. It reads where you are and gives you the one next step.
@@ -16,7 +18,7 @@ Put in `inputs/`:
 
 | file | what |
 |---|---|
-| `transcript.md` | the Teams transcript. If you built the Harbour Office flow (`m365/02`), it's already filed in the meeting's folder in the SharePoint *Meetings* library; download it from there. None arrived? In M365 Copilot Chat (Work): *"Reproduce the transcript of my meeting '<title>' on <date> as `[hh:mm:ss] Speaker: text` lines, in order, without summarising."* Save the answer as `inputs/transcript.md`. |
+| `transcript.md` | the Teams transcript. If you built the Auto-file meetings flow (`m365/02`), it's already filed in the meeting's folder in the SharePoint *Meetings* library; download it from there. None arrived? In M365 Copilot Chat (Work): *"Reproduce the transcript of my meeting '<title>' on <date> as `[hh:mm:ss] Speaker: text` lines, in order, without summarising."* Save the answer as `inputs/transcript.md`. |
 | `notes.md` | your own notes, as they are |
 | documents | anything the stakeholders gave you: `.docx`, `.pptx`, `.md`. A PDF: open it in Word, save as `.docx` (the built-in PDF reader is best-effort). |
 
@@ -31,7 +33,7 @@ Paste the prompt the script printed — one of:
 ```
 /discovery-synthesize engagement=<name>     proposal  -> discovery.md
 /content engagement=<name>                  deck      -> content.md
-/meeting-notes engagement=<name>            meeting   -> notes.md + tasks.json
+/meeting-notes engagement=<name>            meeting   -> notes.md (topic record) + tasks.json
 ```
 
 Copilot ingests the inputs, writes the artifact with a citation on every row, validates it, and stops. It ends by telling you the 3 items it is least sure about.

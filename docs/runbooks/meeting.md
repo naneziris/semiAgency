@@ -1,42 +1,61 @@
-# Runbook — meeting
+# Runbook — meeting (the Topic record)
 
-The everyday write-up: a meeting happened, you want a one-page record and your action points in the tracker. One gate. 5–10 minutes. One engagement per meeting — the folder name is the date and subject, and `notes.md` becomes your searchable record.
+One engagement per **topic**, not per meeting: every meeting on the topic, your notes, and the end-of-meeting summaries from Microsoft 365 Copilot become one living document (`notes.md`) and your actions land in the tracker. One gate (G5), repeated after every meeting. 5–10 minutes per meeting.
 
-Short version: `docs/after-meeting.md`. Prompts run in Copilot Chat, agent mode, `@analyst`. Scripts and prompts default to the engagement you started last (`engagements/CURRENT`); `<dir>` and `engagement=<name>` below are only needed to point at another one.
+Prompts run in Copilot Chat, agent mode, `@analyst`. Scripts and prompts default to the engagement you started or switched to last (`engagements/CURRENT`).
 
-## Step 0 — start [1 min]
+## Step 0 — at the end of the meeting, in Microsoft 365 [1 min]
+
+Paste the prompt from `m365/08-end-of-meeting-summary.md` into Copilot in the Teams meeting. Copy the answer.
+
+## Step 1 — put the meeting into the topic folder [2 min]
+
+**First meeting on the topic:**
 
 ```
 python scripts/new_engagement.py
 ```
 
-Answer 3 (meeting) and the subject; the folder name defaults to `<date>-<subject>`. Drop the transcript (`inputs/transcript.md`), your notes (`inputs/notes.md`) and any attachments into `inputs/`, press Enter, and paste the prompt it prints. Scripted: `python scripts/new_engagement.py --kind meeting --name 2026-09-08-vendor-sync`.
+Answer **meeting** and the topic (e.g. "Data platform migration"); the folder is `engagements/<yyyy-mm>-<topic>/`.
 
-## Step 1 — write-up + actions → G5 [5 min]
+**A later meeting on the same topic:**
 
-`/meeting-notes engagement=<name>` → `notes.md` (takeaways, decisions, *my actions*, others' actions, follow-up needed, open points; under 400 words, your notes win over the transcript when they conflict) and `tasks.json` (your commitments under `tasks`, everyone else's under `candidates`).
+```
+python scripts/new_engagement.py --use <topic folder name>
+```
 
-- [ ] `## My actions` is only what you committed to or were assigned — nothing inferred
-- [ ] `tasks.json`: promote from `candidates` if you actually own something; delete what you don't
+Then save into `inputs/`, with the meeting's date at the start of every file name:
+
+| file | what |
+|---|---|
+| `<date>-summary.md` | the M365 answer from step 0 |
+| `<date>-transcript.docx` (or `.md`) | Teams → meeting → Recap → Transcript → Download. Strongly recommended: it is what the record is checked against. |
+| `<date>-notes.md` | your own notes from that meeting — they win over everything else |
+| `notes.md` | optional, standing notes on the whole topic (context, background) |
+| documents | anything shared in the meeting |
+
+`python scripts/new_engagement.py --check` lists what it found. Never edit or delete files in `inputs/` afterwards — the record cites them.
+
+## Step 2 — update the topic record → G5 [5 min]
+
+`/meeting-notes` → rewrites `notes.md` (where we stand, decisions with dates, my actions with status, others' actions, open points, meeting log) and writes `tasks.json` with only the **new** actions.
+
+- [ ] `## My actions` holds only what you committed to or were assigned — nothing inferred
+- [ ] anything marked *(summary only)* is something you remember being said
+- [ ] `tasks.json`: promote from `candidates` if you own something; delete what you don't
 
 ```
 python scripts/append_tasks.py
 ```
 
-shows the rows, appends them, and asks whether to pass G5. Rows land in `tracker/actions.csv` with `source = meeting-notes`; re-running appends nothing twice. Open the CSV in Excel to work the list (status, notes); the script never rewrites existing rows.
+shows the new rows, appends them to `tracker/actions.csv`, and asks whether to pass G5. Mark actions done in the CSV (Excel, `status` column); the next update shows them as done in the record.
 
-## Step 2 — follow-up needed? [2 min]
+## Step 3 — follow-up needed? [2 min]
 
-If `notes.md` says `## Follow-up needed: Y`:
-
-```
-python scripts/followup_agenda.py
-```
-
-→ `followups/agenda-1.md` and `agenda-1.ics` (double-click → Outlook invite with the agenda in the body). After the follow-up meeting, start a new `meeting` engagement for it, or — if it is part of a proposal — `/merge-followup` in that engagement.
+If `notes.md` says `## Follow-up needed: Y`: `python scripts/followup_agenda.py` → `followups/agenda-N.md` + `.ics`.
 
 ## Variants
 
-- **Everyone's actions, not just yours.** `/team-tasks engagement=<name> file=inputs/transcript.md owner=all` puts every explicit commitment under `tasks`.
-- **This meeting turns out to need a deck.** `python scripts/new_engagement.py --kind deck --name <new> --from <dir>` and continue with the deck runbook.
-- **No transcript file arrived.** In Microsoft 365 Copilot Chat (Work mode) ask: *"Reproduce the transcript of my meeting '<title>' on <date> as `[hh:mm:ss] Speaker: text` lines, in order, without summarising."* Save it as `inputs/transcript.md`. A recap alone gives you nothing to verify against.
+- **The topic turns into a proposal.** `python scripts/new_engagement.py --kind proposal --name <new> --from engagements/<topic>` copies every meeting's inputs; continue with the proposal runbook.
+- **No transcript and no M365 summary.** In Microsoft 365 Copilot Chat (Work mode): *"Reproduce the transcript of my meeting '<title>' on <date> as `[hh:mm:ss] Speaker: text` lines, in order, without summarising."* Save it as `inputs/<date>-transcript.md`.
+- **Keep the record next to the meetings in SharePoint.** Copy `notes.md` into the meeting's SharePoint folder after each update; the Meeting Summariser and the evening prep then see it too.

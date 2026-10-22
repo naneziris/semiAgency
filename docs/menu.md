@@ -10,40 +10,40 @@ and each step names where it happens and the exact command to type.
 - bring: the meeting transcript, your notes, their documents
 - you get: a corporate deck with speaker notes, the proposal, a critique, team tasks
 - steps:
-  1. **Town Hall** — Start an engagement of kind 'proposal'. Drop the transcript and your notes in the folder it opens.
+  1. **Start a job** — Start an engagement of kind 'proposal'. Drop the transcript and your notes in the folder it opens.
      - In the VS Code terminal, inside the semiAgency folder: `python scripts/new_engagement.py`
-     - Answer the questions: **proposal** (they expect options and a recommendation), **deck** (the message is decided) or **meeting** (just a record and your actions). …
-     - Lost at any point? This tells you where you are and what to paste next: `python scripts/status.py`
+     - Answer the questions: **proposal** (they expect options and a recommendation), **deck** (the message is decided) or **meeting** (a topic record: all meetings on a topic + your actions). …
+     - Lost at any point? This tells you where you are and what to paste next: `python scripts/where.py`
      - Or ask the guide in Copilot Chat, which works without any script: `/start`
      - read: `docs/after-meeting.md` (After a meeting — the one page to follow)
-  2. **Herald's House** — Optional, before the meeting: brief, hypotheses and a question guide.
-     - Start a `proposal` engagement at the Town Hall with whatever you have (their email, org chart, old documents), then in VS Code, Copilot Chat (agent mode): `/discovery-prep`
+  2. **Prepare the discovery meeting** — Optional, before the meeting: brief, hypotheses and a question guide.
+     - Start a `proposal` engagement (Start a job) with whatever you have (their email, org chart, old documents), then in VS Code, Copilot Chat (agent mode): `/discovery-prep`
      - Take `brief.md` into the meeting. Check the three hypotheses Copilot is least sure about first.
-  3. **Scribe's House** — The fact base, every row cited. You check the three flagged items — gate G1.
+  3. **Facts from the meeting** — The fact base, every row cited. You check the three flagged items — gate G1.
      - In VS Code, Copilot Chat (agent mode): `/discovery-synthesize`
-     - Jump to the three items Copilot flagged, check their citations, move what you cannot cite to *Unverified*. Blocking questions still open? Go to the Messenger's House before passing.
+     - Jump to the three items Copilot flagged, check their citations, move what you cannot cite to *Unverified*. Blocking questions still open? Do the Follow-up meeting step before passing.
      - Pass gate G1: `python scripts/status.py --pass`
-  4. **Messenger's Stoa** — Only if blocking questions remain: follow-up agenda, then merge what you learn.
+  4. **Follow-up meeting** — Only if blocking questions remain: follow-up agenda, then merge what you learn.
      - Agenda + `.ics` from the open questions (blocking first): `python scripts/followup_agenda.py`
      - After the follow-up, save its transcript as `inputs/followup-1.md`, then: `/merge-followup file=inputs/followup-1.md`
      - Check only the new rows, then re-pass G1: `python scripts/status.py --pass G1`
-  5. **Temple of Options** — Two or three genuinely different options; you choose one — gate G2.
+  5. **Choose an option** — Two or three genuinely different options; you choose one — gate G2.
      - In VS Code, Copilot Chat (agent mode): `/options`
      - Read which high-priority needs each option leaves uncovered, then choose (the script asks which): `python scripts/status.py --pass`
-  6. **Design Studio** — The proposal and two storylines; you pick how it is told — gate G3.
+  6. **Write the proposal** — The proposal and two storylines; you pick how it is told — gate G3.
      - In VS Code, Copilot Chat (agent mode): `/proposal`
      - Check the three claims Copilot is least sure about, then pick S1 or S2: `python scripts/status.py --pass`
-  7. **Print House** — The deck in the corporate template. Open it before anyone else — gate G4.
+  7. **Build the proposal deck** — The deck in the corporate template. Open it before anyone else — gate G4.
      - Outline and storyboard: `/deck-outline`
      - Build the .pptx (lints it afterwards): `python scripts/build_deck.py`
      - Open the deck. Wrong? Fix upstream and rebuild — never patch the .pptx by hand. Then: `python scripts/status.py --pass`
-  8. **The Theatre** — Timed speaker notes, embedded in the deck.
+  8. **Speaker notes** — Timed speaker notes, embedded in the deck.
      - Speaker notes: `/speech`
      - Timing check, then the notes go into the deck: `python scripts/build_deck.py --notes-only`
-  9. **High Court** — The critic: unsupported claims and the questions the room will ask. Best early; at the latest now.
+  9. **Critic review** — The critic: unsupported claims and the questions the room will ask. Best early; at the latest now.
      - In VS Code, Copilot Chat (agent mode): `@critic /critique`
      - Fix what it finds upstream (fact base, proposal), not in the deck.
-  10. **Task Depot** — After presenting: brief the team, turn their meeting into tasks, review — gate G5.
+  10. **Team brief & tasks** — After presenting: brief the team, turn their meeting into tasks, review — gate G5.
      - Team brief and a timed 30-minute agenda: `/team-brief`
      - After the team meeting, its notes or transcript → tasks for review: `/team-tasks file=inputs/team-meeting.md`
      - Reviewed tasks into the tracker (shows the rows, offers to pass G5): `python scripts/append_tasks.py`
@@ -54,44 +54,51 @@ and each step names where it happens and the exact command to type.
 - bring: notes, documents or a draft deck
 - you get: a corporate deck (+ speaker notes)
 - steps:
-  1. **Town Hall** — Start an engagement of kind 'deck'. Put your notes, documents or a draft deck in the folder.
+  1. **Start a job** — Start an engagement of kind 'deck'. Put your notes, documents or a draft deck in the folder.
      - In the VS Code terminal, inside the semiAgency folder: `python scripts/new_engagement.py`
-     - Answer the questions: **proposal** (they expect options and a recommendation), **deck** (the message is decided) or **meeting** (just a record and your actions). …
-     - Lost at any point? This tells you where you are and what to paste next: `python scripts/status.py`
+     - Answer the questions: **proposal** (they expect options and a recommendation), **deck** (the message is decided) or **meeting** (a topic record: all meetings on a topic + your actions). …
+     - Lost at any point? This tells you where you are and what to paste next: `python scripts/where.py`
      - Or ask the guide in Copilot Chat, which works without any script: `/start`
      - read: `docs/after-meeting.md` (After a meeting — the one page to follow)
-  2. **Little Archive** — Key messages and facts, cited. You check them — gate G1.
-     - Start a `deck` engagement at the Town Hall, then in VS Code, Copilot Chat (agent mode): `/content`
+  2. **Key messages & facts** — Key messages and facts, cited. You check them — gate G1.
+     - Start a `deck` engagement (Start a job), then in VS Code, Copilot Chat (agent mode): `/content`
      - New material later? Save it under `inputs/` and merge it: `/merge-followup file=inputs/<file>`
      - Check the three numbers Copilot flags, then: `python scripts/status.py --pass`
-  3. **Story Studio** — Two storylines; you pick one — gate G3.
+  3. **Pick a storyline** — Two storylines; you pick one — gate G3.
      - In VS Code, Copilot Chat (agent mode): `/storylines`
      - Pick S1 or S2: `python scripts/status.py --pass`
-  4. **Little Print House** — Outline, then the .pptx. Open it — gate G4.
+  4. **Build the deck** — Outline, then the .pptx. Open it — gate G4.
      - Outline and storyboard: `/deck-outline`
      - Build and lint: `python scripts/build_deck.py`
      - Open it, fix upstream if needed, then: `python scripts/status.py --pass`
-  5. **Open-air Theatre** — Optional: speaker notes and the critic.
+  5. **Speaker notes & critic** — Optional: speaker notes and the critic.
      - Speaker notes: `/speech`
      - Embed them after the timing check: `python scripts/build_deck.py --notes-only`
      - The critic: `@critic /critique`
 
-## 3. Record a meeting and my actions (VS Code)
-- id: `meeting` · where: VS Code (this workspace) · time: 10 minutes, 1 gate
-- when: A meeting happened, you owe nobody a deck, but you want a clean write-up and your actions in the tracker.
-- bring: the transcript and your notes
-- you get: one-page notes + your actions in the tracker
+## 3. Keep one record per topic across its meetings
+- id: `meeting` · where: VS Code (this workspace) · time: ~10 minutes per meeting, 1 gate
+- when: A topic runs over several meetings and you want one up-to-date document — where things stand, decisions, open points — and your actions in the tracker. Works for a single meeting too.
+- bring: after each meeting: the M365 end-of-meeting summary, the transcript, your notes
+- you get: notes.md (the living topic record, every line cited) + your new actions in the tracker
 - steps:
-  1. **Town Hall** — Start an engagement of kind 'meeting' with the transcript and your notes.
+  1. **End-of-meeting summary** — In Microsoft 365: at the end of the meeting, paste the summary prompt into Copilot in the Teams meeting; copy the answer.
+     - At the end of the meeting, paste this into **Copilot in the Teams meeting** (or from Microsoft 365 Copilot Chat, add a first line `Meeting: "<title>" on <date>.`) → copy the prompt (grey block) from `m365/08-end-of-meeting-summary.md`
+     - Copy the answer and save it in VS Code as `engagements/<topic>/inputs/<date>-summary.md`. Also download the transcript (Teams → meeting → Recap → Transcript → Download) as `inputs/<date>-transcript.docx`.
+     - read: `m365/08-end-of-meeting-summary.md` (Sheet 8 — End-of-meeting summary prompt)
+  2. **Start a job** — In VS Code: first meeting → start a 'meeting' job named after the topic. Later meetings → `new_engagement.py --use <topic>`. Save summary, transcript and notes into inputs/, date first.
      - In the VS Code terminal, inside the semiAgency folder: `python scripts/new_engagement.py`
-     - Answer the questions: **proposal** (they expect options and a recommendation), **deck** (the message is decided) or **meeting** (just a record and your actions). …
-     - Lost at any point? This tells you where you are and what to paste next: `python scripts/status.py`
+     - Answer the questions: **proposal** (they expect options and a recommendation), **deck** (the message is decided) or **meeting** (a topic record: all meetings on a topic + your actions). …
+     - Lost at any point? This tells you where you are and what to paste next: `python scripts/where.py`
      - Or ask the guide in Copilot Chat, which works without any script: `/start`
      - read: `docs/after-meeting.md` (After a meeting — the one page to follow)
-  2. **The Notary** — One page cited to the transcript plus your actions. Review, then to the tracker — gate G5.
-     - Start a `meeting` engagement at the Town Hall, then in VS Code, Copilot Chat (agent mode): `/meeting-notes`
-     - Review `tasks.json`, then send your actions to the tracker: `python scripts/append_tasks.py`
-     - If the notes say *Follow-up needed: Y* — agenda and `.ics`: `python scripts/followup_agenda.py`
+  3. **Topic record** — In VS Code: /meeting-notes updates the topic record; review the new actions; append_tasks.py sends them to the tracker (G5).
+     - First meeting on the topic — in the VS Code terminal, answer **meeting** and the topic: `python scripts/new_engagement.py`
+     - A later meeting — switch to the topic's folder: `python scripts/new_engagement.py --use <topic folder>`
+     - Save into the folder's `inputs/`, date first: `<date>-summary.md` (the M365 answer), `<date>-transcript.docx` (Teams → Recap → Transcript → Download), `<date>-notes.md` (your notes). Then in Copilot Chat (agent mode): `/meeting-notes`
+     - Review `tasks.json` (only the new actions), then send them to the tracker — this passes G5: `python scripts/append_tasks.py`
+     - If the record says *Follow-up needed: Y* — agenda and `.ics`: `python scripts/followup_agenda.py`
+     - read: `docs/runbooks/meeting.md` (Runbook — the Topic record)
 
 ## 4. Start my day knowing what matters
 - id: `morning` · where: Microsoft 365 (Outlook, Teams, Copilot Chat) · time: 10 minutes once
@@ -99,7 +106,8 @@ and each step names where it happens and the exact command to type.
 - bring: nothing — it reads your calendar, inbox and To Do
 - you get: a one-page brief in Microsoft 365 Copilot Chat every weekday at 07:00
 - steps:
-  1. **Radio Tower** — Build it once; it arrives every weekday morning.
+  1. **Morning brief** — Build it once; it arrives every weekday morning.
+     - Set up once: paste this into Microsoft 365 Copilot Chat, then click the clock icon (**Schedule**) → weekdays, 07:00. Replace `<your time zone>` → copy the prompt (grey block) from `m365/01-daily-brief.md`
      - read: `m365/01-daily-brief.md` (Build sheet 1 — Daily brief (10 minutes))
 
 ## 5. Summarise a meeting and prepare the next one (Teams)
@@ -108,22 +116,27 @@ and each step names where it happens and the exact command to type.
 - bring: a transcribed Teams meeting, your notes
 - you get: a filed folder, a cited summary, your actions, tomorrow's prep
 - steps:
-  1. **Harbour Office** — Automatic: the transcript is filed into its own folder and you get a Teams ping. Drop your notes in.
+  1. **Auto-file meetings** — Automatic: the transcript is filed into its own folder and you get a Teams ping. Drop your notes in.
+     - Set up once: a Power Automate flow — nothing to paste; click it together following the numbered steps in the sheet below (~45 min). Needs a SharePoint library called *Meetings*.
      - read: `m365/02-meeting-filing-flow.md` (Build sheet 2 — Meeting filing flow (45 minutes))
-  2. **The Library** — One click on Summarise: takeaways, decisions, your actions. Add yours to To Do.
+  2. **Meeting Summariser** — One click on Summarise: takeaways, decisions, your actions. Add yours to To Do.
+     - Set up once: Microsoft 365 Copilot Chat → **Agents → Create agent → Configure**. Name *Meeting Summariser*; Knowledge: SharePoint → your *Meetings* library; web search off. Paste this into **Instructions**; the starter prompts are in the sheet below → copy the Instructions block from `m365/04-meeting-summariser-agent.md`
      - read: `m365/04-meeting-summariser-agent.md` (Build sheet 4 — Meeting Summariser agent (10 minutes))
-  3. **Lighthouse** — Automatic at 18:00: tomorrow's meetings prepared from what was filed.
+  3. **Evening prep** — Automatic at 18:00: tomorrow's meetings prepared from what was filed.
+     - Set up once: replace `<site name>` and `<notebook name>`, paste into Microsoft 365 Copilot Chat, then **Schedule** → weekdays, 18:00. Needs Auto-file meetings running first → copy the prompt (grey block) from `m365/03-evening-prep-prompt.md`
      - read: `m365/03-evening-prep-prompt.md` (Build sheet 3 — Evening prep (10 minutes))
 
 ## 6. Never walk into a 1-1 unprepared
 - id: `one-on-one` · where: Microsoft 365 (Outlook, Teams, Copilot Chat) · time: 15 minutes once, then one click
 - when: You have recurring 1-1s and want each one to have an agenda built from what is still open.
-- bring: 1-1 invites named "1-1 <name>", past 1-1s filed by the Harbour Office
+- bring: 1-1 invites named "1-1 <name>", past 1-1s filed by Auto-file meetings
 - you get: an agenda in tomorrow's invite
 - steps:
-  1. **Clock Tower** — Automatic at 16:00: a ping when tomorrow's 1-1 has no agenda.
+  1. **1-1 agenda reminder** — Automatic at 16:00: a ping when tomorrow's 1-1 has no agenda.
+     - Set up once: a Power Automate flow — nothing to paste; follow the sheet below (~15 min). Name every recurring 1-1 `1-1 <name>`.
      - read: `m365/06-agenda-check-flow.md` (Build sheet 6 — 1-1 agenda check flow (15 minutes))
-  2. **The Library** — One click on Prep 1-1, then paste the agenda into the invite.
+  2. **Meeting Summariser** — One click on Prep 1-1, then paste the agenda into the invite.
+     - Set up once: Microsoft 365 Copilot Chat → **Agents → Create agent → Configure**. Name *Meeting Summariser*; Knowledge: SharePoint → your *Meetings* library; web search off. Paste this into **Instructions**; the starter prompts are in the sheet below → copy the Instructions block from `m365/04-meeting-summariser-agent.md`
      - read: `m365/04-meeting-summariser-agent.md` (Build sheet 4 — Meeting Summariser agent (10 minutes))
 
 ## 7. Write an email in my own voice
@@ -132,7 +145,8 @@ and each step names where it happens and the exact command to type.
 - bring: rough text and the recipient
 - you get: a subject and a ready-to-send body
 - steps:
-  1. **Post Office** — Draft, then Shorter or Softer / firmer until it sounds like you.
+  1. **Email Drafter** — Draft, then Shorter or Softer / firmer until it sounds like you.
+     - Set up once: write `voice-profile.docx` and collect 15–20 sent mails (see the sheet below). Then **Agents → Create agent → Configure**: name *Email Drafter*, Knowledge: the SharePoint *Voice* folder. Paste this into **Instructions** → copy the Instructions block from `m365/05-email-drafter-agent.md`
      - read: `m365/05-email-drafter-agent.md` (Build sheet 5 — Email Drafter agent (20 minutes + exemplars))
 
 ## 8. Check whether an AI idea would work for us
@@ -141,16 +155,17 @@ and each step names where it happens and the exact command to type.
 - bring: the idea, what your team does, what it can build, known limits (and, once, the context file for the agent)
 - you get: a one-page brief with a two-day test; for good ideas, who to send it to for a proposal
 - steps:
-  1. **The Embassy** — Ask Fit Finder (shared M365 agent, or /fit-finder in VS Code) with the idea and your team; get the brief.
+  1. **AI idea check (Fit Finder)** — Ask Fit Finder (shared M365 agent, or /fit-finder in VS Code) with the idea and your team; get the brief.
+     - Set up once (whoever runs this for the team): write the context file first (template in the sheet below). Then **Agents → Create agent → Configure**: name *Fit Finder*, Knowledge: the SharePoint folder with `fit-finder-context.docx`, Microsoft 365 work data **off**, web off. Paste this into **Instructions**, then **Share** the agent → copy the Instructions block from `m365/07-fit-finder-agent.md`
      - **Build it once (whoever runs this toolkit for your team, ~20 minutes + the context file):** follow build sheet 7 below. First write the context file, `fit-finder-context`: the tools it may recommend, your data rules and past ideas. …
      - **Use it (colleagues):** Microsoft 365 Copilot Chat or Teams → Agents → **Fit Finder**, then a starter below.
      - **Or in VS Code** (reads `brand/fit-finder-context.md`, same instructions): `/fit-finder`
      - **If the brief says the idea is worth pursuing,** it tells you who to send it to. That person books about an hour with you and one or two colleagues who do the work today, to understand how it works now. No slides; bring one real example. …
      - read: `m365/07-fit-finder-agent.md` (Build sheet 7 — Fit Finder (shared agent))
-  2. **Town Hall** — Worth pursuing? Send the brief to the person it names. They talk to you for about an hour, then come back with a short proposal (options and a recommendation). Their side of the work starts here, as a proposal.
+  2. **Start a job** — Worth pursuing? Send the brief to the person it names. They talk to you for about an hour, then come back with a short proposal (options and a recommendation). Their side of the work starts here, as a proposal.
      - In the VS Code terminal, inside the semiAgency folder: `python scripts/new_engagement.py`
-     - Answer the questions: **proposal** (they expect options and a recommendation), **deck** (the message is decided) or **meeting** (just a record and your actions). …
-     - Lost at any point? This tells you where you are and what to paste next: `python scripts/status.py`
+     - Answer the questions: **proposal** (they expect options and a recommendation), **deck** (the message is decided) or **meeting** (a topic record: all meetings on a topic + your actions). …
+     - Lost at any point? This tells you where you are and what to paste next: `python scripts/where.py`
      - Or ask the guide in Copilot Chat, which works without any script: `/start`
      - read: `docs/after-meeting.md` (After a meeting — the one page to follow)
 
@@ -160,7 +175,7 @@ and each step names where it happens and the exact command to type.
 - bring: 5–10 tasks where AI recently failed you
 - you get: a pass/fail matrix per model, side by side
 - steps:
-  1. **Observatory** — Collect tasks that failed you, run them per model, grade with your own checks, compare.
+  1. **Model benchmark** — Collect tasks that failed you, run them per model, grade with your own checks, compare.
      - Copy the `bench/` folder into an empty workspace, open it in VS Code, then in Copilot Chat (agent mode): `/bench-setup`
      - Pick a model in the picker and run a case (repeat per model): `/bench-run case=<name> model=<id>`
      - Or all cases on all models through the Copilot CLI: `python scripts/bench_cli.py --models claude-sonnet-4.5,gpt-5.4 --repeat 3`
@@ -171,20 +186,20 @@ and each step names where it happens and the exact command to type.
 
 ## 10. Set this up (technical)
 - id: `setup` · where: VS Code or Microsoft 365 · time: ~2 hours local, ~2 hours M365
-- when: Once, before the local flows or the harbour work for you. Also where the map is rebuilt.
+- when: Once, before the VS Code flows or the Microsoft 365 pieces work for you. Also where the map is rebuilt.
 - bring: VS Code + Python 3 and your corporate template, or an M365 tenant with Microsoft 365 Copilot Chat
 - you get: working local scripts, built M365 pieces, an up-to-date map
 - steps:
-  1. **The Workshop** — Local: bootstrap the scripts, calibrate the corporate look, write your voice file.
+  1. **Local setup** — Local: bootstrap the scripts, calibrate the corporate look, write your voice file.
      - Open the semiAgency folder in VS Code, `git init`, Python 3 on PATH. Then: `python scripts/append_tasks.py --init`
      - Have Copilot write the scripts: run the Phase prompts of `docs/bootstrap.md` §3 in order, until: `python scripts/selftest_all.py`
      - Calibrate the corporate look (`brand/components.pptx`, then): `python scripts/inspect_components.py`
      - read: `README.md` (README — one-time setup and the five gates)
      - read: `docs/bootstrap.md` (Bootstrap kit (what Copilot builds))
-  2. **Harbour Works** — M365: check prerequisites, then build the harbour sheets in order.
-     - Read the prerequisites, then build the sheets in order. Each harbour building has its own sheet.
+  2. **M365 setup** — M365: check prerequisites, then build the sheets in order.
+     - Read the prerequisites, then build the sheets in order. Each Microsoft 365 stop on the map has its own sheet.
      - read: `m365/README.md` (M365 automations — prerequisites and build order)
-  3. **Cartographer** — Rebuild this map whenever a feature is added.
+  3. **Map maintenance** — Rebuild this map whenever a feature is added.
      - Add a prompt — the file, its building, its stop on a route, then the map and the menu are rebuilt: `python scripts/new_prompt.py`
      - Rebuild the city after any other change (new building in `city/city.json`, edited prompt text): `python scripts/build_city.py`
      - Rebuild the guide's menu (docs/menu.md) after changing journeys or steps here: `python scripts/build_menu.py`
@@ -197,7 +212,7 @@ and each step names where it happens and the exact command to type.
 - bring: the wish in one sentence, and five minutes for questions
 - you get: a new flow on the menu and the map, ready to use
 - steps:
-  1. **Architect's Office** — Pick the wish, answer up to five questions, approve the design, and it builds the flow.
+  1. **Add a new flow** — Pick the wish, answer up to five questions, approve the design, and it builds the flow.
      - See what has been wished for so far: `python scripts/wish.py --list`
      - In VS Code, Copilot Chat (agent mode), with the wish in your words: `/new-flow <what you want>`
      - After it's built, the guide knows it: `/start`

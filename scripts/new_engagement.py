@@ -45,10 +45,11 @@ KINDS = {
         "runbook": "docs/runbooks/deck.md",
     },
     "meeting": {
-        "menu": "I just want a one-page record and my action points in the tracker, no deck",
+        "menu": "a topic record: one living document for all meetings on a topic + my actions\n"
+                "                in the tracker, no deck (continue an existing topic with --use <name>)",
         "asks": ["subject"],
         "minutes": 0,
-        "name_date": "%Y-%m-%d",
+        "name_date": "%Y-%m",
         "first_prompt": "/meeting-notes",
         "runbook": "docs/runbooks/meeting.md",
     },
@@ -257,6 +258,8 @@ def classify(path):
         return "draft deck"
     if ext == ".docx":
         return "document"
+    if "summary" in low:
+        return "summary"
     if "transcript" in low:
         return "transcript"
     if "notes" in low:
@@ -285,13 +288,13 @@ def check_inputs(d):
         say("inputs/ is empty.")
         return found
     say("Found in inputs/:")
-    for cat in ("transcript", "notes", "document", "draft deck", "pdf", "unreadable"):
+    for cat in ("transcript", "summary", "notes", "document", "draft deck", "pdf", "unreadable"):
         for base in found.get(cat, []):
             say("  %-10s %s" % (cat, base))
     warnings = []
-    if "transcript" not in found and "notes" not in found:
+    if not any(k in found for k in ("transcript", "notes", "summary")):
         warnings.append("no transcript and no notes: add at least one, or the synthesis has nothing to cite")
-    if "transcript" not in found:
+    if "transcript" not in found and "summary" not in found:
         warnings.append("no transcript: if Teams did not send one, ask M365 Copilot Chat to reproduce it as "
                         "'[hh:mm:ss] Speaker: text' lines and save it as inputs/transcript.md")
     for base in found.get("pdf", []):
@@ -311,8 +314,16 @@ def next_step(root, d):
     say()
     if kind in ("proposal", "deck"):
         say("Optional but worth 10 minutes: fill inputs/audience.md (who is in the room, what they decide, what they push back on).")
+    if kind == "meeting":
+        say("Topic record: name each meeting's files with its date, e.g. inputs/2026-10-22-summary.md,")
+        say("inputs/2026-10-22-transcript.docx, inputs/2026-10-22-notes.md; inputs/notes.md is for standing notes.")
     say("Next, in VS Code, Copilot Chat (agent mode), paste:")
     say("    %s engagement=%s" % (KINDS[kind]["first_prompt"], name))
+    if kind == "meeting":
+        say("When it stops, review tasks.json, then in the terminal:")
+        say("    python scripts/append_tasks.py")
+        say("After the next meeting on this topic: add its files to inputs/ and paste the same prompt again.")
+        return
     say("When it stops, in the terminal:")
     say("    python scripts/status.py")
     say("It prints the checklist for the gate and the exact command to pass it. Guide: docs/after-meeting.md")

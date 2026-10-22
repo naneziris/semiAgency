@@ -1,4 +1,4 @@
-# 4 · Meeting Summariser — Agent Builder agent (on the map: The Library)
+# 4 · Meeting Summariser — Agent Builder agent (on the map: Meeting Summariser)
 
 On-demand counterpart of the evening prompt: a same-day summary right after a meeting, a 1-1 prep whenever you want it, "what's open from the last two weeks". Reads the Meetings library that flow 2 fills. Because the material is in SharePoint, this works — Agent Builder can't read OneNote, but it reads a document library fine.
 

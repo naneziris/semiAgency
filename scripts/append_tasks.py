@@ -84,6 +84,7 @@ def pass_g5(engagement_dir):
         state = json.load(f)
     state.setdefault("gates", {}).setdefault("G5", {})["passed"] = True
     state["gates"]["G5"]["passed_on"] = dt.date.today().isoformat()
+    state["gates"]["G5"]["passed_at"] = dt.datetime.now().timestamp()  # where.py/status.py compare it with tasks.json
     with open(p, "w", encoding="utf-8") as f:
         json.dump(state, f, indent=2)
         f.write("\n")

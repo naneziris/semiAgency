@@ -12,6 +12,6 @@ applyTo: "engagements/**/tasks.json"
 - `action`: imperative, one line, names the person and the thing. Required.
 - `owner`: `me` or `delegate:<person-slug>`. A delegated task's `notes` starts with the one-line ask you would send.
 - `due`: only a date stated or clearly implied by the source (`"by Thursday"` → the date); else `null`. Never invent.
-- `source`: the meeting file + timestamp (`T1 00:41:10`) or `[notes]`.
+- `source`: the meeting file + timestamp (`T1 00:41:10`), `S2` for an end-of-meeting summary, or `[notes]`.
 - `tasks` holds only explicit commitments or clearly assigned actions. Anything inferred goes under `candidates` with `why_candidate`; candidates are never appended.
-- Keep ids stable: the tracker dedups on (source, engagement, action), so do not rephrase an action that already exists in `tracker/actions.csv`.
+- Keep ids stable: the tracker dedups on (source, engagement, action), so do not rephrase an action that already exists in `tracker/actions.csv`, and do not put it in `tasks.json` again (topic records are re-run after every meeting).

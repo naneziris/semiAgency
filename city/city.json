@@ -1,5 +1,5 @@
 {
-  "title": "SemiAgency City",
+  "title": "SemiAgency",
   "output": "index.html",
   "redact": {
     "Nikos": "the person who runs this toolkit",
@@ -14,11 +14,11 @@
     "bench/results/",
     "docs/upgrades/"
   ],
-  "tagline": "Every area is one flow; every building is one step. Not sure where to go? Pick what you want to do, or ask the Front Desk in the agora.",
+  "tagline": "First choose where you work — Microsoft 365 Copilot or GitHub Copilot in VS Code — then pick what you want to do. Every step says where to paste what.",
   "audiences": {
     "everyone": "Everyone",
-    "vscode": "VS Code + GitHub Copilot",
-    "m365": "Outlook, Teams & Microsoft 365 Copilot Chat"
+    "m365": "Microsoft 365 Copilot (Teams, Outlook, Copilot Chat)",
+    "vscode": "GitHub Copilot in VS Code (this repo)"
   },
   "modes": {
     "auto": "Runs by itself",
@@ -32,63 +32,63 @@
   "districts": [
     {
       "id": "agora",
-      "name": "Central Agora",
-      "subtitle": "Start here. The Town Hall starts any local flow; the kiosk tells you which flow is yours.",
+      "name": "Start here",
+      "subtitle": "Start any VS Code job here, or ask for help: “Help: what do I run?”.",
       "audience": "everyone",
       "color": "#e3b341"
     },
     {
       "id": "proposal",
-      "name": "Proposal Acropolis",
-      "subtitle": "You met stakeholders and must come back with options, a recommendation and a deck. One building per step, climbing to the decision.",
+      "name": "Proposal (VS Code)",
+      "subtitle": "You met stakeholders and must come back with options, a recommendation and a deck. One stop per step.",
       "audience": "vscode",
       "color": "#c8553d"
     },
     {
       "id": "deck",
-      "name": "Deck Street",
-      "subtitle": "The message is decided; you need corporate slides and something to say. The Acropolis route, shortened.",
+      "name": "Deck (VS Code)",
+      "subtitle": "The message is decided; you need corporate slides and something to say. The proposal route, shortened.",
       "audience": "vscode",
       "color": "#2f6fb3"
     },
     {
       "id": "record",
-      "name": "Notary Corner",
-      "subtitle": "A meeting happened; you want a one-page record and your actions in the tracker. Ten minutes.",
+      "name": "Topic record (VS Code)",
+      "subtitle": "Every meeting on a topic + your notes → one living document and your actions in the tracker. Fed by the end-of-meeting summary from Microsoft 365.",
       "audience": "vscode",
       "color": "#8e6cc0"
     },
     {
       "id": "idea",
-      "name": "Gate of Envoys",
-      "subtitle": "Someone saw an AI idea. A shared agent turns it into a brief for their team; good ones walk up to the Acropolis.",
+      "name": "AI ideas",
+      "subtitle": "Someone saw an AI idea. Fit Finder turns it into a brief for their team; good ones become a proposal.",
       "audience": "everyone",
       "color": "#1f9e97"
     },
     {
       "id": "lab",
-      "name": "Observatory Hill",
+      "name": "Model benchmark (VS Code)",
       "subtitle": "Which Copilot model is best at your work? Measure it.",
       "audience": "vscode",
       "color": "#8a93a8"
     },
     {
       "id": "harbour",
-      "name": "M365 Harbour",
-      "subtitle": "Everything inside Outlook, Teams and Microsoft 365 Copilot Chat — no VS Code. Four piers, one per daily need; the buildings are what you build once.",
+      "name": "Microsoft 365",
+      "subtitle": "Everything inside Outlook, Teams and Microsoft 365 Copilot Chat — no VS Code. The four piers are the daily uses; the buildings are what you set up once.",
       "audience": "m365",
       "color": "#3a9a6e"
     },
     {
       "id": "yard",
-      "name": "Construction Yard",
+      "name": "Setup",
       "subtitle": "What you set up once, and the map itself.",
       "audience": "everyone",
       "color": "#d98b3a"
     },
     {
       "id": "arrivals",
-      "name": "New Arrivals",
+      "name": "Not placed yet",
       "subtitle": "Features found in the repo that nobody has placed on the map yet. Add them to city/city.json.",
       "audience": "everyone",
       "color": "#eeeeee",
@@ -99,23 +99,23 @@
     {
       "id": "town-hall",
       "district": "agora",
-      "name": "Town Hall",
-      "sub": "start any local flow",
+      "name": "Start a job",
+      "sub": "new_engagement.py — begins every VS Code flow",
       "shape": "hall",
       "hotspot": "town-hall",
       "mode": "run",
-      "pitch": "Start here for every flow that runs in VS Code (proposal, deck, meeting record). One command asks what you need and prints the first prompt to paste.",
+      "pitch": "Start here for every flow that runs in VS Code (proposal, deck, topic record). One command asks what you need and prints the first prompt to paste.",
       "steps": [
         {
           "say": "In the VS Code terminal, inside the semiAgency folder:",
           "copy": "python scripts/new_engagement.py"
         },
         {
-          "say": "Answer the questions: **proposal** (they expect options and a recommendation), **deck** (the message is decided) or **meeting** (just a record and your actions). Drop the transcript, your notes and any documents into the `inputs/` folder it opens, then press Enter. It prints the prompt for the next building."
+          "say": "Answer the questions: **proposal** (they expect options and a recommendation), **deck** (the message is decided) or **meeting** (a topic record: all meetings on a topic + your actions). Drop your files into the `inputs/` folder it opens, then press Enter. It prints the prompt to paste next."
         },
         {
           "say": "Lost at any point? This tells you where you are and what to paste next:",
-          "copy": "python scripts/status.py"
+          "copy": "python scripts/where.py"
         },
         {
           "say": "Or ask the guide in Copilot Chat, which works without any script:",
@@ -133,8 +133,8 @@
     {
       "id": "front-desk",
       "district": "agora",
-      "name": "Front Desk",
-      "sub": "which flow is mine? · /start",
+      "name": "Help: what do I run?",
+      "sub": "/start tells you the next step",
       "shape": "small",
       "hotspot": "kiosk",
       "mode": "read",
@@ -166,15 +166,15 @@
     {
       "id": "p-prep",
       "district": "proposal",
-      "name": "Herald's House",
-      "sub": "prepare the discovery meeting",
+      "name": "Prepare the discovery meeting",
+      "sub": "/discovery-prep · optional",
       "shape": "house",
       "hotspot": "acro-messenger",
       "mode": "prompt",
       "pitch": "Optional, before you meet the stakeholders: a brief with what you already know, 3–5 hypotheses and a question guide from easy to sensitive.",
       "steps": [
         {
-          "say": "Start a `proposal` engagement at the Town Hall with whatever you have (their email, org chart, old documents), then in VS Code, Copilot Chat (agent mode):",
+          "say": "Start a `proposal` engagement (Start a job) with whatever you have (their email, org chart, old documents), then in VS Code, Copilot Chat (agent mode):",
           "copy": "/discovery-prep"
         },
         {
@@ -189,8 +189,8 @@
     {
       "id": "p-facts",
       "district": "proposal",
-      "name": "Scribe's House",
-      "sub": "facts from the meeting · gate G1",
+      "name": "Facts from the meeting",
+      "sub": "/discovery-synthesize · check G1",
       "shape": "house",
       "hotspot": "acro-scribe",
       "mode": "prompt",
@@ -201,7 +201,7 @@
           "copy": "/discovery-synthesize"
         },
         {
-          "say": "Jump to the three items Copilot flagged, check their citations, move what you cannot cite to *Unverified*. Blocking questions still open? Go to the Messenger's House before passing."
+          "say": "Jump to the three items Copilot flagged, check their citations, move what you cannot cite to *Unverified*. Blocking questions still open? Do the Follow-up meeting step before passing."
         },
         {
           "say": "Pass gate G1:",
@@ -216,8 +216,8 @@
     {
       "id": "p-followup",
       "district": "proposal",
-      "name": "Messenger's Stoa",
-      "sub": "follow-up meeting, only if needed",
+      "name": "Follow-up meeting",
+      "sub": "only if questions stay open",
       "shape": "columns",
       "hotspot": "acro-stoa",
       "mode": "run",
@@ -244,8 +244,8 @@
     {
       "id": "p-options",
       "district": "proposal",
-      "name": "Temple of Options",
-      "sub": "2–3 options, you choose · gate G2",
+      "name": "Choose an option",
+      "sub": "/options · 2–3 options, you pick (G2)",
       "shape": "columns",
       "hotspot": "acro-temple",
       "mode": "prompt",
@@ -268,8 +268,8 @@
     {
       "id": "p-proposal",
       "district": "proposal",
-      "name": "Design Studio",
-      "sub": "proposal + storyline · gate G3",
+      "name": "Write the proposal",
+      "sub": "/proposal · pick a storyline (G3)",
       "shape": "studio",
       "hotspot": "acro-studio",
       "mode": "prompt",
@@ -292,8 +292,8 @@
     {
       "id": "p-print",
       "district": "proposal",
-      "name": "Print House",
-      "sub": "the real deck · gate G4",
+      "name": "Build the proposal deck",
+      "sub": "/deck-outline + build_deck.py (G4)",
       "shape": "factory",
       "hotspot": "acro-print",
       "mode": "prompt",
@@ -320,8 +320,8 @@
     {
       "id": "p-rehearsal",
       "district": "proposal",
-      "name": "The Theatre",
-      "sub": "speaker notes, timed",
+      "name": "Speaker notes",
+      "sub": "/speech · timed",
       "shape": "dome",
       "hotspot": "acro-theatre",
       "mode": "prompt",
@@ -344,8 +344,8 @@
     {
       "id": "p-critic",
       "district": "proposal",
-      "name": "High Court",
-      "sub": "hostile review + audience questions",
+      "name": "Critic review",
+      "sub": "@critic /critique · hostile questions",
       "shape": "columns",
       "hotspot": "acro-parthenon",
       "mode": "prompt",
@@ -370,8 +370,8 @@
     {
       "id": "p-team",
       "district": "proposal",
-      "name": "Task Depot",
-      "sub": "brief the team, tasks · gate G5",
+      "name": "Team brief & tasks",
+      "sub": "/team-brief, /team-tasks (G5)",
       "shape": "warehouse",
       "hotspot": "acro-depot",
       "mode": "prompt",
@@ -399,15 +399,15 @@
     {
       "id": "d-content",
       "district": "deck",
-      "name": "Little Archive",
-      "sub": "key messages + facts · gate G1",
+      "name": "Key messages & facts",
+      "sub": "/content · check G1",
       "shape": "columns",
       "hotspot": "blue-1",
       "mode": "prompt",
       "pitch": "Copilot extracts the key messages and facts from your notes, documents or a draft deck, each cited. A draft .pptx counts: its titles become candidate messages. Gate G1: you check them.",
       "steps": [
         {
-          "say": "Start a `deck` engagement at the Town Hall, then in VS Code, Copilot Chat (agent mode):",
+          "say": "Start a `deck` engagement (Start a job), then in VS Code, Copilot Chat (agent mode):",
           "copy": "/content"
         },
         {
@@ -428,8 +428,8 @@
     {
       "id": "d-story",
       "district": "deck",
-      "name": "Story Studio",
-      "sub": "two storylines, you pick · gate G3",
+      "name": "Pick a storyline",
+      "sub": "/storylines (G3)",
       "shape": "studio",
       "hotspot": "blue-2",
       "mode": "prompt",
@@ -452,12 +452,12 @@
     {
       "id": "d-print",
       "district": "deck",
-      "name": "Little Print House",
-      "sub": "the real deck · gate G4",
+      "name": "Build the deck",
+      "sub": "/deck-outline + build_deck.py (G4)",
       "shape": "factory",
       "hotspot": "blue-3",
       "mode": "prompt",
-      "pitch": "Same press as the Acropolis: outline in your corporate slide kinds, rendered to .pptx. Complete slides from a draft are cloned, not retyped. Gate G4: you open it first.",
+      "pitch": "Same build as the proposal deck: outline in your corporate slide kinds, rendered to .pptx. Complete slides from a draft are cloned, not retyped. Gate G4: you open it first.",
       "steps": [
         {
           "say": "Outline and storyboard:",
@@ -480,8 +480,8 @@
     {
       "id": "d-rehearsal",
       "district": "deck",
-      "name": "Open-air Theatre",
-      "sub": "speaker notes + critic",
+      "name": "Speaker notes & critic",
+      "sub": "/speech, @critic /critique · optional",
       "shape": "dome",
       "hotspot": "blue-4",
       "mode": "prompt",
@@ -512,42 +512,61 @@
     {
       "id": "notary",
       "district": "record",
-      "name": "The Notary",
-      "sub": "meeting notes + my actions · gate G5",
+      "name": "Topic record",
+      "sub": "/meeting-notes · all meetings on a topic + your actions (G5)",
       "shape": "house",
       "hotspot": "notary",
       "mode": "prompt",
-      "pitch": "No deck, just the record: a one-page write-up of the meeting cited to the transcript, and your actions as tasks. Nothing reaches the tracker before you review it (gate G5). Prefer Teams and SharePoint? The Library in the harbour does the same without VS Code.",
+      "pitch": "One living document per topic. After every meeting you add its end-of-meeting summary (from Microsoft 365), the transcript and your notes to the topic's folder; /meeting-notes merges them with every earlier meeting into notes.md — where we stand, decisions, open points, a meeting log — every line cited, your notes counting most. Only the new actions go to tasks.json; you review them before they reach the tracker (G5).",
       "steps": [
         {
-          "say": "Start a `meeting` engagement at the Town Hall, then in VS Code, Copilot Chat (agent mode):",
+          "say": "First meeting on the topic — in the VS Code terminal, answer **meeting** and the topic:",
+          "copy": "python scripts/new_engagement.py"
+        },
+        {
+          "say": "A later meeting — switch to the topic's folder:",
+          "copy": "python scripts/new_engagement.py --use <topic folder>"
+        },
+        {
+          "say": "Save into the folder's `inputs/`, date first: `<date>-summary.md` (the M365 answer), `<date>-transcript.docx` (Teams → Recap → Transcript → Download), `<date>-notes.md` (your notes). Then in Copilot Chat (agent mode):",
           "copy": "/meeting-notes"
         },
         {
-          "say": "Review `tasks.json`, then send your actions to the tracker:",
+          "say": "Review `tasks.json` (only the new actions), then send them to the tracker — this passes G5:",
           "copy": "python scripts/append_tasks.py"
         },
         {
-          "say": "If the notes say *Follow-up needed: Y* — agenda and `.ics`:",
+          "say": "If the record says *Follow-up needed: Y* — agenda and `.ics`:",
           "copy": "python scripts/followup_agenda.py"
         }
       ],
       "prompts": [
         "meeting-notes"
       ],
-      "audience": "vscode"
+      "audience": "vscode",
+      "docs": [
+        {
+          "title": "Runbook — the Topic record",
+          "file": "docs/runbooks/meeting.md"
+        }
+      ]
     },
     {
       "id": "embassy",
       "district": "idea",
-      "name": "The Embassy",
-      "sub": "Fit Finder: would this AI idea work for us?",
+      "name": "AI idea check (Fit Finder)",
+      "sub": "shared M365 agent, or /fit-finder",
       "shape": "embassy",
       "hotspot": "embassy",
       "mode": "click",
       "audience": "everyone",
       "pitch": "Fit Finder turns an AI idea someone saw into a one-page brief for their team: what it would be here, the value beyond saved hours, what to build it with inside the tenant, and a two-day test. It's an M365 Agent Builder agent that you build once from sheet 7 and share with colleagues. You can also run it in VS Code as /fit-finder.",
       "steps": [
+        {
+          "setup": true,
+          "say": "Set up once (whoever runs this for the team): write the context file first (template in the sheet below). Then **Agents → Create agent → Configure**: name *Fit Finder*, Knowledge: the SharePoint folder with `fit-finder-context.docx`, Microsoft 365 work data **off**, web off. Paste this into **Instructions**, then **Share** the agent:",
+          "copy_from": "m365/07-fit-finder-agent.md#instructions"
+        },
         {
           "say": "**Build it once (whoever runs this toolkit for your team, ~20 minutes + the context file):** follow build sheet 7 below. First write the context file, `fit-finder-context`: the tools it may recommend, your data rules and past ideas. The agent does not create it, and without it the briefs are generic. Then create the agent in Agent Builder and share it with your colleagues."
         },
@@ -559,7 +578,7 @@
           "copy": "/fit-finder"
         },
         {
-          "say": "**If the brief says the idea is worth pursuing,** it tells you who to send it to. That person books about an hour with you and one or two colleagues who do the work today, to understand how it works now. No slides; bring one real example. They come back with a short written proposal (two or three ways to do it, plus a recommendation) for you or your manager to decide on. On their side, the proposal is made at the Town Hall and the Proposal Acropolis."
+          "say": "**If the brief says the idea is worth pursuing,** it tells you who to send it to. That person books about an hour with you and one or two colleagues who do the work today, to understand how it works now. No slides; bring one real example. They come back with a short written proposal (two or three ways to do it, plus a recommendation) for you or your manager to decide on. On their side, the proposal is made in VS Code (Start a job → the Proposal flow)."
         }
       ],
       "asks": [
@@ -597,8 +616,8 @@
     {
       "id": "observatory",
       "district": "lab",
-      "name": "Observatory",
-      "sub": "which model is best for my work?",
+      "name": "Model benchmark",
+      "sub": "which Copilot model is best for my work?",
       "shape": "observatory",
       "hotspot": "observatory",
       "mode": "prompt",
@@ -640,8 +659,8 @@
     {
       "id": "radio-tower",
       "district": "harbour",
-      "name": "Radio Tower",
-      "sub": "morning brief, 07:00",
+      "name": "Morning brief",
+      "sub": "scheduled prompt, 07:00",
       "shape": "tower",
       "hotspot": "radio-tower",
       "mode": "auto",
@@ -663,13 +682,19 @@
           "file": "m365/01-daily-brief.md"
         }
       ],
-      "steps": []
+      "steps": [
+        {
+          "setup": true,
+          "say": "Set up once: paste this into Microsoft 365 Copilot Chat, then click the clock icon (**Schedule**) → weekdays, 07:00. Replace `<your time zone>`.",
+          "copy_from": "m365/01-daily-brief.md#block1"
+        }
+      ]
     },
     {
       "id": "harbour-office",
       "district": "harbour",
-      "name": "Harbour Office",
-      "sub": "files every meeting",
+      "name": "Auto-file meetings",
+      "sub": "Power Automate: transcript → SharePoint folder",
       "shape": "office",
       "hotspot": "harbour-office",
       "mode": "auto",
@@ -691,13 +716,18 @@
           "file": "m365/02-meeting-filing-flow.md"
         }
       ],
-      "steps": []
+      "steps": [
+        {
+          "setup": true,
+          "say": "Set up once: a Power Automate flow — nothing to paste; click it together following the numbered steps in the sheet below (~45 min). Needs a SharePoint library called *Meetings*."
+        }
+      ]
     },
     {
       "id": "lighthouse",
       "district": "harbour",
-      "name": "Lighthouse",
-      "sub": "tomorrow's meetings, prepared at 18:00",
+      "name": "Evening prep",
+      "sub": "scheduled prompt, 18:00: tomorrow's meetings",
       "shape": "lighthouse",
       "hotspot": "lighthouse",
       "mode": "auto",
@@ -720,13 +750,19 @@
           "file": "m365/03-evening-prep-prompt.md"
         }
       ],
-      "steps": []
+      "steps": [
+        {
+          "setup": true,
+          "say": "Set up once: replace `<site name>` and `<notebook name>`, paste into Microsoft 365 Copilot Chat, then **Schedule** → weekdays, 18:00. Needs Auto-file meetings running first.",
+          "copy_from": "m365/03-evening-prep-prompt.md#block1"
+        }
+      ]
     },
     {
       "id": "library",
       "district": "harbour",
-      "name": "The Library",
-      "sub": "Meeting Summariser: summaries, prep, open actions",
+      "name": "Meeting Summariser",
+      "sub": "M365 agent: summaries, prep, open actions",
       "shape": "columns",
       "hotspot": "library",
       "mode": "click",
@@ -735,7 +771,7 @@
       "asks": [
         {
           "say": "Summarise the meeting \"<date> <subject>\".",
-          "when": "right after a meeting (use the folder name from the Teams ping)",
+          "when": "right after a meeting (use the folder name from the Teams ping). For a topic you track in VS Code, use the End-of-meeting summary prompt instead — its output is shaped for the Topic record.",
           "get": "takeaways, decisions, your actions, others' actions, follow-up Y/N",
           "journeys": [
             "m365-meeting"
@@ -759,7 +795,7 @@
         },
         {
           "say": "Prepare my next 1-1 with <name>.",
-          "when": "the day before a 1-1 (the Clock Tower reminds you)",
+          "when": "the day before a 1-1 (the 1-1 agenda reminder pings you)",
           "get": "last 1-1s, open items both ways, a 3–5 point agenda to paste",
           "journeys": [
             "one-on-one"
@@ -780,13 +816,19 @@
           "file": "m365/04-meeting-summariser-agent.md"
         }
       ],
-      "steps": []
+      "steps": [
+        {
+          "setup": true,
+          "say": "Set up once: Microsoft 365 Copilot Chat → **Agents → Create agent → Configure**. Name *Meeting Summariser*; Knowledge: SharePoint → your *Meetings* library; web search off. Paste this into **Instructions**; the starter prompts are in the sheet below.",
+          "copy_from": "m365/04-meeting-summariser-agent.md#instructions"
+        }
+      ]
     },
     {
       "id": "post-office",
       "district": "harbour",
-      "name": "Post Office",
-      "sub": "Email Drafter: rough text → email in my voice",
+      "name": "Email Drafter",
+      "sub": "M365 agent: rough text → email in my voice",
       "shape": "office",
       "hotspot": "post-office",
       "mode": "paste",
@@ -832,13 +874,19 @@
           "file": "m365/05-email-drafter-agent.md"
         }
       ],
-      "steps": []
+      "steps": [
+        {
+          "setup": true,
+          "say": "Set up once: write `voice-profile.docx` and collect 15–20 sent mails (see the sheet below). Then **Agents → Create agent → Configure**: name *Email Drafter*, Knowledge: the SharePoint *Voice* folder. Paste this into **Instructions**:",
+          "copy_from": "m365/05-email-drafter-agent.md#instructions"
+        }
+      ]
     },
     {
       "id": "clock-tower",
       "district": "harbour",
-      "name": "Clock Tower",
-      "sub": "pings you if a 1-1 has no agenda",
+      "name": "1-1 agenda reminder",
+      "sub": "Power Automate: ping if a 1-1 has no agenda",
       "shape": "clock",
       "hotspot": "clock-tower",
       "mode": "auto",
@@ -860,13 +908,45 @@
           "file": "m365/06-agenda-check-flow.md"
         }
       ],
-      "steps": []
+      "steps": [
+        {
+          "setup": true,
+          "say": "Set up once: a Power Automate flow — nothing to paste; follow the sheet below (~15 min). Name every recurring 1-1 `1-1 <name>`."
+        }
+      ]
+    },
+    {
+      "id": "m365-summary",
+      "district": "harbour",
+      "name": "End-of-meeting summary",
+      "sub": "prompt you paste in the Teams meeting → saved to the Topic record",
+      "shape": "house",
+      "hotspot": "harbour-cottage",
+      "mode": "paste",
+      "audience": "m365",
+      "pitch": "Nothing to build. At the end of a meeting, paste one prompt into Copilot in the Teams meeting. It answers with key points, decisions, your actions and open points, each with a timestamp, in a fixed shape. Save the answer as `<date>-summary.md` in the topic's folder; the Topic record in VS Code merges it with everything before.",
+      "asks": [],
+      "docs": [
+        {
+          "title": "Sheet 8 — End-of-meeting summary prompt",
+          "file": "m365/08-end-of-meeting-summary.md"
+        }
+      ],
+      "steps": [
+        {
+          "say": "At the end of the meeting, paste this into **Copilot in the Teams meeting** (or from Microsoft 365 Copilot Chat, add a first line `Meeting: \"<title>\" on <date>.`):",
+          "copy_from": "m365/08-end-of-meeting-summary.md#block1"
+        },
+        {
+          "say": "Copy the answer and save it in VS Code as `engagements/<topic>/inputs/<date>-summary.md`. Also download the transcript (Teams → meeting → Recap → Transcript → Download) as `inputs/<date>-transcript.docx`."
+        }
+      ]
     },
     {
       "id": "workshop",
       "district": "yard",
-      "name": "The Workshop",
-      "sub": "set up the local flows (~2 h)",
+      "name": "Local setup",
+      "sub": "VS Code side, once (~2 h)",
       "shape": "workshop",
       "hotspot": "yard-workshop",
       "mode": "setup",
@@ -900,16 +980,16 @@
     {
       "id": "m365-setup",
       "district": "yard",
-      "name": "Harbour Works",
-      "sub": "set up the M365 pieces",
+      "name": "M365 setup",
+      "sub": "build the M365 pieces, once",
       "shape": "construction",
       "hotspot": "yard-cranes",
       "mode": "setup",
       "audience": "m365",
-      "pitch": "Before building anything in the harbour: five minutes of prerequisite checks (scheduled prompts, transcript folder, connectors, the Meetings library, Agent Builder knowledge), then the build order 1 → 2 → 3 → 4 → 5 → 6.",
+      "pitch": "Before building anything in Microsoft 365: five minutes of prerequisite checks (scheduled prompts, transcript folder, connectors, the Meetings library, Agent Builder knowledge), then the build order 1 → 2 → 3 → 4 → 5 → 6.",
       "steps": [
         {
-          "say": "Read the prerequisites, then build the sheets in order. Each harbour building has its own sheet."
+          "say": "Read the prerequisites, then build the sheets in order. Each Microsoft 365 stop on the map has its own sheet."
         }
       ],
       "docs": [
@@ -922,13 +1002,13 @@
     {
       "id": "cartographer",
       "district": "yard",
-      "name": "Cartographer",
-      "sub": "this map · new_prompt.py",
+      "name": "Map maintenance",
+      "sub": "rebuild this map",
       "shape": "small",
       "hotspot": "cartographer",
       "mode": "run",
       "audience": "vscode",
-      "pitch": "This 3D island. It is generated from the repo: every prompt, agent and build sheet is a building, every \"I want to…\" is a route. Add a prompt with one command and it gets its building, its stop on a route and its place in the guide's menu; anything added by hand that nobody has placed lands in New Arrivals until it is given a building.",
+      "pitch": "This map. It is generated from the repo: every prompt, agent and build sheet is a building, every \"I want to…\" is a route. Add a prompt with one command and it gets its building, its stop on a route and its place in the guide's menu; anything added by hand that nobody has placed lands in New Arrivals until it is given a building.",
       "steps": [
         {
           "say": "Add a prompt — the file, its building, its stop on a route, then the map and the menu are rebuilt:",
@@ -957,8 +1037,8 @@
     {
       "id": "architect",
       "district": "yard",
-      "name": "Architect's Office",
-      "sub": "a new flow from a wish · /new-flow",
+      "name": "Add a new flow",
+      "sub": "/new-flow from a wish",
       "shape": "small",
       "mode": "prompt",
       "audience": "vscode",
@@ -990,7 +1070,7 @@
     {
       "hotspot": "pier-morning",
       "journey": "morning",
-      "name": "Pier · Your morning"
+      "name": "Pier · Morning brief"
     },
     {
       "hotspot": "pier-meeting",
@@ -1005,7 +1085,7 @@
     {
       "hotspot": "pier-email",
       "journey": "email",
-      "name": "Pier · Writing email"
+      "name": "Pier · Write an email"
     }
   ],
   "lots_per_district": {
@@ -1111,21 +1191,26 @@
       "id": "meeting",
       "area": "record",
       "audience": "vscode",
-      "q": "Record a meeting and my actions (VS Code)",
-      "when": "A meeting happened, you owe nobody a deck, but you want a clean write-up and your actions in the tracker.",
-      "bring": "the transcript and your notes",
-      "get": "one-page notes + your actions in the tracker",
-      "time": "10 minutes, 1 gate",
+      "q": "Keep one record per topic across its meetings",
+      "when": "A topic runs over several meetings and you want one up-to-date document — where things stand, decisions, open points — and your actions in the tracker. Works for a single meeting too.",
+      "bring": "after each meeting: the M365 end-of-meeting summary, the transcript, your notes",
+      "get": "notes.md (the living topic record, every line cited) + your new actions in the tracker",
+      "time": "~10 minutes per meeting, 1 gate",
       "stops": [
         {
+          "building": "m365-summary",
+          "say": "In Microsoft 365: at the end of the meeting, paste the summary prompt into Copilot in the Teams meeting; copy the answer."
+        },
+        {
           "building": "town-hall",
-          "say": "Start an engagement of kind 'meeting' with the transcript and your notes."
+          "say": "In VS Code: first meeting → start a 'meeting' job named after the topic. Later meetings → `new_engagement.py --use <topic>`. Save summary, transcript and notes into inputs/, date first."
         },
         {
           "building": "notary",
-          "say": "One page cited to the transcript plus your actions. Review, then to the tracker — gate G5."
+          "say": "In VS Code: /meeting-notes updates the topic record; review the new actions; append_tasks.py sends them to the tracker (G5)."
         }
-      ]
+      ],
+      "also": "m365"
     },
     {
       "id": "morning",
@@ -1173,7 +1258,7 @@
       "audience": "m365",
       "q": "Never walk into a 1-1 unprepared",
       "when": "You have recurring 1-1s and want each one to have an agenda built from what is still open.",
-      "bring": "1-1 invites named \"1-1 <name>\", past 1-1s filed by the Harbour Office",
+      "bring": "1-1 invites named \"1-1 <name>\", past 1-1s filed by Auto-file meetings",
       "get": "an agenda in tomorrow's invite",
       "time": "15 minutes once, then one click",
       "stops": [
@@ -1244,7 +1329,7 @@
       "area": "yard",
       "audience": "everyone",
       "q": "Set this up (technical)",
-      "when": "Once, before the local flows or the harbour work for you. Also where the map is rebuilt.",
+      "when": "Once, before the VS Code flows or the Microsoft 365 pieces work for you. Also where the map is rebuilt.",
       "bring": "VS Code + Python 3 and your corporate template, or an M365 tenant with Microsoft 365 Copilot Chat",
       "get": "working local scripts, built M365 pieces, an up-to-date map",
       "time": "~2 hours local, ~2 hours M365",
@@ -1255,7 +1340,7 @@
         },
         {
           "building": "m365-setup",
-          "say": "M365: check prerequisites, then build the harbour sheets in order."
+          "say": "M365: check prerequisites, then build the sheets in order."
         },
         {
           "building": "cartographer",

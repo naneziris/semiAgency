@@ -1,4 +1,4 @@
-# 7 · Fit Finder — shared Agent Builder agent (on the map: The Embassy)
+# 7 · Fit Finder — shared Agent Builder agent (on the map: AI idea check (Fit Finder))
 
 Last changed: 2026-09-16
 

@@ -81,6 +81,19 @@ button.chip .dot,.dot{display:inline-block;width:9px;height:9px;border-radius:50
 #guide li.optional .say{color:var(--mut)}
 #guide li .where{font-size:10.5px;color:var(--mut);border:1px solid var(--line);border-radius:4px;padding:0 4px}
 #guide .cps{margin-top:4px}
+.wb{font-size:10.5px;font-weight:700;border-radius:4px;padding:0 5px;white-space:nowrap}
+.wb.m365{background:#e4effc;color:#14508f;border:1px solid #a9c8ee}.wb.vscode{background:#efe7fb;color:#5a2d91;border:1px solid #c9b3ea}.wb.both{background:#f1f3f6;color:var(--mut);border:1px solid var(--line)}
+.door{display:grid;gap:8px;margin:4px 0 6px}
+.dcard{font:inherit;text-align:left;border:1px solid var(--line);border-left:6px solid var(--dc);border-radius:10px;padding:10px 12px;background:#fff;cursor:pointer}
+.dcard:hover{background:#f7f9fb}.dcard b{display:block;font-size:15px;margin-bottom:2px}.dcard span{font-size:12.5px;color:var(--mut)}
+.dnow{display:flex;gap:6px;align-items:center;flex-wrap:wrap;font-size:12.5px;margin:2px 0 4px}
+.jcard .t{display:flex;gap:6px;align-items:center;justify-content:space-between}
+.chip.setup{background:#fff8e1!important;border-color:#e6c76b!important;font-family:inherit!important}
+.flow{border:1px solid var(--line);border-left:5px solid var(--ac);border-radius:10px;padding:8px 10px;margin:8px 0;background:#fff}
+.flow h4{margin:0 0 2px;font-size:14px;display:flex;gap:6px;align-items:center;justify-content:space-between}.flow .w{font-size:12.5px;color:var(--mut)}
+.flow ol{margin:6px 0 0;padding-left:20px}.flow li{margin:5px 0}.flow li .line{display:flex;gap:6px;align-items:center;flex-wrap:wrap}.flow li .say{font-size:12.5px}
+.flow .chip.cp{font-size:11.5px;padding:1px 8px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.flow .flag.opt{font-size:10.5px;color:var(--mut);border:1px solid var(--line);border-radius:999px;padding:0 6px}
 #guide .chip.cp{font-size:11.5px;padding:1px 8px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:#fff}
 #guide .x{float:right;border:0;background:transparent;font-size:18px;cursor:pointer;color:var(--mut);line-height:1}
 /* detail */
@@ -168,7 +181,7 @@ button.chip.done{background:var(--ok);color:#fff;border-color:var(--ok)}
 <div id="tip"></div>
 <aside id="panel">
   <div id="phead"><div class="t">__TITLE__</div><div class="tag">__TAGLINE__</div><input id="search" type="search" placeholder="Search places, routes, prompts…" autocomplete="off"></div>
-  <div id="tabs"><button data-tab="go" class="on">Go</button><button data-tab="lib">Prompt library</button></div>
+  <div id="tabs"><button data-tab="go" class="on">Start</button><button data-tab="list">All steps</button><button data-tab="lib">Prompt library</button></div>
   <div id="pbody"></div>
 </aside>
 <button id="ptoggle" aria-label="Show or hide the panel" title="H">‹</button>
@@ -312,25 +325,41 @@ function gotoStop(i){ const j = J[sel]; stop = Math.max(0, Math.min(j.stops.leng
 
 /* ---------- panel */
 const view = { tab: 'go', detail: null, q: '', aud: store.get('city.aud') || 'all' };
-if (view.aud !== 'all' && !DATA.audiences[view.aud]) view.aud = 'all';
-const fits = a => view.aud === 'all' || a === view.aud || a === 'everyone' || !a;
+{ const mh = /^#for=(\w+)/.exec(location.hash); if (mh) { view.aud = mh[1]; history.replaceState(null, '', location.pathname); } }
+if (view.aud !== 'all' && view.aud !== 'both' && !DATA.audiences[view.aud]) view.aud = 'all';
+const fits = a => view.aud === 'all' || view.aud === 'both' || a === view.aud || a === 'everyone' || !a;
+const fitsJ = j => fits(j.audience) || (j.also && fits(j.also));
+const WHERE = {m365:'Microsoft 365', vscode:'VS Code'};
+function wbadge(a, also){ if (also && also !== a) return `<span class="wb both">${WHERE[a]||a} + ${WHERE[also]||also}</span>`; return WHERE[a] ? `<span class="wb ${a}">${WHERE[a]}</span>` : `<span class="wb both">Either</span>`; }
 const matches = (...xs) => !view.q || xs.join(' ').toLowerCase().includes(view.q);
 $('#search').oninput = e => { view.q = e.target.value.trim().toLowerCase(); if (view.detail) view.detail = null; renderPanel(); };
 document.querySelectorAll('#tabs button').forEach(b => b.onclick = () => { view.tab = b.dataset.tab; view.detail = null; document.querySelectorAll('#tabs button').forEach(x => x.classList.toggle('on', x === b)); renderPanel(); });
 function codeBlock(text){ return `<div class="code"><button class="copy" type="button">Copy</button><pre>${esc(text)}</pre></div>`; }
-function renderPanel(){ const body = $('#pbody'); if (view.detail) { body.innerHTML = detailHTML(B[view.detail]); wire(body); body.scrollTop = 0; return; } body.innerHTML = view.tab === 'go' ? goHTML() : libHTML(); wire(body); }
+function renderPanel(){ const body = $('#pbody'); if (view.detail) { body.innerHTML = detailHTML(B[view.detail]); wire(body); body.scrollTop = 0; return; } body.innerHTML = view.tab === 'go' ? goHTML() : view.tab === 'list' ? listHTML() : libHTML(); wire(body); }
 function isOptional(st){ return !!st.optional || /^(optional|only if)\b/i.test(st.say||''); }
-function stepLine(j, st, i){ const b = B[st.building]; const opt = isOptional(st); const chips = [];
-  (b.steps||[]).forEach(s => { if (s.copy) chips.push(`<button class="chip cp" data-copy="${esc(s.copy)}" title="Copy to clipboard">⧉ ${esc(s.copy.length > 34 ? s.copy.slice(0,32)+'…' : s.copy)}</button>`); });
-  (b.asks||[]).forEach(a => { if (a.say.startsWith('(')) return; if (a.journeys && !a.journeys.includes(j.id)) return; chips.push(`<button class="chip cp" data-copy="${esc(a.say)}" title="${esc(a.say)}">⧉ prompt: ${esc(a.say.length > 30 ? a.say.slice(0,28)+'…' : a.say)}</button>`); });
-  const where = b.audience === 'm365' ? 'M365' : b.audience === 'vscode' ? 'VS Code' : '';
-  return `<li class="${i===stop?'cur':''} ${opt?'optional':''}" data-stop="${i}"><div class="line"><b>${esc(b.name)}</b><span class="flag ${opt?'opt':'req'}">${opt?'optional':'required'}</span>${where?`<span class="where">${where}</span>`:''}</div><div class="say">${esc(st.say)}</div>${chips.length?`<div class="chips cps">${chips.join('')}</div>`:''}</li>`; }
+function stepChips(j, b){ const chips = [];
+  (b.steps||[]).forEach(s => { if (!s.copy || s.setup) return; const lab = s.long ? (/^You are /.test(s.copy) ? 'copy agent instructions' : 'copy the prompt') : (s.copy.length > 34 ? s.copy.slice(0,32)+'…' : s.copy); chips.push(`<button class="chip cp" data-copy="${esc(s.copy)}" title="Copy to clipboard">⧉ ${esc(lab)}</button>`); });
+  (b.asks||[]).forEach(a => { if (a.say.startsWith('(')) return; if (a.journeys && !a.journeys.includes(j.id)) return; chips.push(`<button class="chip cp" data-copy="${esc(a.say)}" title="${esc(a.say)}">⧉ ${esc(a.say.length > 34 ? a.say.slice(0,32)+'…' : a.say)}</button>`); });
+  if ((b.steps||[]).some(s => s.setup)) chips.push(`<button class="chip cp setup" data-b="${b.id}" data-open="1" title="What to build once, with the text to paste">⚙ set up once</button>`);
+  return chips; }
+function stepLine(j, st, i){ const b = B[st.building]; const opt = isOptional(st); const chips = stepChips(j, b);
+  return `<li class="${i===stop?'cur':''} ${opt?'optional':''}" data-stop="${i}"><div class="line"><b>${esc(b.name)}</b><span class="flag ${opt?'opt':'req'}">${opt?'optional':'required'}</span>${wbadge(b.audience)}</div><div class="say">${esc(st.say)}</div>${chips.length?`<div class="chips cps">${chips.join('')}</div>`:''}</li>`; }
+function listHTML(){ const js = DATA.journeys.filter(j => fitsJ(j) && matches(j.q, j.when, j.bring, j.get, ...j.stops.map(st => (B[st.building]||{}).name)));
+  let h = audChips() + `<p style="font-size:12.5px;color:var(--mut);margin:8px 0">Every flow with every step. The badge says where you do it; ⧉ copies the exact text to paste; ⚙ opens what to set up once.</p>`;
+  h += js.map(j => `<div class="flow" style="--ac:${dcolor(j.area)}"><h4>${esc(j.q)} ${wbadge(j.audience, j.also)}</h4><div class="w">${esc(j.when)}</div><div class="w"><b>You get:</b> ${esc(j.get||'')} · <b>Takes:</b> ${esc(j.time||'')}</div><ol>${j.stops.map(st => { const b = B[st.building]; const chips = stepChips(j, b); return `<li><div class="line"><b>${esc(b.name)}</b>${wbadge(b.audience)}${isOptional(st)?'<span class="flag opt">optional</span>':''}</div><div class="say">${esc(st.say)}</div>${chips.length?`<div class="chips">${chips.join('')}</div>`:''}</li>`; }).join('')}</ol></div>`).join('');
+  return h || `<p style="color:var(--mut)">Nothing matches “${esc(view.q)}”.</p>`; }
+function audChips(){ return `<div class="dnow">Showing: ${['m365','vscode','both'].map(a => `<button class="chip ${view.aud===a?'on':''}" data-aud="${a}">${a==='both'?'both':WHERE[a]}</button>`).join('')}</div>`; }
 function goHTML(){ let h = '';
   if (sel) { const j = J[sel]; h += `<div id="guide" style="--gac:${dcolor(j.area)}"><button class="x" data-act="unsel" aria-label="Clear scenario">×</button><div class="who">${esc(j.q)}</div><div class="when"><b>When:</b> ${esc(j.when)}</div><div class="facts">${[['You bring',j.bring],['You get',j.get],['Takes',j.time]].filter(r=>r[1]).map(r=>`<b>${r[0]}</b><span>${esc(r[1])}</span>`).join('')}</div><div class="legend"><span class="req">required</span> <span class="opt">optional</span> — one line per step; click a step to walk there</div><ol>${j.stops.map((st,i)=>stepLine(j, st, i)).join('')}</ol><div class="nav"><button class="chip" data-act="prev" ${stop===0?'disabled':''}>‹ Previous</button><button class="chip" data-act="next" ${stop===j.stops.length-1?'disabled':''}>Next step ›</button><button class="chip" data-act="open">Open this building</button></div></div>`; }
-  h += `<div class="sec">I work in</div><div class="chips"><button class="chip ${view.aud==='all'?'on':''}" data-aud="all">Show me everything</button>${Object.entries(DATA.audiences).filter(([a])=>a!=='everyone').map(([a,l])=>`<button class="chip ${view.aud===a?'on':''}" data-aud="${a}">${esc(l)}</button>`).join('')}</div>`;
-  const js = DATA.journeys.filter(j => fits(j.audience) && matches(j.q, j.when, j.bring, j.get));
-  h += `<div class="sec">Scenarios — I want to…</div>` + js.map(j => `<div class="jcard ${sel===j.id?'sel':''}" style="--ac:${dcolor(j.area)}" data-j="${j.id}"><h4>${esc(j.q)}</h4><div class="w">${esc(j.when)}</div></div>`).join('');
-  const fd = DATA.buildings.find(b => b.picker); if (fd && !view.q) h += `<div class="chips" style="margin-top:8px"><button class="chip" data-b="${fd.id}" style="background:#fff8e1;border-color:#e6c76b">Not sure? Ask the Front Desk</button></div>`;
+  if (view.aud === 'all' && !view.q && !sel) { h += `<div class="sec">Where do you work?</div><div class="door">
+    <button class="dcard" data-aud="m365" style="--dc:#3b82d6"><b>Microsoft 365 Copilot</b><span>Teams, Outlook, Copilot Chat. You paste a prompt or pick an agent. Nothing to install.</span></button>
+    <button class="dcard" data-aud="vscode" style="--dc:#7c4dc4"><b>GitHub Copilot in VS Code</b><span>This repo open in VS Code. You type /commands in Copilot Chat (agent mode) and run a few python scripts in the terminal.</span></button></div>
+    <div class="chips"><button class="chip" data-aud="both">Show both</button></div>`; }
+  else h += audChips();
+  const js = DATA.journeys.filter(j => fitsJ(j) && matches(j.q, j.when, j.bring, j.get));
+  if (view.aud !== 'all' || view.q || sel) { h += `<div class="sec">I want to…</div>` + js.map(j => `<div class="jcard ${sel===j.id?'sel':''}" style="--ac:${dcolor(j.area)}" data-j="${j.id}"><div class="t"><h4>${esc(j.q)}</h4>${wbadge(j.audience, j.also)}</div><div class="w">${esc(j.when)}</div></div>`).join('');
+    const fd = DATA.buildings.find(b => b.picker); if (fd && !view.q) h += `<div class="chips" style="margin-top:8px"><button class="chip" data-b="${fd.id}" style="background:#fff8e1;border-color:#e6c76b">Not sure? ${esc(fd.name)}</button><button class="chip" data-tab-go="list">See every step of every flow ›</button></div>`; }
+  if (view.aud === 'all' && !view.q && !sel) return h;
   DATA.districts.forEach(d => { const bs = DATA.buildings.filter(b => b.district === d.id && fits(b.audience) && matches(b.name, b.sub, b.pitch, (b.prompts||[]).map(p=>'/'+p.name).join(' '), (b.agents||[]).map(a=>'@'+a.name).join(' '))); if (!bs.length) return;
     h += `<div class="sec"><span class="dot" style="background:${d.color}"></span>${esc(d.name)}</div>` + bs.map(b => `<div class="place ${nearB&&nearB.id===b.id?'near':''}" data-b="${b.id}" style="--ac:${d.color}"><span class="ic"></span><div><b>${esc(b.name)}</b><span>${esc(b.sub||b.pitch.slice(0,90))}</span></div>${b.prompts.length?`<span class="n">${b.prompts.map(p=>'/'+esc(p.name)).join(' ')}</span>`:''}</div>`).join(''); });
   if (!js.length && !h.includes('class="place')) h += `<p style="color:var(--mut)">Nothing matches “${esc(view.q)}”.</p>`;
@@ -345,7 +374,9 @@ function detailHTML(b){ const d = DISTR[b.district] || {}; const cj = sel ? J[se
   if (cj) { const i = cj.stops.findIndex(s => s.building === b.id); if (i >= 0) h += `<p class="stepin"><b>Step ${i+1} of ${cj.stops.length} — ${esc(cj.q)}:</b> ${esc(cj.stops[i].say)}</p>`; }
   if (b.picker) { const groups = [['everyone','Anyone'], ...Object.entries(DATA.audiences).filter(([a])=>a!=='everyone')]; groups.forEach(([a,label]) => { const js = DATA.journeys.filter(j => (j.audience||'everyone')===a && fits(j.audience||'everyone')); if (!js.length) return; h += `<h3>${esc(a==='everyone'?'Anyone':'If you work in '+label)}</h3><div class="cards">` + js.map(j => `<div class="card" style="--ac:${dcolor(j.area)}"><h4>${esc(j.q)}</h4><div class="v">${esc(j.when)}</div><div class="k">You bring</div><div class="v">${esc(j.bring||'')}</div><div class="k">You get</div><div class="v">${esc(j.get||'')}</div><div class="k">Takes</div><div class="v">${esc(j.time||'')}</div><button class="chip" data-j="${j.id}">Show me the route ›</button></div>`).join('') + `</div>`; }); }
   if (b.asks && b.asks.length) { h += `<h3>${b.mode==='auto'?'What you get':'Ask it'}</h3><table class="asks"><thead><tr><th>${b.mode==='auto'?'You do':'Say'}</th><th>When</th><th>You get</th></tr></thead><tbody>`; b.asks.forEach(a => { const cls = cj && a.journeys ? (a.journeys.includes(cj.id) ? 'hi' : 'lo') : ''; const auto = a.say.startsWith('('); h += `<tr class="${cls}"><td class="say">${auto?`<i>${esc(a.say.slice(1,-1))}</i>`:codeBlock(a.say)}</td><td>${esc(a.when)}</td><td>${esc(a.get)}</td></tr>`; }); h += `</tbody></table>`; }
-  if (b.steps.length) { h += `<h3>How to use it</h3>`; b.steps.forEach(s => { h += `<div class="step">${s.say?`<p class="say">${s.say}</p>`:''}${s.copy?codeBlock(s.copy):''}</div>`; }); }
+  const su = b.steps.filter(s => s.setup), us = b.steps.filter(s => !s.setup);
+  if (us.length) { h += `<h3>How to use it</h3>`; us.forEach(s => { h += `<div class="step">${s.say?`<p class="say">${s.say}</p>`:''}${s.copy?codeBlock(s.copy):''}</div>`; }); }
+  if (su.length) { h += `<h3>Set up once</h3>`; su.forEach(s => { h += `<div class="step">${s.say?`<p class="say">${s.say}</p>`:''}${s.copy?codeBlock(s.copy):''}</div>`; }); }
   if (b.prompts.length) { h += `<h3>The prompts behind it</h3>`; b.prompts.forEach(p => { h += `<details><summary><code>/${esc(p.name)}</code></summary><div class="desc">${esc(p.description)}</div><div class="btnrow"><button class="chip" data-act="dlfile" data-file="${esc(p.file)}">Download ${esc(p.name)}.prompt.md</button></div><div class="desc">What it tells Copilot (you do not paste this; it runs when you type the command in a workspace that has <code>${esc(p.file)}</code>):</div>${codeBlock(p.body)}</details>`; }); }
   if (b.agents.length) { h += `<h3>Agents</h3>`; b.agents.forEach(a => { h += `<details><summary><code>@${esc(a.name)}</code></summary><div class="desc">${esc(a.description)}</div><div class="btnrow"><button class="chip" data-act="dlfile" data-file="${esc(a.file)}">Download ${esc(a.name)}.agent.md</button></div>${codeBlock(a.body)}</details>`; }); }
   if (b.docs.length) { h += `<h3>Full instructions</h3>`; b.docs.forEach(doc => { h += `<details ${b.steps.length?'':'open'}><summary>${esc(doc.title)}</summary><div class="btnrow"><button class="chip" data-act="dlfile" data-file="${esc(doc.file)}">Download ${esc(doc.file.split('/').pop())}</button></div><div class="doc">${doc.html}</div></details>`; }); }
@@ -353,8 +384,10 @@ function detailHTML(b){ const d = DISTR[b.district] || {}; const cj = sel ? J[se
   return h + `</div>`; }
 function wire(root){ root.querySelectorAll('.copy').forEach(btn => btn.onclick = () => copyBtn(btn, btn.parentElement.querySelector('pre').textContent));
   root.querySelectorAll('[data-aud]').forEach(c => c.onclick = () => { view.aud = c.dataset.aud; store.set('city.aud', view.aud); renderPanel(); });
+  root.querySelectorAll('[data-tab-go]').forEach(c => c.onclick = () => document.querySelector(`#tabs button[data-tab="${c.dataset.tabGo}"]`).click());
   root.querySelectorAll('[data-j]').forEach(c => c.onclick = () => selectJourney(c.dataset.j));
   root.querySelectorAll('[data-b]:not([data-act])').forEach(c => c.onclick = () => visit(c.dataset.b));
+  root.querySelectorAll('[data-open]').forEach(c => c.onclick = e => { e.stopPropagation(); visit(c.dataset.b); });
   root.querySelectorAll('[data-copy]').forEach(c => c.onclick = e => { e.stopPropagation(); copyBtn(c, c.dataset.copy); });
   root.querySelectorAll('[data-stop]').forEach(li => li.onclick = () => gotoStop(+li.dataset.stop));
   root.querySelectorAll('[data-act]').forEach(el => el.onclick = () => act(el)); }
